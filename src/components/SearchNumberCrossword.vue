@@ -70,22 +70,18 @@
                 let funct_ref = this.string_to_array
                 numberCrosswordsRef.get().then(function(snapshot) {
                     snapshot.forEach(function(childSnapshot) {
-                        let permissions = childSnapshot.get('permissions')
                         let solution = funct_ref(childSnapshot.get('solution'))
-                        if (permissions) {
-                            permissions = permissions.substring(1, permissions.length - 1)
-                        }
                         result.push({
                             rows: solution.length,
                             columns: solution[0].length,
                             description: childSnapshot.get('description'), 
                             source: childSnapshot.get('source'), 
                             is_public: childSnapshot.get('is_public'),
-                            permissions: permissions,
+                            permissions: childSnapshot.get('permissions'),
                             author: childSnapshot.get('author'), 
-                            time_created: new Date(childSnapshot.get('time_created').seconds * 1000), 
+                            time_created: new Date(childSnapshot.get('time_created').seconds * 1000).toLocaleString(), 
                             updater: childSnapshot.get('updater'),
-                            last_updated: new Date(childSnapshot.get('last_updated').seconds * 1000), 
+                            last_updated: new Date(childSnapshot.get('last_updated').seconds * 1000).toLocaleString(), 
                             id: childSnapshot.id, 
                         })
                     });

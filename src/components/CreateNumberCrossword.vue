@@ -268,15 +268,28 @@ export default {
       store() {
           let datetime = new Date()
           let funct_ref = this.array_to_string
+          let newsolution = []
+          let newspecial = []
+          let newrevealed = []
+          for (let i = 0; i < this.rows; i++) {
+              newsolution.push([])
+              newspecial.push([])
+              newrevealed.push([])
+              for (let j = 0; j < this.columns; j++) {
+                newsolution[i].push(this.solution[i][j])
+                newspecial[i].push(this.is_special[i][j])
+                newrevealed[i].push(this.is_revealed[i][j])
+              }
+          }
           numberCrosswordsRef.add({
-                solution: funct_ref(this.solution),
-                is_special: funct_ref(this.is_special),
-                is_revealed: funct_ref(this.is_revealed),
+                solution: funct_ref(newsolution),
+                is_special: funct_ref(newspecial),
+                is_revealed: funct_ref(newrevealed),
                 description: this.description,
                 author: "",
                 updater: "",
                 is_public: this.is_public,
-                permissions: "[" + this.permissions.toString() + "]",
+                permissions: this.permissions,
                 source: this.source,
                 time_created: datetime,
                 last_updated: datetime,
@@ -370,7 +383,7 @@ export default {
             <va-button style="margin-left: 1%;margin-top: 1%" @click="mode=10">?</va-button>
             <va-button @click="mode=-1" style="background-color: black;margin-left: 1%;margin-top: 1%">Barijera</va-button>
             <va-button @click="mode=-2" style="background-color: salmon;margin-left: 1%;margin-top: 1%">Dio rješenja</va-button> 
-            <va-button @click="mode=-3" style="background-color: lightskyblue;margin-left: 1%;margin-top: 1%">Vidljivo kao pomoć korisniku</va-button>
+            <va-button @click="mode=-3" style="background-color: #90beee;margin-left: 1%;margin-top: 1%">Vidljivo kao pomoć korisniku</va-button>
     </div> 
     <br>
     <div class="myrow">
@@ -395,17 +408,7 @@ export default {
             </tr>
         </table> 
     </div>   
-    <br>
-    <div class="myrow">
-        <va-input
-            class="mb-4"
-            v-model="description"
-            type="textarea"
-            label="Opis zagonetke"
-            :min-rows="3"
-            :max-rows="5"
-        />
-    </div> 
+    <br> 
     <div class="myrow" v-if="count_special()">
         Rješenje: 
         <span v-for="i in (rows)" v-bind:key="i">
@@ -440,13 +443,21 @@ export default {
     <div class="myrow">
         <va-input
             class="mb-4"
+            v-model="description"
+            type="textarea"
+            label="Opis zagonetke"
+            :min-rows="3"
+            :max-rows="5"
+        />
+        <va-input
+            class="mb-4"
             v-model="source"
             type="textarea"
             label="Izvor zagonetke"
             :min-rows="3"
             :max-rows="5"
         />
-    </div> 
+    </div>
     <div class="myrow"> 
         Dozvola uređivanja
         <va-switch style="display: inline-block;margin-left: 1%;margin-top: 1%" v-model="is_public" true-inner-label="Svi" false-inner-label="Samo suradnici" class="mr-4" /> 
@@ -464,7 +475,7 @@ export default {
                 {{permission}}
             </va-chip> 
     </div>
-    <div class="myrow"> 
+    <div class="myrow" v-if="!warning">
         <va-button @click="store()">Spremi zagonetku</va-button>  
     </div>    
     <va-modal ref="begin_zero" hide-default-actions message="Broj ne može započinjati znamenkom 0." stateful />
@@ -504,7 +515,7 @@ export default {
 
 .help {
     font-weight: bold;
-    background-color: lightblue;
+    background-color: #90beee;
 } 
 
 </style>

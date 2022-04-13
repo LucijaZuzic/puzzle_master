@@ -135,10 +135,15 @@ export default {
                 this.colors[i] = document.getElementById("colorpicker" + i).value
             }
         }
-        for (let i = 0; i < this.colnum; i++) {
-            for (let j = 0; j < this.rownum; j++) {
-                document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[this.solution[i][j]]
-            }
+        for (let i = 0; i < this.rownum; i++) {
+            for (let j = 0; j < this.colnum; j++) {
+                if (document.getElementById("cell" + i + ":" + j)) {
+                    document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[this.solution[i][j]]
+                    if (this.solution[i][j] >= this.num_colors) {
+                        document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[0]
+                    }
+                }
+            }   
         }
     },
     getcol() {
@@ -294,14 +299,28 @@ export default {
         this.shorten_colors()
         let datetime = new Date()
         let funct_ref = this.array_to_string
+        let newsolution = []
+        for (let i = 0; i < this.rownum; i++) {
+            newsolution.push([])
+            for (let j = 0; j < this.colnum; j++) {
+                newsolution[i].push(this.solution[i][j])
+                if (newsolution[i][j] >= this.num_colors) {
+                    newsolution[i][j] = 0
+                }
+            }
+        }
+        let newcolors = []
+        for (let i = 0; i < this.num_colors; i++) {
+            newcolors.push(this.colors[i])
+        }
         nonogramsRef.add({
-            solution: funct_ref(this.solution),
-            colors: "[" + this.colors.toString() + "]",
+            solution: funct_ref(newsolution),
+            colors: newcolors,
             description: this.description,
             author: "",
             updater: "",
             is_public: this.is_public,
-            permissions: "[" + this.permissions.toString() + "]",
+            permissions: this.permissions,
             source: this.source,
             time_created: datetime,
             last_updated: datetime,
@@ -318,6 +337,14 @@ export default {
       this.update_colors()
       this.initialize()
       this.check_equal_colors()
+  },
+  updated() { 
+    this.update_colors()
+    for (let i = 0; i < this.num_colors; i++) {
+        document.getElementById("colorbutton" + (i)).style.backgroundColor = this.colors[i]
+    }
+    this.colorcol()
+    this.colorrow()
   },
 }
 </script>
@@ -408,6 +435,12 @@ export default {
     <div class="myrow">
         <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" class="flex mb-2 md6" v-model="drag" /> Bojanje prelaskom miša 
     </div> 
+    <div class="myrow" v-if="warning">
+        <va-alert color="warning" :title="'Postoje boje koje se preklapaju'" center class="mb-4">
+            <p >{{warning}}</p>
+        </va-alert>
+        <br>
+    </div> 
     <br> 
     <div class="myrow">
         <va-input
@@ -426,12 +459,6 @@ export default {
             :min-rows="3"
             :max-rows="5"
         />
-    </div> 
-    <div class="myrow" v-if="warning">
-        <va-alert color="warning" :title="'Postoje boje koje se preklapaju'" center class="mb-4">
-            <p >{{warning}}</p>
-        </va-alert>
-        <br>
     </div> 
     <div class="myrow"> 
         Dozvola uređivanja

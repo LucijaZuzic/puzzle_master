@@ -379,7 +379,7 @@ export default {
                         string_author = childSnapshot.get('author')
                         string_updater= childSnapshot.get('updater')
                         string_is_public = childSnapshot.get('is_public')
-                        string_permissions = funct_ref(childSnapshot.get('permissions'))
+                        string_permissions = childSnapshot.get('permissions')
                         string_source = childSnapshot.get('source')
                         string_time_created = new Date(childSnapshot.get('time_created').seconds * 1000)
                         string_last_updated = new Date(childSnapshot.get('last_updated').seconds * 1000)
@@ -437,13 +437,7 @@ export default {
             </tr>
         </table>
     </div>   
-    <br>
-    <div class="myrow">
-        <va-card>
-            <va-card-title>Opis zagonetke</va-card-title>
-            <va-card-content>{{description}}</va-card-content>
-        </va-card>
-    </div>
+    <br> 
     <div class="myrow" v-if="count_special()"> 
             Rješenje:
             <span v-for="i in (rows)" v-bind:key="i">
@@ -478,16 +472,22 @@ export default {
     </div> 
     <div class="myrow">
         <va-card>
+            <va-card-title>Opis zagonetke</va-card-title>
+            <va-card-content>{{description}}</va-card-content>
+        </va-card>
+    </div>
+    <div class="myrow">
+        <va-card>
             <va-card-title>Izvor zagonetke</va-card-title>
             <va-card-content>{{source}}</va-card-content>
         </va-card>
     </div>
     <div class="myrow"> 
         <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{author}}</va-chip>  
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created}}</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
         <br>
         <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updater}}</va-chip> 
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated}}</va-chip>
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
     </div>
     <div class="myrow">
         <va-button @click="show_solution();$forceUpdate()">Otkrij sva polja</va-button>
@@ -533,7 +533,7 @@ export default {
 
 .help {
     font-weight: bold;
-    background-color: lightblue;
+    background-color: #90beee;
 } 
 
 .used {

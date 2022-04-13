@@ -1,5 +1,6 @@
 <script> 
 
+import { updateDoc } from "@firebase/firestore"
 import { nonogramsRef } from "../main.js"
 
 export default {
@@ -8,14 +9,19 @@ export default {
         warning: "",
         author: "",   
         updater: "",
+        time_created: '',
+        last_updated: '',
         is_public: false,
         permissions: [],
         collaborator: "",
         description: '',
+        solution: [],
+        blocked: false,
         source: '',
         colnum: 20,
         rownum: 20,
         maxcol: 0,
+        victory: false,
         maxrow: 0,
         row_colors: [],
         col_colors: [],
@@ -25,6 +31,7 @@ export default {
         prev_x: -1,
         prev_y: -1,
         num_colors: 2,
+        show_error:  false,
         wrong_colors: [false, false],
         colors: ["#FFFFFF", "#000000"]
     }
@@ -73,6 +80,9 @@ export default {
         this.parse_sequence()
     },
     increment(x, y, ismouseover) {
+        if (this.victory) {
+            return
+        }
         if (this.blocked == true) {
             return
         }
@@ -82,14 +92,17 @@ export default {
         this.values[x][y] = this.mode
         document.getElementById("cell" + x + ":" + y).style.backgroundColor = this.mode
         this.values = [... this.values]
+        this.checkvictory()  
         this.parse_sequence()
         this.$forceUpdate()
     },
     update_colors() {
-        for (let i = 0; i < this.colnum; i++) {
-            for (let j = 0; j < this.rownum; j++) {
-                document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[this.values[i][j]]
-            }
+        for (let i = 0; i < this.rownum; i++) {
+            for (let j = 0; j < this.colnum; j++) {
+                if (document.getElementById("cell" + i + ":" + j)) {
+                    document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[this.values[i][j]]
+                }
+            }   
         }
     },
     getcol() {
@@ -102,7 +115,7 @@ export default {
             let one_arr = new Array()
             let current = 0
             for (let j = 0; j < this.rownum; j++) {
-                color = this.values[j][i]
+                color = this.solution[j][i]
                 if (color == prev_color) {
                     if (color != 0) {
                         current += 1
@@ -135,6 +148,16 @@ export default {
             }
         }
     },
+    show_solution() {
+        for (let i = 0; i < this.rownum; i++) {
+            for (let j = 0; j < this.colnum; j++) {
+                this.values[i][j] = this.solution[i][j]
+            }
+        }
+        this.checkvictory()  
+        this.update_colors()
+        this.$forceUpdate()
+    },
     getrow() {
         let color_val = new Array()
         let val = new Array()
@@ -145,7 +168,7 @@ export default {
             let one_arr = new Array()
             let current = 0
             for (let j = 0; j < this.colnum; j++) {
-                color = this.values[i][j]
+                color = this.solution[i][j]
                 if (color == prev_color) {
                     if (color != 0) {
                         current += 1
@@ -218,6 +241,17 @@ export default {
             return array
         }
     },
+    checkvictory() {
+        this.victory = true;
+        for (let i = 0; i < this.values.length; i++) {
+            for (let j = 0; j < this.values[i].length; j++) {
+                if (this.values[i][j] != this.solution[i][j]) { 
+                    this.victory = false;
+                    return;
+                }
+            }
+        }
+    },
     fetch_puzzle() {
         let params_id= this.$route.params.id
         let string_solution = []
@@ -237,12 +271,12 @@ export default {
                 let id = childSnapshot.id;
                 if (id == params_id) {
                     string_solution = funct_ref(childSnapshot.get('solution'))
-                    string_colors = funct_ref(childSnapshot.get('colors')) 
+                    string_colors = childSnapshot.get('colors') 
                     string_description = childSnapshot.get('description')
                     string_author = childSnapshot.get('author')
                     string_updater= childSnapshot.get('updater')
                     string_is_public = childSnapshot.get('is_public')
-                    string_permissions = funct_ref(childSnapshot.get('permissions'))
+                    string_permissions = childSnapshot.get('permissions')
                     string_source = childSnapshot.get('source')
                     string_time_created = new Date(childSnapshot.get('time_created').seconds * 1000)
                     string_last_updated = new Date(childSnapshot.get('last_updated').seconds * 1000)
@@ -253,6 +287,7 @@ export default {
             if (found) {
                 this.solution = string_solution
                 this.colors = string_colors
+                this.num_colors = this.colors.length
                 this.description = string_description
                 this.author = string_author
                 this.updater = string_updater
@@ -294,7 +329,7 @@ export default {
     },
   }, 
   beforeMount() { 
-      this.fetch_puzzle() 
+    this.fetch_puzzle() 
   },
   beforeUpdate() {
     this.update_colors()
@@ -306,12 +341,21 @@ export default {
     } 
     this.$refs.show_error.show()
     this.startTimer()
+  },
+  updated() {
+    this.update_colors()
+    for (let i = 0; i < this.num_colors; i++) {
+        document.getElementById("colorbutton" + (i)).style.backgroundColor = this.colors[i]
+    } 
+    this.colorcol()
+    this.colorrow()
   }
 }
 </script>
 
 <template> 
     <div class="myrow">
+        <va-checkbox class="flex mb-2 md6" style="float: left" label="Prikaži greške" v-model="show_error" />
         <va-chip style="float: right" outline>{{format(time_elapsed)}}</va-chip>
     </div>
     <div class="myrow">
@@ -342,7 +386,11 @@ export default {
                 </td> 
                 <td v-if="maxcol==0"></td>
                 <td v-for="column_index in colnum" v-bind:key="column_index"   @mouseover="increment(row_index - 1, column_index - 1,true)"
-                @click="increment(row_index - 1, column_index - 1,false)" :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"> &nbsp;</td>
+                @click="increment(row_index - 1, column_index - 1,false)" :id="'cell' + (row_index - 1) + ':' + (column_index - 1)">
+                <va-icon  
+                v-if="show_error && solution[row_index - 1][column_index - 1] != values[row_index - 1][column_index - 1] && values[row_index - 1][column_index - 1] != 0" name="error" >
+                </va-icon>
+                <span v-else>&nbsp;</span></td>
             </tr>
         </table>
     </div> 
@@ -380,10 +428,10 @@ export default {
     </div>
     <div class="myrow"> 
         <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{author}}</va-chip>  
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created}}</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
         <br>
         <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updater}}</va-chip> 
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated}}</va-chip>
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
     </div>
     <div class="myrow">
         <va-button @click="show_solution();$forceUpdate()">Otkrij sva polja</va-button>

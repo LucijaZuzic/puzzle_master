@@ -301,7 +301,7 @@ export default {
                     string_author = childSnapshot.get('author')
                     string_updater= childSnapshot.get('updater')
                     string_is_public = childSnapshot.get('is_public')
-                    string_permissions = funct_ref(childSnapshot.get('permissions'))
+                    string_permissions = childSnapshot.get('permissions')
                     string_source = childSnapshot.get('source')
                     string_time_created = new Date(childSnapshot.get('time_created').seconds * 1000)
                     string_last_updated = new Date(childSnapshot.get('last_updated').seconds * 1000)
@@ -321,6 +321,8 @@ export default {
                 this.source = string_source
                 this.time_created = string_time_created
                 this.last_updated = string_last_updated
+                this.rows = this.solution.length
+                this.columns = this.solution[0].length
                 this.initialize()
                 this.$forceUpdate()
             } else {
@@ -342,15 +344,58 @@ export default {
       store() {
           let datetime = new Date()
           let funct_ref = this.array_to_string
+          let newsolution = []
+          let newspecial = []
+          let newrevealed = []
+          for (let i = 0; i < this.rows; i++) {
+              newsolution.push([])
+              newspecial.push([])
+              newrevealed.push([])
+              for (let j = 0; j < this.columns; j++) {
+                newsolution[i].push(this.solution[i][j])
+                newspecial[i].push(this.is_special[i][j])
+                newrevealed[i].push(this.is_revealed[i][j])
+              }
+          }
           numberCrosswordsRef.doc(this.$route.params.id).update({
-                solution: funct_ref(this.solution),
-                is_special: funct_ref(this.is_special),
-                is_revealed: funct_ref(this.is_revealed),
+                solution: funct_ref(newsolution),
+                is_special: funct_ref(newspecial),
+                is_revealed: funct_ref(newrevealed),
                 description: this.description,
                 author: "",
                 updater: "",
                 is_public: this.is_public,
-                permissions: "[" + this.permissions.toString() + "]",
+                permissions: this.permissions,
+                source: this.source,
+                time_created: this.time_created,
+                last_updated: datetime,
+          })
+      },
+      duplicate() {
+          let datetime = new Date()
+          let funct_ref = this.array_to_string
+          let newsolution = []
+          let newspecial = []
+          let newrevealed = []
+          for (let i = 0; i < this.rows; i++) {
+              newsolution.push([])
+              newspecial.push([])
+              newrevealed.push([])
+              for (let j = 0; j < this.columns; j++) {
+                newsolution[i].push(this.solution[i][j])
+                newspecial[i].push(this.is_special[i][j])
+                newrevealed[i].push(this.is_revealed[i][j])
+              }
+          }
+          numberCrosswordsRef.add({
+                solution: funct_ref(newsolution),
+                is_special: funct_ref(newspecial),
+                is_revealed: funct_ref(newrevealed),
+                description: this.description,
+                author: "",
+                updater: "",
+                is_public: this.is_public,
+                permissions: this.permissions,
                 source: this.source,
                 time_created: datetime,
                 last_updated: datetime,
@@ -397,7 +442,7 @@ export default {
                         this.$refs.revealed_barrier.show()
                         return;
                     }
-                }
+                } 
                 this.is_revealed[i][j] = (this.is_revealed[i][j] + 1) % 2
             }
         }
@@ -445,7 +490,7 @@ export default {
             <va-button style="margin-left: 1%;margin-top: 1%" @click="mode=10">?</va-button>
             <va-button @click="mode=-1" style="background-color: black;margin-left: 1%;margin-top: 1%">Barijera</va-button>
             <va-button @click="mode=-2" style="background-color: salmon;margin-left: 1%;margin-top: 1%">Dio rješenja</va-button> 
-            <va-button @click="mode=-3" style="background-color: lightskyblue;margin-left: 1%;margin-top: 1%">Vidljivo kao pomoć korisniku</va-button>
+            <va-button @click="mode=-3" style="background-color: #90beee;margin-left: 1%;margin-top: 1%">Vidljivo kao pomoć korisniku</va-button>
     </div> 
     <br>
     <div class="myrow">
@@ -471,17 +516,7 @@ export default {
             </tr>
         </table> 
     </div>   
-    <br>
-    <div class="myrow">
-        <va-input
-            class="mb-4"
-            v-model="description"
-            type="textarea"
-            label="Opis zagonetke"
-            :min-rows="3"
-            :max-rows="5"
-        />
-    </div> 
+    <br> 
     <div class="myrow" v-if="count_special()">
         Rješenje: 
         <span v-for="i in (rows)" v-bind:key="i">
@@ -517,6 +552,14 @@ export default {
     <div class="myrow">
         <va-input
             class="mb-4"
+            v-model="description"
+            type="textarea"
+            label="Opis zagonetke"
+            :min-rows="3"
+            :max-rows="5"
+        />
+        <va-input
+            class="mb-4"
             v-model="source"
             type="textarea"
             label="Izvor zagonetke"
@@ -526,10 +569,10 @@ export default {
     </div> 
     <div class="myrow"> 
         <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{author}}</va-chip>  
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created}}</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
         <br>
         <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updater}}</va-chip> 
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated}}</va-chip>
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
     </div>
     <div class="myrow"> 
         Dozvola uređivanja
@@ -548,9 +591,10 @@ export default {
                 <va-icon style="display: inline-block" @click="permissions.splice(i,1)" name="clear" />
             </va-chip> 
     </div>
-    <div class="myrow">
-        <va-button @click="store()">Spremi zagonetku</va-button>
-    </div>     
+    <div class="myrow" v-if="!warning">
+        <va-button @click="store()">Izmijeni postojeću zagonetku</va-button>
+        <va-button @click="duplicate()">Spremi izmjene kao novu zagonetku</va-button>
+    </div>   
     <va-modal ref="begin_zero" hide-default-actions message="Broj ne može započinjati znamenkom 0." stateful />
     <va-modal ref="barrier_revealed" hide-default-actions message="Pomoćno polje ne može biti barijera." stateful />
     <va-modal ref="barrier_special" hide-default-actions message="Polje koje je dio rješenja ne može biti barijera." stateful />
@@ -589,7 +633,7 @@ export default {
 
 .help {
     font-weight: bold;
-    background-color: lightblue;
+    background-color: #90beee;
 } 
 
 </style>

@@ -1,5 +1,5 @@
 <script>
-import { ref, uploadBytes } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL  } from "firebase/storage";
 
 import { projectStorage } from "../main.js"
 import { integramsRef } from "../main.js"
@@ -109,20 +109,20 @@ export default {
               }
           } 
       },
-       check_same() {
+      check_same() { 
           this.alert = ""
             for (let j = 0; j < this.numinstructions; j++) { 
                     if (this.instructions[j] == "") {
                         this.alert += (j+1).toString() + ". uputa nema tekst.\n"  
                     } 
-            }
+            } 
             for (let j = 0; j < this.numcategories; j++) { 
                     if (this.category_names[j] == "") {
                         this.alert += (j+1).toString() + ". kategorija nema naziv.\n"  
                     } 
             }
           for (let i = 0; i < this.numcategories; i++) {
-            for (let j = 0; j < this.numvalues; j++) {  
+              for (let j = 0; j < this.numvalues; j++) {  
                 if (this.category_values[j][i] == "" || this.category_values[j][i] == []) {
                     if (this.is_image[i]) {
                         this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema sliku za " + (j+1).toString() + ". pojam.\n"  
@@ -131,7 +131,8 @@ export default {
 
                     }
                 }
-            }
+                    
+              }
           }
             for (let j = 0; j < this.numinstructions; j++) { 
                 for (let k = j + 1; k < this.numinstructions; k++) { 
@@ -153,13 +154,19 @@ export default {
                     if (this.category_values[j][i] == this.category_values[k][i] && this.category_values[j][i] && this.category_values[k][i]) {
                         this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku vrijednost za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ").\n"  
                     } 
-                    if (this.is_image[i] && this.category_values[j][i] != "" && this.category_values[j][i] != []  && this.category_values[k][i] != "" && this.category_values[k][i] != [] 
+                    if (this.is_image[i] && this.category_values[j][i].toString()[0] == '[' &&  this.category_values[k][i].name  != undefined
+                    && this.category_values[j][i] != "" && this.category_values[j][i] != []  && this.category_values[k][i] != "" && this.category_values[k][i] != [] 
                     && this.category_values[j][i].name == this.category_values[k][i].name && this.category_values[j][i] && this.category_values[k][i]) {
                         this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i].name + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i].name + ").\n"  
                     }
+                    if (this.is_image[i] && this.category_values[j][i].toString()[0] != '[' &&  this.category_values[k][i].name == undefined
+                    && this.category_values[j][i] != "" && this.category_values[j][i] != []  && this.category_values[k][i] != "" && this.category_values[k][i] != [] 
+                    && this.category_values[j][i] == this.category_values[k][i] && this.category_values[j][i] && this.category_values[k][i]) {
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ").\n"  
+                    }
                 }
               }
-          }
+          } 
       },
       check_too_long() {
           this.too_long = []
@@ -174,7 +181,7 @@ export default {
           }
       },
       order_in_category() {
-          this.order = [] 
+          this.order = []
           for (let i = 0; i < this.numcategories; i++) {
               let category_order = []
               let used = []
@@ -192,10 +199,11 @@ export default {
               this.order.push(category_order)
           }
           this.solution = []
+          this.values = []
           for (let i = 0; i < this.numcategories; i++) {
               for (let j = 0; j < this.numvalues; j++) { 
                 let solution_row = []
-                
+                let values_row = []
                 for (let k = 0; k < this.numcategories; k++) {
                     for (let l = 0; l < this.numvalues; l++) { 
                         if (this.order[i][j] == this.order[k][l]) {
@@ -203,9 +211,11 @@ export default {
                         } else {
                             solution_row.push(0)
                         }
+                        values_row.push(-1)
                     }
                 }
                 this.solution.push(solution_row)
+                this.values.push(values_row)
               }
           }
       },
@@ -223,14 +233,8 @@ export default {
        },
       image_uploaded(i, j) { 
           this.category_values[i][j] = document.getElementById("fileinput" + (i) + ":" + (j)).files[0];  
-       },
-       returnURL(file) { 
-           if (file && file != "" && file != []) {  
-               return URL.createObjectURL(file)
-           } else {
-               return ""
-           }
-       },
+          this.getPicture()
+       }, 
       array_to_string(array) {
           let string = "["
           for (let i = 0; i < array.length; i++) {
@@ -249,6 +253,62 @@ export default {
           return string + "]"
         },
         store() {
+            let datetime = new Date()
+            let params_id= this.$route.params.id
+            let funct_ref = this.array_to_string  
+            let newinstructions = []
+            for (let i = 0; i < this.numinstructions; i++) {
+                newinstructions.push(this.instructions[i])
+            }
+            let newcategorynames = []
+            for (let i = 0; i < this.numcategories; i++) {
+                newcategorynames.push(this.category_names[i])
+            }
+            let newisimage = []
+            for (let i = 0; i < this.numcategories; i++) {
+                newisimage.push(this.is_image[i])
+            }
+            let category_values2 = []
+            for (let i = 0; i < this.numvalues; i++) {
+                category_values2.push([]) 
+                for (let j = 0; j < this.numcategories; j++) {
+                    category_values2[i].push(this.category_values[i][j]) 
+                }
+            } 
+            for (let i = 0; i < this.numcategories; i++) {
+                for (let j = 0; j < this.numvalues; j++) {
+                    if (this.is_image[i] && this.category_values[j][i] != '' && this.category_values[j][i] != [] && this.category_values[j][i].name != undefined) {
+                        let exstension = this.category_values[j][i].name.split('.')[this.category_values[j][i].name.split('.').length - 1]
+                        const reference = 'integram/' + params_id + "/" + (i + 1) + this.alphabet[j] + "."  + exstension; 
+                        const storageRef = ref(projectStorage, reference);
+                            const metadata = {
+                            contentType: 'image/' + exstension
+                        };
+                        // 'file' comes from the Blob or File API 
+                        uploadBytes(storageRef, this.category_values[j][i], metadata).then((snapshot) => {  
+                        })
+                        .catch((error) => {  
+                        })
+                        category_values2[j][i] = reference
+                    }
+                }
+            } 
+            integramsRef.doc(params_id).update({
+                    category_values: funct_ref(category_values2),
+                    category_names: newcategorynames,
+                    is_image: newisimage,
+                    instructions: newinstructions,
+                    description: this.description,
+                    author: "",
+                    updater: "",
+                    is_public: this.is_public,
+                    permissions: this.permissions,
+                    source: this.source,
+                    time_created: datetime,
+                    last_updated: datetime,
+            }) 
+        }, 
+        duplicate() {
             let datetime = new Date()
             let funct_ref = this.array_to_string 
             let newinstructions = []
@@ -288,7 +348,7 @@ export default {
                 } 
                 for (let i = 0; i < this.numcategories; i++) {
                     for (let j = 0; j < this.numvalues; j++) {
-                        if (this.is_image[i] && this.category_values[j][i] != '' && this.category_values[j][i] != []) {
+                        if (this.is_image[i] && this.category_values[j][i] != '' && this.category_values[j][i] != [] && this.category_values[j][i].name != undefined) {
                             let exstension = this.category_values[j][i].name.split('.')[this.category_values[j][i].name.split('.').length - 1]
                             const reference = 'integram/' + some_id + "/" + (i + 1) + this.alphabet[j] + "."  + exstension; 
                             const storageRef = ref(projectStorage, reference);
@@ -321,10 +381,112 @@ export default {
             })
             .catch((error) => { 
             });
+        },
+        string_to_array(array_string) {
+            if (!array_string) {
+                return []
+            }
+            let array = array_string.substring(2, array_string.length - 2).split("],[")
+            for (let i = 0; i < array.length; i++) {
+                array[i] = array[i].split("\\,")
+                for(let j = 0; j < array[i].length; j++) {
+                    array[i][j] = array[i][j]
+                }
+            }
+            return array 
+        },
+        fetch_puzzle() {
+            let params_id= this.$route.params.id
+            let string_category_values = []
+            let string_category_names = []
+            let string_is_image = []
+            let string_instructions = ""
+            let string_description = ""
+            let string_author = ""
+            let string_updater = ""
+            let string_is_public = false
+            let string_permissions = []
+            let string_source = ""
+            let string_time_created = ""
+            let string_last_updated = ""
+            let found = false
+            let funct_ref = this.string_to_array
+            integramsRef.get().then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let id = childSnapshot.id;
+                    if (id == params_id) {
+                        string_category_values = funct_ref(childSnapshot.get('category_values'))
+                        string_category_names = childSnapshot.get('category_names')
+                        string_is_image = childSnapshot.get('is_image')
+                        string_instructions = childSnapshot.get('instructions')
+                        string_description = childSnapshot.get('description')
+                        string_author = childSnapshot.get('author')
+                        string_updater= childSnapshot.get('updater')
+                        string_is_public = childSnapshot.get('is_public')
+                        string_permissions = childSnapshot.get('permissions')
+                        string_source = childSnapshot.get('source')
+                        string_time_created = new Date(childSnapshot.get('time_created').seconds * 1000)
+                        string_last_updated = new Date(childSnapshot.get('last_updated').seconds * 1000)
+                        found = true
+                    }
+                });
+            }).then(() => {
+                if (found) {
+                    this.category_values = string_category_values 
+                    this.category_names = string_category_names
+                    this.is_image = string_is_image
+                    this.instructions = string_instructions
+                    this.description = string_description
+                    this.author = string_author
+                    this.updater = string_updater
+                    this.is_public = string_is_public
+                    this.permissions = string_permissions
+                    this.source = string_source
+                    this.time_created = string_time_created
+                    this.last_updated = string_last_updated
+                    this.numvalues = this.category_values.length
+                    this.numcategories = this.category_values[0].length 
+                    this.numinstructions = this.instructions.length
+                    this.change_instructions()      
+                    this.order_in_category() 
+                    this.initialize()
+                    this.getPicture()
+                    this.$forceUpdate()
+                } else {
+                    this.$refs.no_puzzle.show()
+                    this.$router.push("/searchintegram");
+                }
+            })
+      },
+      getPicture() {
+         for (let i = 0; i < this.numcategories; i++) {
+            for (let j = 0; j < this.numvalues; j++) {
+                if (this.is_image[i] && this.category_values[j][i] != '' && this.category_values[j][i] != []) {
+                    let file = this.category_values[j][i]
+                    if (file && file != "" && file != []) {   
+                        if (file.name == undefined) {     
+                             // Create a reference to the file we want to download
+                            var reference = ref(projectStorage, file)
+                            // Get the download URL
+                            getDownloadURL(reference)
+                            .then((url) => {
+                                 document.getElementById("img" + (j) + ":" + (i)).src  = url
+                            })
+                            .catch((error) => { 
+                            }); 
+                        } else {  
+                            let comp_url =  URL.createObjectURL(file)
+                            document.getElementById("img" + (j) + ":" + (i)).src = comp_url
+                         }
+                    } 
+                }
+            }
         }
-  }, 
+    },
+  },  
   beforeMount() {
     this.initialize() 
+    this.fetch_puzzle()
   },  
 }
 </script>
@@ -386,8 +548,9 @@ export default {
             <td v-for="j in numcategories" v-bind:key="j" style="width:15%" :class="{first:  j == 1, second: j == 2, third: j == 3, fourth: j == 4, fifth: j == 5}">
                 <span  v-if="is_image[j-1]==true">
                     <va-button  style="  display:inline-block;width:25%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    @click="click_file(k-1,j-1)">   
-                        <span    style="  display:inline-block;width:100%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != []">{{this.category_values[k-1][j-1].name}}</span>
-                        <span  v-else>Odaberi sliku</span></va-button>  
+                        <span    style="  display:inline-block;width:100%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != [] && this.category_values[k-1][j-1].name != undefined">{{this.category_values[k-1][j-1].name}}</span>
+                        <span    style="  display:inline-block;width:100%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != [] && this.category_values[k-1][j-1].name == undefined">{{this.category_values[k-1][j-1]}}</span>
+                        <span  v-if="this.category_values[k-1][j-1] == '' || this.category_values[k-1][j-1] == []">Odaberi sliku</span></va-button>  
              
                 <input   file-types="image/*" type="file" :id='"fileinput" + (k-1) + ":" + (j-1)'  
                 style="display: none;visibility: hidden;width:0%"
@@ -403,7 +566,7 @@ export default {
             {{alert}}
         </va-alert> 
     </div> 
-    <br> 
+    <br>   
     <table class="integram_solve"> 
         <tr>            
             <td>&nbsp;</td>
@@ -443,19 +606,17 @@ export default {
     
     <br>
     <div v-for="i in numcategories" v-bind:key="i">
-        <span v-if="too_long[i-1]==true && is_image[i-1]==false">
-            {{i}}. kategorija:
-            <span v-for="j in numvalues" v-bind:key="j">
-                <span :class="{first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</span> {{category_values[j-1][i-1]}}
-            </span>
-        </span>
+        <va-card v-if="too_long[i-1]==true && is_image[i-1]==false">
+            <va-card-title>{{i}}. kategorija</va-card-title>
+            <va-card-content><div v-for="j in numvalues" v-bind:key="j">
+                <div :class="{first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</div> {{category_values[j-1][i-1]}}
+            </div> </va-card-content>
+        </va-card>
         <span v-if="is_image[i-1]==true">
             {{i}}. kategorija:<br>
             <span v-for="j in numvalues" v-bind:key="j"> 
-                {{category_values[j-1][i-1]}}
-                {{category_values[j-1][i-1].name}}
                 <div class="image_container" > 
-                    <img :id='"img" + (j-1) + ":" + (i-1)' :src="returnURL(category_values[j-1][i-1])"  alt="No image" style="width:100%;">
+                    <img :id='"img" + (j-1) + ":" + (i-1)' alt="No image" style="width:100%;">
                     <div :class="{topleft: true, first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</div>
                 </div>
             </span>
@@ -496,10 +657,12 @@ export default {
                 {{permission}}
             </va-chip> 
     </div>
-    <div  v-if="!alert" class="myrow"> 
-        <va-button @click="store()">Spremi zagonetku</va-button>  
-    </div>  
-    <!--<button @click="update_order=true;initialize();$forceUpdate()">Promjeni redoslijed</button>-->
+    <div class="myrow" v-if="!warning">
+        <va-button @click="store()">Izmijeni postojeću zagonetku</va-button>
+        <va-button @click="duplicate()">Spremi izmjene kao novu zagonetku</va-button>
+    </div> 
+    <!--<button @click="update_order=true;$forceUpdate()">Promjeni redoslijed</button>-->
+    <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
 </template>
 
 <style scoped>
@@ -528,7 +691,7 @@ table  {
 .rotated_text { 
     writing-mode: vertical-rl;
 }
-.checkmark { 
+.checkmark {  
     width: 25px;
     text-align: center;
     vertical-align: middle;

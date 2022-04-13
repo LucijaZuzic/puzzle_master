@@ -11,10 +11,9 @@
             Nonogrami
           </router-link>
         </va-navbar-item>
-        <va-navbar-item><router-link to="/createintegram">Integram</router-link></va-navbar-item>  
-         <va-navbar-item>
-          <router-link v-bind:to="{ name: 'solve_integram', params: { id: 'integram1' }}">
-            Riješi integram
+        <va-navbar-item>
+          <router-link  to="/searchintegram">
+            Integrami 
           </router-link>
         </va-navbar-item>  
         <va-navbar-item>

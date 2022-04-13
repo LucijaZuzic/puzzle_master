@@ -1,27 +1,36 @@
 <script>
 
+import { ref, getDownloadURL  } from "firebase/storage";
+
+import { projectStorage } from "../main.js"
+import { integramsRef } from "../main.js"
 export default {
   data() {
-    return {
-      category_values: [['Bez naslova', '1964.','03\'00\'\''],
-                        ['Krek','1967.','09\'36\'\''], 
-                        ['Ljubitelji cvijeća','1971.','10\'15\'\''],
-                        ['Putnik drugog razreda','1973.','10\'54\'\''],
-                        ['Znatiželja','1966.','08\'09\'\'']],
-      category_names: ['Film','Godina','Trajanje'],
-      numcategories: 0,
-      numvalues: 0,
-      numinstructions: 0,
-      instructions: ['1s','2s','3s','4s','5s','6s'],
-      is_image: [false,false,false,false,false],
+    return { 
+      numcategories: 5,
+      numvalues: 5,
+      numinstructions: 10,
+      instructions: [],
+      is_image: [false,false,false],
       alert: '',
       alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
       max_len_display: 20,
       solution: [],
       mode: -1,
       time_elapsed: 0,
-      mark_error: this.startup()
+      show_error: false,
+        author: "",   
+        updater: "",
+        time_created: '',
+        last_updated: '',
+        is_public: false,
+        permissions: [],
+        collaborator: "",
     }
+  },
+  mounted() { 
+    this.$refs.show_error.show()
+    this.startTimer()
   },
   methods: {
         startup () {
@@ -48,10 +57,63 @@ export default {
             return hours + ":" + minutes + ":" + seconds;
         }, 
       initialize() {
-          this.numvalues = this.category_values.length
-          this.numcategories = this.category_values[0].length
-          this.numinstructions = this.instructions.length
-          this.order_in_category()
+          let oldvalues = []
+          let maxcol = this.numcategories
+          let maxrow = this.numvalues
+          if (this.category_values) {
+              oldvalues = this.category_values 
+              if (oldvalues.length > maxrow) {
+                   maxrow = oldvalues.length
+               }
+               if (oldvalues[0].length > maxcol) {
+                   maxcol = oldvalues[0].length
+               }
+          }
+          this.category_values = []
+          for (let i = 0; i < maxrow; i++) {
+              let category_values_row = []
+              for (let j = 0; j < maxcol; j++) {
+                if (oldvalues[i]) {
+                    if (oldvalues[i].length > j) {
+                        category_values_row.push(oldvalues[i][j])
+                    } else {
+                        category_values_row.push('')
+                    }
+                } else {
+                    category_values_row.push('')
+                }
+              }
+              this.category_values.push(category_values_row)
+          }
+          let oldnames = []
+          let oldisimage = []
+          let oldtoolong = []
+          let maxnames = this.numcategories
+          if (this.category_names) {
+              oldnames = this.category_names
+              oldisimage = this.is_image 
+              oldtoolong = this.too_long 
+              if (oldnames.length > maxnames) {
+                  maxnames = oldnames.length
+              }
+          }
+          this.category_names = []
+          this.is_image = []
+          this.too_long = []
+          for (let i = 0; i < maxnames; i++) {
+              if (oldnames[i]) {
+                this.category_names.push(oldnames[i])
+                this.is_image.push(oldisimage[i])
+                this.too_long.push(oldtoolong[i])
+              } else {
+                this.category_names.push('')
+                this.is_image.push(false)
+                this.too_long.push(false)
+              }
+          } 
+          this.change_instructions()    
+            this.order_in_category() 
+          this.check_same()
           this.check_too_long()
       },
       change_instructions() {
@@ -72,8 +134,38 @@ export default {
               }
           } 
       },
-      check_same() {
+      check_same() { 
           this.alert = ""
+            for (let j = 0; j < this.numinstructions; j++) { 
+                    if (this.instructions[j] == "") {
+                        this.alert += (j+1).toString() + ". uputa nema tekst.\n"  
+                    } 
+            } 
+            for (let j = 0; j < this.numcategories; j++) { 
+                    if (this.category_names[j] == "") {
+                        this.alert += (j+1).toString() + ". kategorija nema naziv.\n"  
+                    } 
+            }
+          for (let i = 0; i < this.numcategories; i++) {
+              for (let j = 0; j < this.numvalues; j++) {  
+                if (this.category_values[j][i] == "" || this.category_values[j][i] == []) {
+                    if (this.is_image[i]) {
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema sliku za " + (j+1).toString() + ". pojam.\n"  
+                    } else {
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema vrijednost za " + (j+1).toString() + ". pojam.\n"  
+
+                    }
+                }
+                    
+              }
+          }
+            for (let j = 0; j < this.numinstructions; j++) { 
+                for (let k = j + 1; k < this.numinstructions; k++) { 
+                    if (this.instructions[j] == this.instructions[k] && this.instructions[j] && this.instructions[k]) {
+                        this.alert += (j+1).toString() + ". uputa (" + this.instructions[j] + ") i "  + (k+1).toString() + ". uputa (" + this.instructions[k] + ") imaju isti tekst.\n"  
+                    }
+                }
+            }
             for (let j = 0; j < this.numcategories; j++) { 
                 for (let k = j + 1; k < this.numcategories; k++) { 
                     if (this.category_names[j] == this.category_names[k] && this.category_names[j] && this.category_names[k]) {
@@ -86,10 +178,20 @@ export default {
                 for (let k = j + 1; k < this.numvalues; k++) { 
                     if (this.category_values[j][i] == this.category_values[k][i] && this.category_values[j][i] && this.category_values[k][i]) {
                         this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku vrijednost za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ").\n"  
+                    } 
+                    if (this.is_image[i] && this.category_values[j][i].toString()[0] == '[' &&  this.category_values[k][i].name  != undefined
+                    && this.category_values[j][i] != "" && this.category_values[j][i] != []  && this.category_values[k][i] != "" && this.category_values[k][i] != [] 
+                    && this.category_values[j][i].name == this.category_values[k][i].name && this.category_values[j][i] && this.category_values[k][i]) {
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i].name + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i].name + ").\n"  
+                    }
+                    if (this.is_image[i] && this.category_values[j][i].toString()[0] != '[' &&  this.category_values[k][i].name == undefined
+                    && this.category_values[j][i] != "" && this.category_values[j][i] != []  && this.category_values[k][i] != "" && this.category_values[k][i] != [] 
+                    && this.category_values[j][i] == this.category_values[k][i] && this.category_values[j][i] && this.category_values[k][i]) {
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ").\n"  
                     }
                 }
               }
-          }
+          } 
       },
       check_too_long() {
           this.too_long = []
@@ -199,8 +301,8 @@ export default {
                 this.values[y][row_start + i] = -1
             }
         } 
-        this.values[x][y] = this.mode;
-        this.values[y][x] = this.mode;
+        this.values[x][y] = this.mode
+        this.values[y][x] = this.mode
         let correct = this.update_values()
         for (let i = 0; i < Math.max(this.numcategories, this.numvalues); i++) {
             correct = this.update_values()
@@ -213,9 +315,9 @@ export default {
         if (!correct) {
             window.alert("Neispravan zaključak")
             this.values = oldvalues
-        }
-        this.update_order=false;
-        this.$forceUpdate();
+        } 
+        this.generate_my_solution()
+        this.$forceUpdate()
       },
       find_single() {
         for (let i = 0; i < this.numcategories; i++) {
@@ -370,35 +472,212 @@ export default {
             }
         }
         return true
-    }
-  },
+    }, 
+    generate_my_solution() {
+        this.my_solution = []
+        for (let j = 0; j < this.numvalues; j++) {
+            this.my_solution.push([])
+            for (let i = 0; i < this.numcategories; i++) {
+                this.my_solution[j].push("")
+            }
+        }
+        for (let i = 0; i < 1; i++) {
+            for (let j = 0; j < this.numvalues; j++) {
+                for (let k = i + 1; k < this.numcategories; k++) {
+                    for (let l = 0; l < this.numvalues; l++) {
+                        if (this.values[i * this.numvalues + j][k * this.numvalues + l] == 1 || this.values[k * this.numvalues + l][i * this.numvalues + j] == 1) {  
+                            this.my_solution[this.order[i][j]][i] = this.category_values[this.order[i][j]][i]
+                            this.my_solution[this.order[i][j]][k] = this.category_values[this.order[k][l]][k]
+                        } 
+                    }
+                }
+            }
+        }
+    },
+    clear_values() { 
+        for (let i = 0; i < this.numcategories * this.numvalues; i++) {
+            for (let j = 0; j < this.numvalues * this.numvalues; j++) { 
+                this.values[i][j] = -1 
+            }
+        }
+        this.my_solution = []
+        for (let j = 0; j < this.numvalues; j++) {
+            this.my_solution.push([])
+            for (let i = 0; i < this.numcategories; i++) {
+                this.my_solution[j].push("")
+            }
+        }
+        this.$forceUpdate()
+    },
+        string_to_array(array_string) {
+            if (!array_string) {
+                return []
+            }
+            let array = array_string.substring(2, array_string.length - 2).split("],[")
+            for (let i = 0; i < array.length; i++) {
+                array[i] = array[i].split("\\,")
+                for(let j = 0; j < array[i].length; j++) {
+                    array[i][j] = array[i][j]
+                }
+            }
+            return array 
+        },
+        fetch_puzzle() {
+            let params_id= this.$route.params.id
+            let string_category_values = []
+            let string_category_names = []
+            let string_is_image = []
+            let string_instructions = ""
+            let string_description = ""
+            let string_author = ""
+            let string_updater = ""
+            let string_is_public = false
+            let string_permissions = []
+            let string_source = ""
+            let string_time_created = ""
+            let string_last_updated = ""
+            let found = false
+            let funct_ref = this.string_to_array
+            integramsRef.get().then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let id = childSnapshot.id;
+                    if (id == params_id) {
+                        string_category_values = funct_ref(childSnapshot.get('category_values'))
+                        string_category_names = childSnapshot.get('category_names')
+                        string_is_image = childSnapshot.get('is_image')
+                        string_instructions = childSnapshot.get('instructions')
+                        string_description = childSnapshot.get('description')
+                        string_author = childSnapshot.get('author')
+                        string_updater= childSnapshot.get('updater')
+                        string_is_public = childSnapshot.get('is_public')
+                        string_permissions = childSnapshot.get('permissions')
+                        string_source = childSnapshot.get('source')
+                        string_time_created = new Date(childSnapshot.get('time_created').seconds * 1000)
+                        string_last_updated = new Date(childSnapshot.get('last_updated').seconds * 1000)
+                        found = true
+                    }
+                });
+            }).then(() => {
+                if (found) {
+                    this.category_values = string_category_values 
+                    this.category_names = string_category_names
+                    this.is_image = string_is_image
+                    this.instructions = string_instructions
+                    this.description = string_description
+                    this.author = string_author
+                    this.updater = string_updater
+                    this.is_public = string_is_public
+                    this.permissions = string_permissions
+                    this.source = string_source
+                    this.time_created = string_time_created
+                    this.last_updated = string_last_updated
+                    this.numvalues = this.category_values.length
+                    this.numcategories = this.category_values[0].length 
+                    this.numinstructions = this.instructions.length
+                    this.change_instructions()      
+                    this.order_in_category()
+                    this.check_same()
+                    this.check_too_long()
+        this.getPicture()
+                    this.$forceUpdate()
+                } else {
+                    this.$refs.no_puzzle.show()
+                    this.$router.push("/searchintegram");
+                }
+            })
+      },
+      getPicture() {
+        console.log("HERE")
+        for (let i = 0; i < this.numcategories; i++) {
+            for (let j = 0; j < this.numvalues; j++) {
+                if (this.is_image[i] && this.category_values[j][i] != '' && this.category_values[j][i] != []) {
+                    let file = this.category_values[j][i]
+                    if (file && file != "" && file != []) {   
+                        if (file.name == undefined) {     
+                            console.log("firebase")
+                            // Create a reference to the file we want to download
+                            var reference = ref(projectStorage, file)
+                            // Get the download URL
+                            getDownloadURL(reference)
+                            .then((url) => {
+                                console.log(url)
+                                document.getElementById("img" + (j) + ":" + (i)).src  = url
+                            })
+                            .catch((error) => { 
+                            }); 
+                        } else { 
+                            console.log("compurt")
+                            let comp_url =  URL.createObjectURL(file)
+                            document.getElementById("img" + (j) + ":" + (i)).src = comp_url
+                            console.log(comp_url)
+                        }
+                    } 
+                }
+            }
+        }
+    },
+  }, 
   beforeMount() { 
+        this.my_solution = []
+        for (let j = 0; j < this.numvalues; j++) {
+            this.my_solution.push([])
+            for (let i = 0; i < this.numcategories; i++) {
+                this.my_solution[j].push("")
+            }
+        }
     this.initialize()
+    this.fetch_puzzle()
+        this.my_solution = []
+        for (let j = 0; j < this.numvalues; j++) {
+            this.my_solution.push([])
+            for (let i = 0; i < this.numcategories; i++) {
+                this.my_solution[j].push("")
+            }
+        }
+
+  },
+  mounted() {
   }
 }
 </script>
 
-<template> 
+<template>  
+    <div class="myrow">
+        <va-checkbox class="flex mb-2 md6" style="float: left" label="Prikaži greške" v-model="show_error" />
+        <va-chip style="float: right" outline>{{format(time_elapsed)}}</va-chip>
+    </div> 
 
-<span class="rounded" style="background-color: lightgray; padding: 5px;float:right">{{format(time_elapsed)}}</span>
-  <div v-for="i in numinstructions" v-bind:key="i">{{i}}: <input type="text" v-model="instructions[i-1]"></div>
-    <table> 
+    <br>
+
+  <div v-for="i in numinstructions" v-bind:key="i"> 
+        <va-card>
+            <va-card-title>{{i}}. uputa</va-card-title>
+            <va-card-content>{{instructions[i-1]}}</va-card-content>
+        </va-card><br>
+    </div>
+  <br>
+    <table class="integram_task">
         <tr>       
-            <td v-for="i in numcategories" v-bind:key="i">
-                <span>{{i}}. kategorija</span> 
-                Slika: <input type="checkbox" v-model="is_image[i-1]" unchecked @change="$update_order=false;$forceUpdate()"><br>
-                <input type="text" v-model="category_names[i-1]" @change="check_same();update_order=false;$forceUpdate()">
+            <td v-for="i in numcategories" v-bind:key="i" :class="{first: i == 1, second: i == 2, third: i == 3, fourth: i == 4, fifth: i == 5}">
+                <span></span>   
+                <va-chip>{{i}}. kategorija: {{category_names[i - 1]}}</va-chip>
             </td>
         </tr> 
         <tr v-for="k in numvalues" v-bind:key="k">            
-            <td v-for="j in numcategories" v-bind:key="j">
-                <input type="text" v-model="category_values[k-1][j-1]" @change="check_too_long();check_same();update_order=false;$forceUpdate()">
-                <img v-if="is_image[j-1]==true" alt="No image" style="height: 50px" :src="category_values[k-1][j-1]"> 
-            </td>
+            <td v-for="j in numcategories" v-bind:key="j" :class="{first:  j == 1, second: j == 2, third: j == 3, fourth: j == 4, fifth: j == 5}">
+                 <va-chip v-if="my_solution[order[0][k-1]][j-1] != '' && my_solution[order[0][k-1]][j-1] == category_values[order[0][k-1]][j-1]">{{my_solution[order[0][k-1]][j-1]}}</va-chip> 
+                 <va-chip color="danger" v-if="my_solution[order[0][k-1]][j-1] != '' && my_solution[order[0][k-1]][j-1] != category_values[order[0][k-1]][j-1] && show_error">{{my_solution[order[0][k-1]][j-1]}}</va-chip> 
+             </td>
         </tr> 
     </table>
-  <span style=" white-space: pre-wrap;">{{alert}}</span>
-    <table> 
+    <br>  
+    <div class="myrow" v-if="alert">
+        <va-alert style="white-space: pre-wrap;" color="warning" :title="'Greške u unosu kategorija i vrijednosti'" center class="mb-4">
+            {{alert}}
+        </va-alert> 
+    </div> 
+    <br> 
+    <table class="integram_solve"> 
         <tr>            
             <td>&nbsp;</td>
             <td class="rotated_text" v-for="i in numvalues*(numcategories-1)" v-bind:key="i"
@@ -417,7 +696,7 @@ export default {
             </td>
             <td v-for="i in numvalues*(numcategories-1)" v-bind:key="i" @click="click_cell(j-1,(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues)"
             :class="{wrong: values[j-1][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]!=solution[j-1][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues] 
-            && values[j-1][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]!= -1 && mark_error}">
+            && values[j-1][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]!= -1 && show_error}">
                 <span class="checkmark" v-if="values[j-1][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]==1">&#128504;</span>
                 <span class="checkmark" v-else-if="values[j-1][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]==0">&#215;</span>
                 <span class="checkmark" v-else>?</span>
@@ -435,7 +714,7 @@ export default {
             @click="click_cell((numcategories-1-Math.floor((j-1)/numvalues))*numvalues+(j-1)%numvalues,(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues)"
             :class="{wrong: values[(numcategories-1-Math.floor((j-1)/numvalues))*numvalues+(j-1)%numvalues][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]
             !=solution[(numcategories-1-Math.floor((j-1)/numvalues))*numvalues+(j-1)%numvalues][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]
-            && values[(numcategories-1-Math.floor((j-1)/numvalues))*numvalues+(j-1)%numvalues][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]!= -1 && mark_error}">
+            && values[(numcategories-1-Math.floor((j-1)/numvalues))*numvalues+(j-1)%numvalues][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]!= -1 && show_error}">
                 <span class="checkmark" v-if="values[(numcategories-1-Math.floor((j-1)/numvalues))*numvalues+(j-1)%numvalues][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]==1">
                 &#128504;</span>
                 <span class="checkmark" v-else-if="values[(numcategories-1-Math.floor((j-1)/numvalues))*numvalues+(j-1)%numvalues][(Math.floor((i-1)/numvalues)+1)*numvalues+(i-1)%numvalues]==0">&#215;</span>
@@ -443,6 +722,7 @@ export default {
             </td>
         </tr> 
     </table>
+    <br>
     <div v-for="i in numcategories" v-bind:key="i">
         <span v-if="too_long[i-1]==true && is_image[i-1]==false">
             {{i}}. kategorija:
@@ -452,19 +732,41 @@ export default {
         </span>
         <span v-if="is_image[i-1]==true">
             {{i}}. kategorija:<br>
-            <span v-for="j in numvalues" v-bind:key="j">
-                <div class="image_container">
-                    <img :src="category_values[j-1][i-1]" alt="No image" style="width:100%;">
+            <span v-for="j in numvalues" v-bind:key="j">  
+                <div class="image_container" > 
+                    <img :id='"img" + (j-1) + ":" + (i-1)' alt="No image" style="width:100%;">
                     <div :class="{topleft: true, first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</div>
                 </div>
             </span>
         </span>
-    </div>
-    Označi greške<input type="checkbox" v-model="mark_error"> 
+    </div> 
+    <va-button @click="mode=-1">?</va-button>
+    <va-button @click="mode=1">&#128504;</va-button>
+    <va-button @click="mode=0">&#215;</va-button>
+    <va-button @click="clear_values()">Kreni ispočetka</va-button>
+
     
-    <button @click="mode=-1">?</button>
-    <button @click="mode=1">&#128504;</button>
-    <button @click="mode=0">&#215;</button>
+    <div class="myrow">
+        <va-card>
+            <va-card-title>Opis zagonetke</va-card-title>
+            <va-card-content>{{description}}</va-card-content>
+        </va-card>
+    </div>
+    <div class="myrow">
+        <va-card>
+            <va-card-title>Izvor zagonetke</va-card-title>
+            <va-card-content>{{source}}</va-card-content>
+        </va-card>
+    </div>
+    <div class="myrow"> 
+        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{author}}</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
+        <br>
+        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updater}}</va-chip> 
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
+    </div>
+    <va-modal ref="show_error" message="Želite li da greške budu uznačene?" @ok="show_error=true" stateful ok-text="Da" cancel-text="Ne" />
+    <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
 </template>
 
 <style scoped>
@@ -478,9 +780,28 @@ td, th {
   border: 1px solid black;
   text-align: center;
 }  
+.integram_task  { 
+    border: none;
+}
+.integram_task th { 
+    border: none;
+   padding: 15px;
+}
+.integram_task td {
+    border: none;
+    border-collapse:separate;
+   padding: 15px;
+}
 .rotated_text { 
     writing-mode: vertical-rl;
 }
+table  { 
+    display: inline-table;
+}
+.integram_solve td, th {
+  border: 1px solid black;
+}  
+
 .checkmark {
     width: 25px;
     vertical-align: center;
@@ -508,23 +829,23 @@ td, th {
 }
 .first {
     color: white;
-    background-color: #008080;
+    background-color: #0a2543;
 }
 .second {
     color: white;
-    background-color: #009999;
+    background-color: #144b85;
 }
 .third {
     color: white;
-    background-color: #00b3b3;
+    background-color:  #1e70c8;
 }
 .fourth {
     color: white;
-    background-color: #00cccc;
+    background-color:  #4e96e4;
 }
 .fifth {
     color: white;
-    background-color: #00e6e6;
+    background-color:  #90beee;
 }
 .wrong {
     color: red;

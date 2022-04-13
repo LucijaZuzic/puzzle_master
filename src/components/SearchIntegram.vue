@@ -1,7 +1,7 @@
  
 <script>
 
-    import { nonogramsRef } from "../main.js"
+    import { integramsRef } from "../main.js"
 
     export default {
         data() {
@@ -21,9 +21,9 @@
                 perPage: 10,
                 currentPage: 1,
                 columns: [
-                    {key: 'rows', sortable: true},
-                    {key: 'columns', sortable: true},
-                    {key: 'colors', sortable: true},
+                    {key: 'categories', sortable: true},
+                    {key: 'values', sortable: true}, 
+                    {key: 'num_instructions', sortable: true}, 
                     {key: 'description', sortable: true},
                     {key: 'source', sortable: true},
                     {key: 'is_public', sortable: true},
@@ -55,7 +55,7 @@
                     if (array_string[1] == '[') {
                         let array = array_string.substring(2, array_string.length - 2).split("],[")
                         for (let i = 0; i < array.length; i++) {
-                            array[i] = array[i].split(",")
+                            array[i] = array[i].split("\\,")
                             for(let j = 0; j < array[i].length; j++) {
                                 array[i][j] = parseInt(array[i][j])
                             }
@@ -69,17 +69,17 @@
             fetch_puzzles() {
                 let result = []
                 let funct_ref = this.string_to_array
-                nonogramsRef.get().then(function(snapshot) {
+                integramsRef.get().then(function(snapshot) {
                     snapshot.forEach(function(childSnapshot) { 
-                        let solution = funct_ref(childSnapshot.get('solution')) 
+                        let category_values = funct_ref(childSnapshot.get('category_values').replace('\,',',')) 
                         result.push({
-                            rows: solution.length,
-                            columns: solution[0].length,
-                            colors: childSnapshot.get('colors').length,
+                            categories: category_values[0].length,
+                            values: category_values.length,
+                            num_instructions: childSnapshot.get('instructions').length,
                             description: childSnapshot.get('description'), 
                             source: childSnapshot.get('source'), 
                             is_public: childSnapshot.get('is_public'),
-                            permissions: childSnapshot.get('permissions'),
+                            permissions: childSnapshot.get('permissions').length,
                             author: childSnapshot.get('author'), 
                             time_created: new Date(childSnapshot.get('time_created').seconds * 1000).toLocaleString(), 
                             updater: childSnapshot.get('updater'),
@@ -154,9 +154,9 @@
         no-data-html="Nema podataka." 
         :filter-method="customFilteringFn" >
         <template #header(id)>Akcije</template>
-        <template #header(rows)>Broj redaka</template>
-        <template #header(columns)>Broj stupaca</template>
-        <template #header(colors)>Broj boja</template>
+        <template #header(categories)>Broj kategorija</template>
+        <template #header(values)>Broj pojmova</template>
+        <template #header(inuM_instructions)>Broj uputa</template>
         <template #header(description)>Opis zagonetke</template>
         <template #header(author)>Autor</template>
         <template #header(updater)>Zadnji ažurirao</template>
@@ -166,8 +166,8 @@
         <template #header(time_created)>Vrijeme kreiranja</template>
         <template #header(last_updated)>Vrijeme zadnje izmjene</template>
         <template #cell(id)="{ source: id }">
-            <router-link v-bind:to="{ name: 'solve_nonogram', params: { id: id }}">
-            <router-link v-bind:to="{ name: 'edit_nonogram', params: { id: id }}">
+            <router-link v-bind:to="{ name: 'solve_integram', params: { id: id }}">
+            <router-link v-bind:to="{ name: 'edit_integram', params: { id: id }}">
                 <va-icon name="mode_edit"/>
             </router-link>
                 <va-icon name="play_arrow"/>
@@ -177,7 +177,7 @@
         <template #bodyAppend>
             <tr>
                 <td colspan="12" style="text-align: left">
-                    <router-link to="/createnonogram"> 
+                    <router-link to="/createintegram"> 
                         <va-icon color="primary" class="mr-4" name="add_circle"/> Nova zagonetka
                     </router-link>
                 </td>

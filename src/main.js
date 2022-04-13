@@ -6,8 +6,10 @@ import Home from './components/Home.vue'
 import CreateIntegram from './components/CreateIntegram.vue'
 import CreateNonogram from './components/CreateNonogram.vue'
 import CreateNumberCrossword from './components/CreateNumberCrossword.vue'
+import EditIntegram from './components/EditIntegram.vue'
 import EditNonogram from './components/EditNonogram.vue'
 import EditNumberCrossword from './components/EditNumberCrossword.vue'
+import SearchIntegram from './components/SearchIntegram.vue'
 import SearchNonogram from './components/SearchNonogram.vue'
 import SearchNumberCrossword from './components/SearchNumberCrossword.vue'
 import SolveIntegram from './components/SolveIntegram.vue'
@@ -38,8 +40,10 @@ const routes = [
     { path: '/createintegram', component: CreateIntegram },
     { path: '/createnonogram', component: CreateNonogram },
     { path: '/createnumbercrossword', component: CreateNumberCrossword }, 
+    { path: '/editintegram/:id', component: EditIntegram, name: 'edit_integram' }, 
     { path: '/editnonogram/:id', component: EditNonogram, name: 'edit_nonogram' }, 
     { path: '/editnumbercrossword/:id', component: EditNumberCrossword, name: 'edit_number_crossword' }, 
+    { path: '/searchintegram', component: SearchIntegram }, 
     { path: '/searchnonogram', component: SearchNonogram }, 
     { path: '/searchnumbercrossword', component: SearchNumberCrossword }, 
     { path: '/solveintegram/:id', component: SolveIntegram, name: 'solve_integram' },
@@ -86,5 +90,6 @@ const projectAuth = firebase.auth();
 const projectStorage = firebase.storage();
 const numberCrosswordsRef = projectFirestore.collection('numberCrosswords') 
 const nonogramsRef = projectFirestore.collection('nonograms') 
+const integramsRef = projectFirestore.collection('integrams') 
 
-export { projectFirestore, projectAuth, projectStorage, numberCrosswordsRef, nonogramsRef };
+export { projectFirestore, projectAuth, projectStorage, numberCrosswordsRef, nonogramsRef, integramsRef };

@@ -7,6 +7,8 @@ export default {
     return {
         warning: "",
         author: "",   
+        time_created: '',
+        last_updated: '',
         updater: "",
         is_public: false,
         permissions: [],
@@ -135,10 +137,15 @@ export default {
                 this.colors[i] = document.getElementById("colorpicker" + i).value
             }
         }
-        for (let i = 0; i < this.colnum; i++) {
-            for (let j = 0; j < this.rownum; j++) {
-                document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[this.solution[i][j]]
-            }
+        for (let i = 0; i < this.rownum; i++) {
+            for (let j = 0; j < this.colnum; j++) {
+                if (document.getElementById("cell" + i + ":" + j)) {
+                    document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[this.solution[i][j]]
+                    if (this.solution[i][j] >= this.num_colors) {
+                        document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[0]
+                    }
+                }
+            }   
         }
     },
     getcol() {
@@ -294,14 +301,59 @@ export default {
         this.shorten_colors()
         let datetime = new Date()
         let funct_ref = this.array_to_string
+        let newsolution = []
+        for (let i = 0; i < this.rownum; i++) {
+            newsolution.push([])
+            for (let j = 0; j < this.colnum; j++) {
+                newsolution[i].push(this.solution[i][j])
+                if (newsolution[i][j] >= this.num_colors) {
+                    newsolution[i][j] = 0
+                }
+            }
+        }
+        let newcolors = []
+        for (let i = 0; i < this.num_colors; i++) {
+            newcolors.push(this.colors[i])
+        }
         nonogramsRef.doc(this.$route.params.id).update({
-            solution: funct_ref(this.solution),
-            colors: "[" + this.colors.toString() + "]",
+            solution: funct_ref(newsolution),
+            colors: newcolors,
             description: this.description,
             author: "",
             updater: "",
             is_public: this.is_public,
-            permissions: "[" + this.permissions.toString() + "]",
+            permissions: this.permissions,
+            source: this.source,
+            time_created: this.time_created,
+            last_updated: datetime,
+        })
+    },
+    duplicate() {
+        this.shorten_colors()
+        let datetime = new Date()
+        let funct_ref = this.array_to_string
+        let newsolution = []
+        for (let i = 0; i < this.rownum; i++) {
+            newsolution.push([])
+            for (let j = 0; j < this.colnum; j++) {
+                newsolution[i].push(this.solution[i][j])
+                if (newsolution[i][j] >= this.num_colors) {
+                    newsolution[i][j] = 0
+                }
+            }
+        }
+        let newcolors = []
+        for (let i = 0; i < this.num_colors; i++) {
+            newcolors.push(this.colors[i])
+        }
+        nonogramsRef.add({
+            solution: funct_ref(newsolution),
+            colors: newcolors,
+            description: this.description,
+            author: "",
+            updater: "",
+            is_public: this.is_public,
+            permissions: this.permissions,
             source: this.source,
             time_created: datetime,
             last_updated: datetime,
@@ -344,12 +396,12 @@ export default {
                 let id = childSnapshot.id;
                 if (id == params_id) {
                     string_solution = funct_ref(childSnapshot.get('solution'))
-                    string_colors = funct_ref(childSnapshot.get('colors')) 
+                    string_colors = childSnapshot.get('colors') 
                     string_description = childSnapshot.get('description')
                     string_author = childSnapshot.get('author')
                     string_updater= childSnapshot.get('updater')
                     string_is_public = childSnapshot.get('is_public')
-                    string_permissions = funct_ref(childSnapshot.get('permissions'))
+                    string_permissions = childSnapshot.get('permissions')
                     string_source = childSnapshot.get('source')
                     string_time_created = new Date(childSnapshot.get('time_created').seconds * 1000)
                     string_last_updated = new Date(childSnapshot.get('last_updated').seconds * 1000)
@@ -360,6 +412,7 @@ export default {
             if (found) {
                 this.solution = string_solution
                 this.colors = string_colors
+                this.num_colors = this.colors.length
                 this.description = string_description
                 this.author = string_author
                 this.updater = string_updater
@@ -368,7 +421,11 @@ export default {
                 this.source = string_source
                 this.time_created = string_time_created
                 this.last_updated = string_last_updated
-                this.initialize()
+                this.rownum = this.solution.length
+                this.colnum = this.solution[0].length
+    this.expand_color_list()
+    this.initialize()
+    this.check_equal_colors()
                 this.$forceUpdate()
             } else {
                 this.$refs.no_puzzle.show()
@@ -379,21 +436,22 @@ export default {
   }, 
   beforeMount() {
     this.fetch_puzzle()
-    this.num_colors = this.colors.length
     this.expand_color_list() 
     this.initialize()
     this.check_equal_colors()
   },
-  mounted() {
-    for (let i = 0; i < this.num_colors; i++) {
-        document.getElementById("colorbutton" + (i)).style.backgroundColor = this.colors[i]
-    } 
-  },
   beforeUpdate() {
-    this.expand_color_list()
-    this.update_colors()
+    this.expand_color_list() 
     this.initialize()
     this.check_equal_colors()
+  },
+  updated() { 
+    this.update_colors()
+    for (let i = 0; i < this.num_colors; i++) {
+        document.getElementById("colorbutton" + (i)).style.backgroundColor = this.colors[i]
+    }
+    this.colorcol()
+    this.colorrow()
   },
 }
 </script>
@@ -484,6 +542,12 @@ export default {
     <div class="myrow">
         <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" class="flex mb-2 md6" v-model="drag" /> Bojanje prelaskom miša 
     </div> 
+    <div class="myrow" v-if="warning">
+        <va-alert color="warning" :title="'Postoje boje koje se preklapaju'" center class="mb-4">
+            <p >{{warning}}</p>
+        </va-alert>
+        <br>
+    </div> 
     <br> 
     <div class="myrow">
         <va-input
@@ -503,12 +567,13 @@ export default {
             :max-rows="5"
         />
     </div> 
-    <div class="myrow" v-if="warning">
-        <va-alert color="warning" :title="'Postoje boje koje se preklapaju'" center class="mb-4">
-            <p >{{warning}}</p>
-        </va-alert>
+    <div class="myrow"> 
+        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{author}}</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
         <br>
-    </div> 
+        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updater}}</va-chip> 
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
+    </div>
     <div class="myrow"> 
         Dozvola uređivanja
         <va-switch style="display: inline-block;margin-left: 1%;margin-top: 1%" v-model="is_public" true-inner-label="Svi" false-inner-label="Samo suradnici" class="mr-4" /> 
@@ -525,10 +590,11 @@ export default {
                 <va-icon style="display: inline-block" @click="permissions.splice(i,1)" name="clear" class="mr-2"/>
                 {{permission}}
             </va-chip> 
-    </div>
-    <div class="myrow" v-if="warning.length== 0"> 
-        <va-button @click="store()">Spremi zagonetku</va-button>  
-    </div>   
+    </div> 
+    <div class="myrow" v-if="!warning">
+        <va-button @click="store()">Izmijeni postojeću zagonetku</va-button>
+        <va-button @click="duplicate()">Spremi izmjene kao novu zagonetku</va-button>
+    </div>    
     <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
 </template>
 
