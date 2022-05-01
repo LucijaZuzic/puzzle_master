@@ -1,38 +1,10 @@
-<script setup>
+<script>  
+
 
 </script>
 
-<template>
-  <header>
-    <va-navbar color="primary" class="mb-2">
-      <template #left>
-        <va-navbar-item>
-          <router-link  to="/searchnonogram">
-            Nonogrami
-          </router-link>
-        </va-navbar-item>
-        <va-navbar-item>
-          <router-link  to="/searchintegram">
-            Integrami 
-          </router-link>
-        </va-navbar-item>  
-        <va-navbar-item>
-          <router-link  to="/searchnumbercrossword">
-            Brojevne križaljke
-          </router-link>
-        </va-navbar-item>
-      </template>
-      <template #center>
-        <va-navbar-item>Center</va-navbar-item>
-      </template>
-      <template #right>
-        <va-navbar-item>Right</va-navbar-item>
-      </template>
-    </va-navbar>
-  </header> 
-  <body class="mybody">
-    <router-view></router-view>
-  </body>
+<template> 
+  <router-view></router-view>
 </template>
 
 <style>

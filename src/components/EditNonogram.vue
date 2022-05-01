@@ -1,17 +1,29 @@
 <script> 
 
 import { nonogramsRef } from "../main.js"
+import { usersRef } from "../main.js"
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import Navbar from './Navbar.vue'
 
 export default {
+  components: {
+    Navbar
+  },
   data() {
     return {
+        permission_to_edit_visibility: false,
+        user: null,
+        title: "",
         warning: "",
         author: "",   
+        authorUserRecord: {displayName: "", email: ""}, 
         time_created: '',
         last_updated: '',
         updater: "",
+        updaterUserRecord: {displayName: "", email: ""},
         is_public: false,
         permissions: [],
+        permissionsUserRecords: [],
         collaborator: "",
         description: '',
         source: '',
@@ -32,6 +44,114 @@ export default {
     }
   },
   methods: {
+      getAuthorUserRecord() { 
+        let some_id = this.author
+        let newRecord = {}
+        usersRef.get(some_id).then(function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+                let id = childSnapshot.id; 
+                if (id == some_id) {
+                    newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                }
+            });
+        }).then(() => { 
+            this.authorUserRecord = newRecord
+        }) 
+    },
+      getUpdaterUserRecord() { 
+        let some_id = this.updater
+        let newRecord = {}
+        usersRef.get(some_id).then(function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+                let id = childSnapshot.id; 
+                if (id == some_id) {
+                    newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                }
+            });
+        }).then(() => { 
+            this.updaterUserRecord = newRecord
+        }) 
+      },
+      getCollaboratorUserRecord() { 
+          this.permissionsUserRecords = []
+          for (let i = 0; i < this.permissions.length; i++) {
+            let some_id = this.permissions[i]
+            let newRecord = {}
+            usersRef.get(some_id).then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let id = childSnapshot.id; 
+                    if (id == some_id) {
+                        newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                    }
+                });
+            }).then(() => { 
+                this.permissionsUserRecords.push(newRecord)
+            }) 
+          }  
+      }, 
+      checkIdentity() {
+        this.permission_to_edit_visibility = false
+        if (this.author == this.user.uid) {
+            this.permission_to_edit_visibility = true
+            return
+        } 
+        let is_collaborator = false
+        for (let i = 0; i < this.permissions.length; i++) {
+            if (this.permissions[i] == this.user.uid) {
+                is_collaborator = true
+                break
+            }
+        }
+        if (is_collaborator == true) {
+            this.permission_to_edit_visibility = false
+            return
+        } else {
+            if (this.is_public == true) {
+                this.permission_to_edit_visibility = false
+                return
+            } else {
+                this.new_async(this.$refs.permission.show(), 1000).then(() => {this.$router.push("/searchnonogram")})  
+            }
+        }  
+      },
+      checkIfUserExists() {  
+          let email = this.collaborator
+          let found = false
+          let uid = ""
+          let displayName = ""
+          if (this.user.email == email) {
+              this.$refs.me_collaborator.show()
+          } else { 
+            usersRef.get().then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let some_email = childSnapshot.get("email"); 
+                    if (email == some_email) {
+                        found = true
+                        uid = childSnapshot.id
+                        displayName = childSnapshot.get("displayName")
+                    }
+                });
+            }).then(() => {  
+                if (found == true) {
+                    let duplicate = false
+                    for (let i = 0; i < this.permissions.length; i++) {  
+                        if (this.permissions[i] == uid) {
+                            duplicate = true
+                            break
+                        }
+                    } 
+                    if (duplicate == true) {
+                        this.$refs.duplicate_collaborator.show()
+                    } else {
+                        this.permissions.push(uid)
+                        this.permissionsUserRecords.push({"displayName": displayName, "email": email})
+                    }
+                } else {
+                    this.$refs.no_collaborator.show()
+                }
+            })  
+          }
+      }, 
     reset() {
         this.solution = new Array()
         for (let i = 0; i < this.rownum; i++) {
@@ -318,15 +438,16 @@ export default {
         nonogramsRef.doc(this.$route.params.id).update({
             solution: funct_ref(newsolution),
             colors: newcolors,
+            title: this.title,
             description: this.description,
-            author: "",
-            updater: "",
+            author: this.author,
+            updater: this.user.uid,
             is_public: this.is_public,
             permissions: this.permissions,
             source: this.source,
             time_created: this.time_created,
             last_updated: datetime,
-        })
+          }).then(() => {this.new_async(this.$refs.store_success.show(), 1000).then(() => {this.$router.push("/searchnonogram")}) })
     },
     duplicate() {
         this.shorten_colors()
@@ -346,18 +467,35 @@ export default {
         for (let i = 0; i < this.num_colors; i++) {
             newcolors.push(this.colors[i])
         }
+        let newPermissions = []
+        let authorAdded = false
+        if (this.author == this.user.uid) {
+            authorAdded = true
+        }
+        for (let i = 0; i < this.permissions; i++) {
+            if (this.permissions[i] != this.user.uid) {
+                newPermissions.push(this.permissions[i])
+                if (this.permissions[i] == this.author) {
+                    authorAdded = true
+                }
+            }
+        }
+        if (authorAdded == false) {
+            newPermissions.push(this.author)
+        }
         nonogramsRef.add({
             solution: funct_ref(newsolution),
             colors: newcolors,
+            title: this.title,
             description: this.description,
-            author: "",
-            updater: "",
+            author: this.user.uid,
+            updater: this.user.uid,
             is_public: this.is_public,
-            permissions: this.permissions,
+            permissions: newPermissions,
             source: this.source,
             time_created: datetime,
             last_updated: datetime,
-        })
+          }).then(() => {this.new_async(this.$refs.duplicate_success.show(), 1000).then(() => {this.$router.push("/searchnonogram")}) })
     },
     string_to_array(array_string) {
         if (!array_string) {
@@ -381,6 +519,7 @@ export default {
         let params_id= this.$route.params.id
         let string_solution = []
         let string_colors = []
+        let string_title = ""
         let string_description = ""
         let string_author = ""
         let string_updater = ""
@@ -391,12 +530,13 @@ export default {
         let string_last_updated = ""
         let found = false
         let funct_ref = this.string_to_array
-        nonogramsRef.get().then(function(snapshot) {
+        nonogramsRef.get(params_id).then(function(snapshot) {
             snapshot.forEach(function(childSnapshot) {
                 let id = childSnapshot.id;
                 if (id == params_id) {
                     string_solution = funct_ref(childSnapshot.get('solution'))
                     string_colors = childSnapshot.get('colors') 
+                    string_title = childSnapshot.get('title')
                     string_description = childSnapshot.get('description')
                     string_author = childSnapshot.get('author')
                     string_updater= childSnapshot.get('updater')
@@ -413,26 +553,40 @@ export default {
                 this.solution = string_solution
                 this.colors = string_colors
                 this.num_colors = this.colors.length
+                this.title = string_title
                 this.description = string_description
                 this.author = string_author
+                this.getAuthorUserRecord()
                 this.updater = string_updater
+                this.getUpdaterUserRecord()
                 this.is_public = string_is_public
                 this.permissions = string_permissions
+                this.getCollaboratorUserRecord() 
+                this.checkIdentity()
                 this.source = string_source
                 this.time_created = string_time_created
                 this.last_updated = string_last_updated
                 this.rownum = this.solution.length
                 this.colnum = this.solution[0].length
-    this.expand_color_list()
-    this.initialize()
-    this.check_equal_colors()
+                this.expand_color_list()
+                this.initialize()
+                this.check_equal_colors()
                 this.$forceUpdate()
             } else {
-                this.$refs.no_puzzle.show()
-                this.$router.push("/searchnonogram");
+                this.new_async(this.$refs.no_puzzle.show(), 1000).then(() => {this.$router.push("/searchnonogram")})  
             }
         })
     },
+    delay(operation, delay) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+            resolve(operation);
+            }, delay);
+        });
+    },
+    async new_async(operation, delay) {
+        await this.delay(operation, delay);
+    }
   }, 
   beforeMount() {
     this.fetch_puzzle()
@@ -452,11 +606,28 @@ export default {
     }
     this.colorcol()
     this.colorrow()
-  },
+  },  
+  mounted() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User 
+        this.user = user
+        // ...
+      } else {
+        // User is signed out
+        // ...
+        this.new_async(this.$refs.no_user.show(), 1000).then(() => {this.$router.push("/login")}) 
+      }
+    })
+  }
 }
 </script>
 
 <template> 
+  <Navbar></Navbar>
+  <body class="mybody">
     <div class="myrow">
         <va-slider v-model="rownum" @focusout="initialize()" :min="1" :max="50" track-label-visible>
             <template #label>
@@ -552,6 +723,12 @@ export default {
     <div class="myrow">
         <va-input
             class="mb-4"
+            v-model="title"
+            type="text"
+            label="Naslov zagonetke" 
+        />
+        <va-input
+            class="mb-4"
             v-model="description"
             type="textarea"
             label="Opis zagonetke"
@@ -566,36 +743,44 @@ export default {
             :min-rows="3"
             :max-rows="5"
         />
-    </div> 
+    </div>  
     <div class="myrow"> 
-        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{author}}</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{authorUserRecord.displayName}} ({{authorUserRecord.email}})</va-chip>  
         <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
         <br>
-        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updater}}</va-chip> 
+        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updaterUserRecord.displayName}} ({{updaterUserRecord.email}})</va-chip>  
         <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
-    </div>
-    <div class="myrow"> 
+    </div> 
+    <div class="myrow" v-if="permission_to_edit_visibility"> 
         Dozvola uređivanja
         <va-switch style="display: inline-block;margin-left: 1%;margin-top: 1%" v-model="is_public" true-inner-label="Svi" false-inner-label="Samo suradnici" class="mr-4" /> 
-        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Korisničko ime" label="Ime suradnika">
+        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Email adresa" label="Email adresa suradnika">
             <template #append> 
-                <va-icon @click="permissions.push(collaborator);$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
+                <va-icon @click="checkIfUserExists();$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
             </template>
         </va-input> 
     </div>
-    <div class="myrow"> 
+    <div class="myrow" v-if="permission_to_edit_visibility"> 
             Suradnici: 
             <va-chip style="display: inline-block;margin-left: 1%;margin-top: 1%" 
-            v-for="(permission, i) in permissions" :key="i">
+            v-for="(permission, i) in permissionsUserRecords" :key="i">
                 <va-icon style="display: inline-block" @click="permissions.splice(i,1)" name="clear" class="mr-2"/>
-                {{permission}}
+                {{permission.displayName}} ({{permission.email}})
             </va-chip> 
-    </div> 
+    </div>
     <div class="myrow" v-if="!warning">
-        <va-button @click="store()">Izmijeni postojeću zagonetku</va-button>
+        <va-button @click="store()">Izmijeni postojeću zagonetku</va-button>&nbsp;
         <va-button @click="duplicate()">Spremi izmjene kao novu zagonetku</va-button>
     </div>    
     <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
+    <va-modal ref="no_user" hide-default-actions message="Ne možete uređivati zagonetku jer niste prijavljeni." stateful />
+    <va-modal ref="permission" hide-default-actions message="Ne možete uređivati zagonetku jer niste autor niti suradnik." stateful />
+    <va-modal ref="duplicate_success" hide-default-actions message="Nova zagonetka je uspješno spremljena." stateful />
+    <va-modal ref="store_success" hide-default-actions message="Postojeća zagonetka je uspješno izmijenjena." stateful />
+    <va-modal ref="no_collaborator" hide-default-actions message="Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom." stateful />
+    <va-modal ref="me_collaborator" hide-default-actions message="Ne možete dodati samog sebe kao suradnika." stateful />
+    <va-modal ref="duplicate_collaborator" hide-default-actions message="Ne možete dodati istu osobu kao suradnika dvaput." stateful />
+    </body>
 </template>
 
 <style scoped>

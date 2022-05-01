@@ -1,13 +1,24 @@
 <script> 
 import { numberCrosswordsRef } from "../main.js"
+import { usersRef } from "../main.js"
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import Navbar from './Navbar.vue'
+import { ref, uploadBytes } from "firebase/storage"
+import { projectStorage } from "../main.js"
 
 export default {
+  components: {
+    Navbar
+  },  
   data() {
     return {
-        author: "",   
-        updater: "",
+        image: null,
+        imageURL: "",
+        user: null,
+        title: "",  
         is_public: false,
         permissions: [],
+        permissionsUserRecords: [],
         collaborator: "",
         rows: 15,
         columns: 11,
@@ -21,6 +32,51 @@ export default {
     }
   },
   methods: {
+        image_uploaded() { 
+            this.image = document.getElementById("fileinput").files[0] 
+            this.imageURL = URL.createObjectURL(this.image) 
+        }, 
+        click_file() { 
+            document.getElementById("fileinput").click();  
+        },
+      checkIfUserExists() {  
+          let email = this.collaborator
+          let found = false
+          let uid = ""
+          let displayName = ""
+          if (this.user.email == email) {
+              this.$refs.me_collaborator.show()
+          } else { 
+            usersRef.get().then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let some_email = childSnapshot.get("email"); 
+                    if (email == some_email) {
+                        found = true
+                        uid = childSnapshot.id
+                        displayName = childSnapshot.get("displayName")
+                    }
+                });
+            }).then(() => {  
+                if (found == true) {
+                    let duplicate = false
+                    for (let i = 0; i < this.permissions.length; i++) {  
+                        if (this.permissions[i] == uid) {
+                            duplicate = true
+                            break
+                        }
+                    } 
+                    if (duplicate == true) {
+                        this.$refs.duplicate_collaborator.show()
+                    } else {
+                        this.permissions.push(uid)
+                        this.permissionsUserRecords.push({"displayName": displayName, "email": email})
+                    }
+                } else {
+                    this.$refs.no_collaborator.show()
+                }
+            })  
+          }
+      }, 
       initialize() {
           this.rows = parseInt(this.rows)
           this.columns = parseInt(this.columns)
@@ -264,37 +320,69 @@ export default {
               string += "[" + array[i].toString() + "]"
           }
           return string + "]"
-      },
-      store() {
-          let datetime = new Date()
-          let funct_ref = this.array_to_string
-          let newsolution = []
-          let newspecial = []
-          let newrevealed = []
-          for (let i = 0; i < this.rows; i++) {
-              newsolution.push([])
-              newspecial.push([])
-              newrevealed.push([])
-              for (let j = 0; j < this.columns; j++) {
-                newsolution[i].push(this.solution[i][j])
-                newspecial[i].push(this.is_special[i][j])
-                newrevealed[i].push(this.is_revealed[i][j])
-              }
-          }
-          numberCrosswordsRef.add({
-                solution: funct_ref(newsolution),
-                is_special: funct_ref(newspecial),
-                is_revealed: funct_ref(newrevealed),
-                description: this.description,
-                author: "",
-                updater: "",
-                is_public: this.is_public,
-                permissions: this.permissions,
-                source: this.source,
-                time_created: datetime,
-                last_updated: datetime,
-          })
-      },
+      }, 
+        store() {
+            let datetime = new Date()
+            let funct_ref = this.array_to_string
+            let newsolution = []
+            let newspecial = []
+            let newrevealed = []
+            for (let i = 0; i < this.rows; i++) {
+                newsolution.push([])
+                newspecial.push([])
+                newrevealed.push([])
+                for (let j = 0; j < this.columns; j++) {
+                    newsolution[i].push(this.solution[i][j])
+                    newspecial[i].push(this.is_special[i][j])
+                    newrevealed[i].push(this.is_revealed[i][j])
+                }
+            }  
+            numberCrosswordsRef.add({
+                    solution: funct_ref(newsolution),
+                    is_special: funct_ref(newspecial),
+                    is_revealed: funct_ref(newrevealed),
+                    title: this.title,
+                    description: this.description,
+                    image: "",
+                    author: this.user.uid,
+                    updater: this.user.uid,
+                    is_public: this.is_public,
+                    permissions: this.permissions,
+                    source: this.source,
+                    time_created: datetime,
+                    last_updated: datetime,
+            }).then((docRef) => {
+                    let some_id = docRef.id  
+                    let exstension = this.image.name.split('.')[this.image.name.split('.').length - 1]
+                    const reference = 'numberCrossword/' + some_id + "."  + exstension; 
+                    const storageRef = ref(projectStorage, reference);
+                        const metadata = {
+                        contentType: 'image/' + exstension
+                    };
+                    // 'file' comes from the Blob or File API 
+                    uploadBytes(storageRef, this.image, metadata).then((snapshot) => {  
+                    })
+                    .catch((error) => {  
+                    }).then(() => {
+                        let imageLocation = reference 
+                        numberCrosswordsRef.doc(some_id).update({
+                            solution: funct_ref(newsolution),
+                            is_special: funct_ref(newspecial),
+                            is_revealed: funct_ref(newrevealed),
+                            title: this.title,
+                            description: this.description,
+                            image: imageLocation,
+                            author: this.user.uid,
+                            updater: this.user.uid,
+                            is_public: this.is_public,
+                            permissions: this.permissions,
+                            source: this.source,
+                            time_created: datetime,
+                            last_updated: datetime,
+                        }).then(() => {this.new_async(this.$refs.store_success.show(), 1000).then(() => {this.$router.push("/searchnumbercrossword")}) })
+                    })
+            }) 
+        },
       change_number(i,j) {
         if (this.mode == 0 && (i == 0 || j == 0 || (j > 0 && this.solution[i][j - 1] == -1) || (i > 0 && this.solution[i - 1][j] == -1))) {
             this.$refs.begin_zero.show()
@@ -340,13 +428,38 @@ export default {
                 this.is_revealed[i][j] = (this.is_revealed[i][j] + 1) % 2
             }
         }
-      }
+      },
+    delay(operation, delay) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+            resolve(operation);
+            }, delay);
+        });
+    },
+    async new_async(operation, delay) {
+        await this.delay(operation, delay);
+    }
   },
   beforeMount() {
       this.initialize() 
   }, 
   beforeUpdate() {
       this.initialize() 
+  },  
+  mounted() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User 
+        this.user = user
+        // ...
+      } else {
+        // User is signed out
+        // ...
+        this.new_async(this.$refs.no_user.show(), 1000).then(() => {this.$router.push("/login")}) 
+      }
+    })
   }, 
   computed: {
   }
@@ -354,6 +467,8 @@ export default {
 </script>
 
 <template>
+  <Navbar></Navbar>
+  <body class="mybody">
     <div class="myrow">
         <va-slider v-model="rows" @focusout="initialize()" :min="1" :max="50" track-label-visible>
             <template #label>
@@ -441,6 +556,28 @@ export default {
         </span>
     </div> 
     <div class="myrow">
+            <va-button style="display:inline-block;overflow-wrap:anywhere" @click="click_file()">   
+                    <span v-if="this.imageURL != ''">
+                        {{this.imageURL}}</span><span  v-else>Odaberi sliku
+                    </span>
+            </va-button>  
+            <input file-types="image/*" type="file" id="fileinput" style="display: none;visibility: hidden;width:0%"  @input="image_uploaded()"/> 
+    </div>  
+    <div class="myrow" v-if="image">
+        <img id='img' :src="imageURL"  alt="No image" style="width:50%">
+    </div>  
+    <div class="myrow" v-if="!image">
+        <va-alert style="white-space: pre-wrap;" color="warning" title="Prazna slika" center class="mb-4">
+            Niste dodali sliku uz zagonetku.
+        </va-alert> 
+    </div>   
+    <div class="myrow">
+        <va-input
+            class="mb-4"
+            v-model="title"
+            type="text"
+            label="Naslov zagonetke" 
+        />
         <va-input
             class="mb-4"
             v-model="description"
@@ -461,21 +598,21 @@ export default {
     <div class="myrow"> 
         Dozvola uređivanja
         <va-switch style="display: inline-block;margin-left: 1%;margin-top: 1%" v-model="is_public" true-inner-label="Svi" false-inner-label="Samo suradnici" class="mr-4" /> 
-        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Korisničko ime" label="Ime suradnika">
+        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Email adresa" label="Email adresa suradnika">
             <template #append> 
-                <va-icon @click="permissions.push(collaborator);$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
+                <va-icon @click="checkIfUserExists();$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
             </template>
         </va-input> 
     </div>
-    <div class="myrow"> 
+    <div class="myrow">  
             Suradnici: 
             <va-chip style="display: inline-block;margin-left: 1%;margin-top: 1%" 
-            v-for="(permission, i) in permissions" :key="i">
+            v-for="(permission, i) in permissionsUserRecords" :key="i">
                 <va-icon style="display: inline-block" @click="permissions.splice(i,1)" name="clear" class="mr-2"/>
-                {{permission}}
+                {{permission.displayName}} ({{permission.email}})
             </va-chip> 
     </div>
-    <div class="myrow" v-if="!warning">
+    <div class="myrow" v-if="!warning && image">
         <va-button @click="store()">Spremi zagonetku</va-button>  
     </div>    
     <va-modal ref="begin_zero" hide-default-actions message="Broj ne može započinjati znamenkom 0." stateful />
@@ -484,7 +621,13 @@ export default {
     <va-modal ref="special_revealed" hide-default-actions message="Pomoćno polje ne može biti dio rješenja." stateful />
     <va-modal ref="special_barrier" hide-default-actions message="Barijera ne može biti dio rješenja." stateful />
     <va-modal ref="revealed_special" hide-default-actions message="Polje koje je dio rješenja ne može biti pomoćno polje." stateful />
-    <va-modal ref="revealed_barrier" hide-default-actions message="Barijera ne može biti pomoćno polje." stateful />
+    <va-modal ref="revealed_barrier" hide-default-actions message="Barijera ne može biti pomoćno polje." stateful /> 
+    <va-modal ref="no_user" hide-default-actions message="Ne možete kreirati zagonetku jer niste prijavljeni." stateful />
+    <va-modal ref="store_success" hide-default-actions message="Nova zagonetka je uspješno spremljena." stateful />
+    <va-modal ref="no_collaborator" hide-default-actions message="Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom." stateful />
+    <va-modal ref="me_collaborator" hide-default-actions message="Ne možete dodati samog sebe kao suradnika." stateful />
+    <va-modal ref="duplicate_collaborator" hide-default-actions message="Ne možete dodati istu osobu kao suradnika dvaput." stateful />
+  </body>
 </template>
 
 <style scoped>

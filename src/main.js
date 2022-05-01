@@ -3,6 +3,10 @@ import App from './App.vue'
 import {createRouter, createWebHashHistory} from 'vue-router'
 
 import Home from './components/Home.vue'
+import SignInSuccess from './components/SignInSuccess.vue'
+import Login from './components/Login.vue'
+import CreateTournament from './components/CreateTournament.vue'
+import SearchTournament from './components/TournamentsTable.vue'
 import CreateIntegram from './components/CreateIntegram.vue'
 import CreateNonogram from './components/CreateNonogram.vue'
 import CreateNumberCrossword from './components/CreateNumberCrossword.vue'
@@ -16,6 +20,16 @@ import SolveIntegram from './components/SolveIntegram.vue'
 import SolveNonogram from './components/SolveNonogram.vue'
 import SolveNumberCrossword from './components/SolveNumberCrossword.vue'
 
+import CreateCryptogram from './components/CreateCryptogram.vue'
+import SearchCryptogram from './components/SearchCryptogram.vue'
+import EditCryptogram from './components/EditCryptogram.vue' 
+import SolveCryptogram from './components/SolveCryptogram.vue'
+
+
+import CreateInitial from './components/CreateInitial.vue'
+import SearchInitial from './components/SearchInitial.vue'
+import EditInitial from './components/EditInitial.vue' 
+import SolveInitial from './components/SolveInitial.vue'
 /*import BootstrapVue3 from "bootstrap-vue-3";
 
 import "bootstrap/dist/css/bootstrap.css"; 
@@ -37,6 +51,10 @@ import 'vuestic-ui/dist/vuestic-ui.css'
 // We'll talk about nested routes later.
 const routes = [
     { path: '/', component: Home },
+    { path: '/signinsuccess', component: SignInSuccess },
+    { path: '/login', component: Login },
+    { path: '/searchtournament', component: SearchTournament },
+    { path: '/createtournament', component: CreateTournament },
     { path: '/createintegram', component: CreateIntegram },
     { path: '/createnonogram', component: CreateNonogram },
     { path: '/createnumbercrossword', component: CreateNumberCrossword }, 
@@ -49,6 +67,16 @@ const routes = [
     { path: '/solveintegram/:id', component: SolveIntegram, name: 'solve_integram' },
     { path: '/solvenonogram/:id', component: SolveNonogram, name: 'solve_nonogram' },
     { path: '/solvenumbercrossword/:id', component: SolveNumberCrossword, name: 'solve_number_crossword' }, 
+
+    { path: '/createcryptogram', component: CreateCryptogram }, 
+    { path: '/searchcryptogram', component: SearchCryptogram }, 
+    { path: '/editcryptogram/:id', component: EditCryptogram, name: 'edit_cryptogram' }, 
+    { path: '/solvecryptogram/:id', component: SolveCryptogram, name: 'solve_cryptogram' }, 
+    
+    { path: '/createinitial', component: CreateInitial }, 
+    { path: '/searchinitial', component: SearchInitial }, 
+    { path: '/editinitial/:id', component: EditInitial, name: 'edit_initial' }, 
+    { path: '/solveinitial/:id', component: SolveInitial, name: 'solve_initial' }, 
 ]
 
 // 3. Create the router instance and pass the `routes` option
@@ -66,6 +94,13 @@ const router = createRouter({
 
 createApp(App).use(router).use(Oruga).use(VuesticPlugin).mount('#app')
 
+import firebase from 'firebase/compat/app';
+import * as firebaseui from 'firebaseui'
+import 'firebaseui/dist/firebaseui.css'
+import "firebase/compat/firestore";
+import "firebase/compat/auth";
+import "firebase/compat/storage"; 
+
 const firebaseConfig = {
     apiKey: "AIzaSyCEGoa2YCsv_0EDAlkZoLIbW901pLpcemU",
     authDomain: "strucna-praksa.firebaseapp.com",
@@ -74,22 +109,45 @@ const firebaseConfig = {
     messagingSenderId: "265258934708",
     appId: "1:265258934708:web:656051d675c1de04c152e1",
     measurementId: "G-JRHM9NQWQ8"
-  };
-
-import firebase from 'firebase/compat/app';
-import "firebase/compat/firestore";
-import "firebase/compat/auth";
-import "firebase/compat/storage";
+  }; 
 
 // init firebase
-firebase.initializeApp(firebaseConfig);
-
+firebase.initializeApp(firebaseConfig); 
+ 
 // init services
 const projectFirestore = firebase.firestore();
 const projectAuth = firebase.auth();
 const projectStorage = firebase.storage();
+const usersRef = projectFirestore.collection('users') 
 const numberCrosswordsRef = projectFirestore.collection('numberCrosswords') 
 const nonogramsRef = projectFirestore.collection('nonograms') 
 const integramsRef = projectFirestore.collection('integrams') 
+const tournamentsRef = projectFirestore.collection('tournaments') 
+const numberCrosswordsRecordsRef = projectFirestore.collection('numberCrosswordsRecords') 
+const nonogramsRecordsRef = projectFirestore.collection('nonogramsRecords') 
+const integramsRecordsRef = projectFirestore.collection('integramsRecords') 
 
-export { projectFirestore, projectAuth, projectStorage, numberCrosswordsRef, nonogramsRef, integramsRef };
+
+const cryptogramsRef = projectFirestore.collection('cryptograms') 
+const cryptogramsRecordsRef = projectFirestore.collection('cryptogramsRecords') 
+
+const initialRef = projectFirestore.collection('initial') 
+const initialRecordsRef = projectFirestore.collection('initialRecords') 
+// Initialize the FirebaseUI Widget using Firebase.
+var ui = new firebaseui.auth.AuthUI(firebase.auth());
+// Set up sign-in methods
+var uiConfig = {
+  signInOptions: [
+    firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID
+  ],
+  signInSuccessUrl: ['/signinsuccess']
+  // Other config options...
+}
+export { ui, uiConfig, 
+  projectFirestore, projectAuth, projectStorage, 
+  numberCrosswordsRef, nonogramsRef, integramsRef,
+  numberCrosswordsRecordsRef, nonogramsRecordsRef,integramsRecordsRef, 
+  cryptogramsRef, cryptogramsRecordsRef,
+  initialRef, initialRecordsRef,
+  usersRef, tournamentsRef };

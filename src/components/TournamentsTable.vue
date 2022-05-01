@@ -1,0 +1,287 @@
+ 
+<script>
+    import { getAuth, onAuthStateChanged } from "firebase/auth"
+    import { tournamentsRef } from "../main.js"   
+    import Navbar from "./Navbar.vue" 
+    import IntegramTable from "./IntegramTable.vue" 
+    import NonogramTable from "./NonogramTable.vue" 
+    import NumberCrosswordTable from "./NumberCrosswordTable.vue" 
+    import CryptogramTable from "./CryptogramTable.vue" 
+    import InitialTable from "./InitialTable.vue"
+    import { usersRef } from "../main.js"
+    export default {
+        emits: ["selectedNonograms"],  
+        props: ["puzzleList", "selectMode", "start_time", "end_time"], 
+        components: {
+    Navbar,
+    IntegramTable,
+    NonogramTable,
+    NumberCrosswordTable,
+    CryptogramTable,
+    InitialTable
+},
+        mounted() {   
+            const auth = getAuth()
+            onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, see docs for a list of available properties
+                // https://firebase.google.com/docs/reference/js/firebase.User
+                this.user = user
+                // ...
+            } else {
+                // User is signed out
+                // ... 
+            }
+            });
+        },
+        data() {
+            return {
+                user: null, 
+                tournaments: [],
+                selectedItemsEmitted: [],
+                new_item: "",
+                new_item_tag: "",
+                filterBy: '',
+                new_item_exact: false,
+                filter: '',
+                useCustomFilteringFn: false,
+                filters: [],
+                filtered: [],
+                columns: [],
+                sortBy: 'username',
+                sortingOrder: 'asc',
+                perPage: 10,
+                currentPage: 1,
+                columns: [ 
+                    {key: 'organizer_display_name', sortable: true},
+                    {key: 'organizer_email', sortable: true},
+                    {key: 'start_time', sortable: true},
+                    {key: 'end_time', sortable: true}, 
+                    {key: 'selectedIntegrams', sortable: true}, 
+                    {key: 'selectedNonograms', sortable: true}, 
+                    {key: 'selectedNumberCrosswords', sortable: true}, 
+                    {key: 'selectedCryptograms', sortable: true}, 
+                    {key: 'selectedInitials', sortable: true}, 
+                    {key: 'id', sortable: false}, 
+                ],
+                sortingOrderOptions: [
+                    { text: 'Uzlazno', value: 'asc' },
+                    { text: 'Silazno', value: 'desc' },
+                    { text: 'Bez sortiranja', value: null },
+                ], 
+            }
+        }, 
+        methods: {
+            filterExact (source) {
+                if (this.filter === '') {
+                    return true
+                }
+                return source?.toString?.() === this.filter
+            },
+            string_to_array(array_string) {
+                    if (!array_string) {
+                        return []
+                    }
+                    if (array_string[1] == '[') {
+                        let array = array_string.substring(2, array_string.length - 2).split("],[")
+                        for (let i = 0; i < array.length; i++) {
+                            array[i] = array[i].split(",")
+                            for(let j = 0; j < array[i].length; j++) {
+                                array[i][j] = parseInt(array[i][j])
+                            }
+                        }
+                        return array
+                    } else {
+                        let array = array_string.substring(1, array_string.length - 1).split(",")
+                        return array
+                    }
+            },
+            fetch_tournaments() {
+                this.tournaments = []
+                let me = this 
+                tournamentsRef.get().then(function(snapshot) {
+                    snapshot.forEach(function(childSnapshot) { 
+                        usersRef.get(childSnapshot.get('organizer')).then(function(snapshotOrganizer) {
+                            snapshotOrganizer.forEach(function(childSnapshotOrganizer) {
+                                let idOrganizer = childSnapshotOrganizer.id; 
+                                if (idOrganizer == childSnapshot.get('organizer')) { 
+                                    let newId = {granted: false, id: childSnapshot.id}
+                                    if (me.user) {
+                                        newId = {granted: childSnapshotOrganizer.id == me.user.uid, id: childSnapshot.id}
+                                    }
+                                    me.tournaments.push({ 
+                                        organizer_display_name: childSnapshotOrganizer.get('displayName'), 
+                                        organizer_email: childSnapshotOrganizer.get('email'), 
+                                        start_time: new Date(childSnapshot.get('start').seconds * 1000).toLocaleString(),  
+                                        end_time: new Date(childSnapshot.get('end').seconds * 1000).toLocaleString(),  
+                                        selectedIntegrams: childSnapshot.get('selectedIntegrams'),
+                                        selectedNonograms: childSnapshot.get('selectedNonograms'),
+                                        selectedNumberCrosswords: childSnapshot.get('selectedNumberCrosswords'),
+                                        selectedCryptograms: childSnapshot.get('selectedCryptograms'),
+                                        selectedInitials: childSnapshot.get('selectedInitials'),
+                                        id: newId
+                                    })
+                                }
+                            })
+                        }).then(() => {me.$forceUpdate()}) 
+                    })
+                }) 
+            },
+            sortByOptions () {
+                return this.columns.map(({ key }) => key)
+            },
+            deleteTournament(id) {
+                tournamentsRef.doc(id).delete().then(() => {
+                    this.fetch_tournaments() 
+                    this.$forceUpdate()
+                })
+            }
+        },
+        created() {
+            this.fetch_tournaments()
+        },
+        computed: {
+            customFilteringFn () {
+                return this.useCustomFilteringFn ? this.filterExact : undefined
+            },
+            pages () {
+                return (this.perPage && this.perPage !== 0)
+                    ? Math.ceil(this.filtered.length / this.perPage)
+                    : this.filtered.length
+            },
+        },
+    }
+</script>
+
+<template>  
+  <Navbar></Navbar>  
+  <body class="mybody"> 
+    <h1 class="display-1">Turniri</h1>
+    <div class="myrow">
+        <va-input
+        class="flex mb-2 md6" style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 25%" 
+        placeholder="Unesite pojam za pretragu"
+        v-model="filter"
+        />  
+        <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" 
+        class="flex mb-2 md6"
+        label="Traži cijelu riječ"
+        v-model="useCustomFilteringFn"
+        /> 
+        <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+            label="Trenutna stranica"
+            class="flex mb-2 md6"
+            v-model="currentPage"
+            :min="1"
+            :max="Math.ceil(this.filtered.length / this.perPage)"
+            type="number"
+        /> 
+        <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+            label="Broj pojmova na stranici"
+            class="flex mb-2 md6"
+            v-model="perPage"
+            :min="1"
+            :max="Math.ceil(this.filtered.length)"
+            type="number"
+        /> 
+    </div> 
+    <va-data-table 
+        :items="tournaments"
+        :filter="filter"
+        :columns="columns"
+        :hoverable="true" 
+        :per-page="perPage"
+        selectable="selectable"
+        select-mode="single"
+        @selectionChange="selectedItemsEmitted = $event.currentSelectedItems;$emit('selectedNonograms', selectedItemsEmitted)"
+        :current-page="currentPage"
+        v-model:sort-by="sortBy"
+        v-model:sorting-order="sortingOrder"
+        @filtered="filtered = $event.items" 
+        no-data-filtered-html="Pretraga nije dala rezultate." 
+        no-data-html="Nema podataka." 
+        :filter-method="customFilteringFn" >
+        <template #header(organizer_display_name)>Organizator (ime)</template>
+        <template #header(organizer_email)>Organizator (email)</template>
+        <template #header(start_time)>Početak turnira</template>
+        <template #header(end_time)>Kraj turnira</template>
+        <template #header(id)>Izbriši</template> 
+        <template #header(selectedIntegrams)>Broj integrama</template> 
+        <template #header(selectedNonograms)>Broj nonograma</template> 
+        <template #header(selectedNumberCrosswords)>Broj brojevnih križaljki</template> 
+        <template #header(selectedCryptograms)>Broj kriptograma</template> 
+        <template #header(selectedInitials)>Broj inicijalnih osmosmjerki</template> 
+        <template #cell(id)="{ source: id }"> 
+            <va-icon v-if="id.granted == true" @click="deleteTournament(id.id)" name="delete"/>
+        </template>  
+        <template #cell(selectedIntegrams)="{ source: selectedIntegrams }">  
+            {{selectedIntegrams.length}}
+        </template>  
+        <template #cell(selectedNonograms)="{ source: selectedNonograms }">  
+            {{selectedNonograms.length}}
+        </template>  
+        <template #cell(selectedNumberCrosswords)="{ source: selectedNumberCrosswords }">  
+            {{selectedNumberCrosswords.length}}
+        </template> 
+        <template #cell(selectedCryptograms)="{ source: selectedCryptograms }">  
+            {{selectedCryptograms.length}}
+        </template> 
+        <template #cell(selectedInitials)="{ source: selectedInitials }">  
+            {{selectedInitials.length}}
+        </template> 
+        <template #bodyAppend>
+            <tr>
+                <td colspan="12" style="text-align: left">
+                    <router-link to="/createtournament"> 
+                        <va-icon color="primary" class="mr-4" name="add_circle"/> Novi turnir
+                    </router-link>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="12" class="table-example--pagination">
+                    <va-pagination
+                    v-model="currentPage"
+                    input
+                    :pages="pages"
+                    />
+                </td>
+            </tr>
+        </template>
+    </va-data-table>  
+    <span v-for="item in selectedItemsEmitted" :key="item.id">  
+        <br>
+        <span v-if="item.selectedIntegrams.length > 0">
+            <h2 class="display-2">Integrami koji ulaze u turnir</h2>
+            <IntegramTable selectMode="single" :puzzleList="item.selectedIntegrams" :start_time="item.start_time" :end_time="item.end_time"></IntegramTable> 
+            <br>
+        </span>
+        <span v-if="item.selectedNonograms.length > 0">
+            <h2 class="display-2">Nonogrami koji ulaze u turnir</h2>
+            <NonogramTable selectMode="single" :puzzleList="item.selectedNonograms" :start_time="item.start_time" :end_time="item.end_time"></NonogramTable> 
+            <br>
+        </span>
+        <span v-if="item.selectedNumberCrosswords.length > 0">
+            <h2 class="display-2">Brojevne križaljke koji ulaze u turnir</h2>
+            <NumberCrosswordTable selectMode="single" :puzzleList="item.selectedNumberCrosswords" :start_time="item.start_time" :end_time="item.end_time"></NumberCrosswordTable>
+            <br> 
+        </span>
+        <span v-if="item.selectedCryptograms.length > 0">
+            <h2 class="display-2">Kriptogrami koji ulaze u turnir</h2>
+            <CryptogramTable selectMode="single" :puzzleList="item.selectedCryptograms" :start_time="item.start_time" :end_time="item.end_time"></CryptogramTable> 
+            <br> 
+        </span>
+        <span v-if="item.selectedInitials.length > 0">
+            <h2 class="display-2">Incijalne osmosmjerke koji ulaze u turnir</h2>
+            <InitialTable selectMode="single" :puzzleList="item.selectedInitials" :start_time="item.start_time" :end_time="item.end_time"></InitialTable> 
+        </span>
+    </span>
+    </body>
+</template>
+
+<style>
+
+  .table-example--pagination {
+    text-align: center;
+    text-align: -webkit-center;
+  }
+</style>

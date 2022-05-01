@@ -1,11 +1,11 @@
  
 <script>
     import Navbar from './Navbar.vue'
-    import IntegramTable from "./IntegramTable.vue"
+    import InitialTable from "./InitialTable.vue"
     export default {
         components: {
             Navbar,
-            IntegramTable
+            InitialTable
         },
     }
 </script>
@@ -13,8 +13,8 @@
 <template> 
   <Navbar></Navbar>
   <body class="mybody"> 
-        <h1 class="display-1">Integrami</h1>
-      <IntegramTable selectMode="single"></IntegramTable> 
+      <h1 class="display-1">Inicijalne osmosmjerke</h1>
+      <InitialTable  selectMode="single"></InitialTable> 
   </body>
 </template>
 

@@ -12,6 +12,8 @@
     "bootstrap-vue": "^2.21.2",
     "bootstrap-vue-3": "^0.1.9",
     "firebase": "^9.6.9",
+    "firebase-admin": "^10.0.2",
+    "firebaseui": "^6.0.1",
     "vue": "^3.2.31",
     "vue-router": "^4.0.13",
     "vuefire": "^2.2.5",

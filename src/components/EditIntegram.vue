@@ -1,34 +1,154 @@
 <script>
-import { ref, uploadBytes, getDownloadURL  } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, getMetadata, deleteObject } from "firebase/storage";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import { projectStorage } from "../main.js"
+import { usersRef } from "../main.js"
 import { integramsRef } from "../main.js"
+import Navbar from './Navbar.vue'
+
 export default {
+  components: {
+    Navbar
+  },  
   data() {
     return {
-      numcategories: 5,
-      numvalues: 5,
-      numinstructions: 6,
-        author: "",   
+        permission_to_edit_visibility: false,
+        user: null,
+        title: "",
+        numcategories: 5,
+        numvalues: 5,
+        numinstructions: 6,
+        author: "",  
+        authorUserRecord: {displayName: "", email: ""}, 
         time_created: '',
         last_updated: '',
         updater: "",
+        updaterUserRecord: {displayName: "", email: ""}, 
         is_public: false,
         permissions: [],
+        permissionsUserRecords: [],
         collaborator: "",
         description: '',
         source: '',
-      alert: '',
-      alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      max_len_display: 20,
-      update_order: true,
-      instructions: [],
-      solution: [],
-      mode: -1,
-      mark_error: false
+        alert: '',
+        alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        max_len_display: 20, 
+        instructions: [],
+        solution: [],
+        mode: -1,
+        mark_error: false
     }
   },
   methods: {
+      getAuthorUserRecord() { 
+        let some_id = this.author
+        let newRecord = {}
+        usersRef.get(some_id).then(function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+                let id = childSnapshot.id; 
+                if (id == some_id) {
+                    newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                }
+            });
+        }).then(() => { 
+            this.authorUserRecord = newRecord
+        }) 
+    },
+      getUpdaterUserRecord() { 
+        let some_id = this.updater
+        let newRecord = {}
+        usersRef.get(some_id).then(function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+                let id = childSnapshot.id; 
+                if (id == some_id) {
+                    newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                }
+            });
+        }).then(() => { 
+            this.updaterUserRecord = newRecord
+        }) 
+      },
+      getCollaboratorUserRecord() { 
+          this.permissionsUserRecords = []
+          for (let i = 0; i < this.permissions.length; i++) {
+            let some_id = this.permissions[i]
+            let newRecord = {}
+            usersRef.get(some_id).then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let id = childSnapshot.id; 
+                    if (id == some_id) {
+                        newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                    }
+                });
+            }).then(() => { 
+                this.permissionsUserRecords.push(newRecord)
+            }) 
+          }  
+      }, 
+      checkIdentity() {
+        this.permission_to_edit_visibility = false
+        if (this.author == this.user.uid) {
+            this.permission_to_edit_visibility = true
+            return
+        } 
+        let is_collaborator = false
+        for (let i = 0; i < this.permissions.length; i++) {
+            if (this.permissions[i] == this.user.uid) {
+                is_collaborator = true
+                break
+            }
+        }
+        if (is_collaborator == true) {
+            this.permission_to_edit_visibility = false
+            return
+        } else {
+            if (this.is_public == true) {
+                this.permission_to_edit_visibility = false
+                return
+            } else {
+                this.new_async(this.$refs.permission.show(), 1000).then(() => {this.$router.push("/searchintegram")})  
+            }
+        }  
+      },
+      checkIfUserExists() {  
+          let email = this.collaborator
+          let found = false
+          let uid = ""
+          let displayName = ""
+          if (this.user.email == email) {
+              this.$refs.me_collaborator.show()
+          } else { 
+            usersRef.get().then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let some_email = childSnapshot.get("email"); 
+                    if (email == some_email) {
+                        found = true
+                        uid = childSnapshot.id
+                        displayName = childSnapshot.get("displayName")
+                    }
+                });
+            }).then(() => {  
+                if (found == true) {
+                    let duplicate = false
+                    for (let i = 0; i < this.permissions.length; i++) {  
+                        if (this.permissions[i] == uid) {
+                            duplicate = true
+                            break
+                        }
+                    } 
+                    if (duplicate == true) {
+                        this.$refs.duplicate_collaborator.show()
+                    } else {
+                        this.permissions.push(uid)
+                        this.permissionsUserRecords.push({"displayName": displayName, "email": email})
+                    }
+                } else {
+                    this.$refs.no_collaborator.show()
+                }
+            })  
+          }
+      }, 
       initialize() { 
           let oldvalues = []
           let maxcol = this.numcategories
@@ -59,37 +179,28 @@ export default {
               this.category_values.push(category_values_row)
           }
           let oldnames = []
-          let oldisimage = []
-          let oldtoolong = []
+          let oldisimage = [] 
           let maxnames = this.numcategories
           if (this.category_names) {
               oldnames = this.category_names
               oldisimage = this.is_image 
-              oldtoolong = this.too_long 
               if (oldnames.length > maxnames) {
                   maxnames = oldnames.length
               }
           }
           this.category_names = []
           this.is_image = []
-          this.too_long = []
           for (let i = 0; i < maxnames; i++) {
               if (oldnames[i]) {
                 this.category_names.push(oldnames[i])
                 this.is_image.push(oldisimage[i])
-                this.too_long.push(oldtoolong[i])
               } else {
                 this.category_names.push('')
                 this.is_image.push(false)
-                this.too_long.push(false)
               }
           } 
-          this.change_instructions()        
-          if (this.update_order) {
-            this.order_in_category()
-          }    
+          this.change_instructions()       
           this.check_same()
-          this.check_too_long()
       },
       change_instructions() {
           let oldinstructions = []
@@ -113,21 +224,33 @@ export default {
           this.alert = ""
             for (let j = 0; j < this.numinstructions; j++) { 
                     if (this.instructions[j] == "") {
-                        this.alert += (j+1).toString() + ". uputa nema tekst.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (j+1).toString() + ". uputa nema tekst."  
                     } 
             } 
             for (let j = 0; j < this.numcategories; j++) { 
                     if (this.category_names[j] == "") {
-                        this.alert += (j+1).toString() + ". kategorija nema naziv.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (j+1).toString() + ". kategorija nema naziv."  
                     } 
             }
           for (let i = 0; i < this.numcategories; i++) {
               for (let j = 0; j < this.numvalues; j++) {  
                 if (this.category_values[j][i] == "" || this.category_values[j][i] == []) {
                     if (this.is_image[i]) {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema sliku za " + (j+1).toString() + ". pojam.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema sliku za " + (j+1).toString() + ". pojam."  
                     } else {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema vrijednost za " + (j+1).toString() + ". pojam.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema vrijednost za " + (j+1).toString() + ". pojam."  
 
                     }
                 }
@@ -137,14 +260,20 @@ export default {
             for (let j = 0; j < this.numinstructions; j++) { 
                 for (let k = j + 1; k < this.numinstructions; k++) { 
                     if (this.instructions[j] == this.instructions[k] && this.instructions[j] && this.instructions[k]) {
-                        this.alert += (j+1).toString() + ". uputa (" + this.instructions[j] + ") i "  + (k+1).toString() + ". uputa (" + this.instructions[k] + ") imaju isti tekst.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (j+1).toString() + ". uputa (" + this.instructions[j] + ") i "  + (k+1).toString() + ". uputa (" + this.instructions[k] + ") imaju isti tekst."  
                     }
                 }
             }
             for (let j = 0; j < this.numcategories; j++) { 
                 for (let k = j + 1; k < this.numcategories; k++) { 
                     if (this.category_names[j] == this.category_names[k] && this.category_names[j] && this.category_names[k]) {
-                        this.alert += (j+1).toString() + ". kategorija (" + this.category_names[j] + ") i "  + (k+1).toString() + ". kategorija (" + this.category_names[k] + ") imaju isti naziv.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (j+1).toString() + ". kategorija (" + this.category_names[j] + ") i "  + (k+1).toString() + ". kategorija (" + this.category_names[k] + ") imaju isti naziv."  
                     }
                 }
             }
@@ -152,73 +281,31 @@ export default {
               for (let j = 0; j < this.numvalues; j++) { 
                 for (let k = j + 1; k < this.numvalues; k++) { 
                     if (this.category_values[j][i] == this.category_values[k][i] && this.category_values[j][i] && this.category_values[k][i]) {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku vrijednost za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ").\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku vrijednost za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ")."  
                     } 
                     if (this.is_image[i] && this.category_values[j][i].toString()[0] == '[' &&  this.category_values[k][i].name  != undefined
                     && this.category_values[j][i] != "" && this.category_values[j][i] != []  && this.category_values[k][i] != "" && this.category_values[k][i] != [] 
                     && this.category_values[j][i].name == this.category_values[k][i].name && this.category_values[j][i] && this.category_values[k][i]) {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i].name + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i].name + ").\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i].name + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i].name + ")."  
                     }
                     if (this.is_image[i] && this.category_values[j][i].toString()[0] != '[' &&  this.category_values[k][i].name == undefined
                     && this.category_values[j][i] != "" && this.category_values[j][i] != []  && this.category_values[k][i] != "" && this.category_values[k][i] != [] 
                     && this.category_values[j][i] == this.category_values[k][i] && this.category_values[j][i] && this.category_values[k][i]) {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ").\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ")."  
                     }
                 }
               }
           } 
-      },
-      check_too_long() {
-          this.too_long = []
-          for (let j = 0; j < this.numcategories; j++) {
-            this.too_long.push(false) 
-            for (let i = 0; i < this.numvalues; i++) {
-                if (this.is_image[j] == false && this.category_values[i][j].length > this.max_len_display) {
-                    this.too_long[j] = true;
-                    break;
-                }
-            }
-          }
-      },
-      order_in_category() {
-          this.order = []
-          for (let i = 0; i < this.numcategories; i++) {
-              let category_order = []
-              let used = []
-              for (let j = 0; j < this.numvalues; j++) { 
-                  used.push(0)
-              }
-              for (let j = 0; j < this.numvalues; j++) { 
-                  let x = Math.floor(Math.random() * this.numvalues)
-                  while (used[x]) {
-                        x = Math.floor(Math.random() * this.numvalues)
-                  }
-                  used[x] = 1;
-                  category_order.push(x);
-              }
-              this.order.push(category_order)
-          }
-          this.solution = []
-          this.values = []
-          for (let i = 0; i < this.numcategories; i++) {
-              for (let j = 0; j < this.numvalues; j++) { 
-                let solution_row = []
-                let values_row = []
-                for (let k = 0; k < this.numcategories; k++) {
-                    for (let l = 0; l < this.numvalues; l++) { 
-                        if (this.order[i][j] == this.order[k][l]) {
-                            solution_row.push(1)
-                        } else {
-                            solution_row.push(0)
-                        }
-                        values_row.push(-1)
-                    }
-                }
-                this.solution.push(solution_row)
-                this.values.push(values_row)
-              }
-          }
-      },
+      },  
       clear_category(category_to_clear) {
         for (let i = 0; i < this.numvalues; i++) { 
             if (this.is_image[category_to_clear]) {
@@ -242,7 +329,7 @@ export default {
                   string += ","
               }
               string += "[" 
-              for (let j = 0; j < array.length; j++) {
+              for (let j = 0; j < array[i].length; j++) {
                 if (j != 0) {
                   string += "\\,"
                 }
@@ -275,9 +362,31 @@ export default {
                     category_values2[i].push(this.category_values[i][j]) 
                 }
             } 
+            for (let i = 0; i < this.old_values.length; i++) {
+                for (let j = 0; j < this.old_values[i].length; j++) { 
+                    if (this.old_isimage[j] && !this.is_image[j] && this.old_values[i][j] != '' && this.old_values[i][j] != []) {
+                        let oldRef = ref(projectStorage, this.old_values[i][j]);
+                        // Delete the file
+                        deleteObject(oldRef).then(() => {
+                        // File deleted successfully
+                        }).catch((error) => {
+                        // Uh-oh, an error occurred!
+                        });
+                    }  
+                }
+            }
             for (let i = 0; i < this.numcategories; i++) {
                 for (let j = 0; j < this.numvalues; j++) {
                     if (this.is_image[i] && this.category_values[j][i] != '' && this.category_values[j][i] != [] && this.category_values[j][i].name != undefined) {
+                        if (this.old_isimage[i] && this.old_values[j][i] != '' && this.old_values[j][i] != []) {
+                            let oldRef = ref(projectStorage, this.old_values[j][i]);
+                            // Delete the file
+                            deleteObject(oldRef).then(() => {
+                            // File deleted successfully
+                            }).catch((error) => {
+                            // Uh-oh, an error occurred!
+                            });
+                        } 
                         let exstension = this.category_values[j][i].name.split('.')[this.category_values[j][i].name.split('.').length - 1]
                         const reference = 'integram/' + params_id + "/" + (i + 1) + this.alphabet[j] + "."  + exstension; 
                         const storageRef = ref(projectStorage, reference);
@@ -290,7 +399,7 @@ export default {
                         .catch((error) => {  
                         })
                         category_values2[j][i] = reference
-                    }
+                    } 
                 }
             } 
             integramsRef.doc(params_id).update({
@@ -298,15 +407,16 @@ export default {
                     category_names: newcategorynames,
                     is_image: newisimage,
                     instructions: newinstructions,
+                    title: this.title,
                     description: this.description,
-                    author: "",
-                    updater: "",
+                    author: this.author,
+                    updater: this.user.uid,
                     is_public: this.is_public,
                     permissions: this.permissions,
                     source: this.source,
-                    time_created: datetime,
+                    time_created: this.time_created,
                     last_updated: datetime,
-            }) 
+          }).then(() => {this.new_async(this.$refs.store_success.show(), 1000).then(() => {this.$router.push("/searchintegram")}) })
         }, 
         duplicate() {
             let datetime = new Date()
@@ -323,16 +433,33 @@ export default {
             for (let i = 0; i < this.numcategories; i++) {
                 newisimage.push(this.is_image[i])
             }
+            let newPermissions = []
+            let authorAdded = false
+            if (this.author == this.user.uid) {
+                authorAdded = true
+            }
+            for (let i = 0; i < this.permissions; i++) {
+                if (this.permissions[i] != this.user.uid) {
+                    newPermissions.push(this.permissions[i])
+                    if (this.permissions[i] == this.author) {
+                        authorAdded = true
+                    }
+                }
+            }
+            if (authorAdded == false) {
+                newPermissions.push(this.author)
+            }
             integramsRef.add({
                     category_values: "",
                     category_names: newcategorynames,
                     is_image: newisimage,
                     instructions: newinstructions,
+                    title: this.title,
                     description: this.description,
-                    author: "",
-                    updater: "",
+                    author: this.user.uid,
+                    updater: this.user.uid,
                     is_public: this.is_public,
-                    permissions: this.permissions,
+                    permissions: newPermissions,
                     source: this.source,
                     time_created: datetime,
                     last_updated: datetime,
@@ -361,23 +488,49 @@ export default {
                             .catch((error) => {  
                             })
                             category_values2[j][i] = reference
+                        } else {
+                            if (this.is_image[i] && this.category_values[j][i] != '' && this.category_values[j][i] != [] && this.category_values[j][i].name == undefined) {
+                                var old_reference = ref(projectStorage, this.old_values[j][i]) 
+                                let exstension = ""
+                                // Get metadata properties
+                                getMetadata(old_reference)
+                                .then((metadata) => {
+                                    // Metadata now contains the metadata for 'images/forest.jpg'
+                                    exstension =metadata.contentType.split('/')[1]
+                                })
+                                .catch((error) => {
+                                    // Uh-oh, an error occurred!
+                                });                             
+                                const reference = 'integram/' + some_id + "/" + (i + 1) + this.alphabet[j] + "."  + exstension; 
+                                const storageRef = ref(projectStorage, reference);
+                                    const metadata = {
+                                    contentType: 'image/' + exstension
+                                };
+                                // 'file' comes from the Blob or File API 
+                                uploadBytes(storageRef, this.category_values[j][i], metadata).then((snapshot) => {  
+                                })
+                                .catch((error) => {  
+                                })
+                                category_values2[j][i] = reference
+                            }
                         }
                     }
                 } 
                 integramsRef.doc(some_id).update({
-                        category_values: funct_ref(category_values2),
-                        category_names: newcategorynames,
-                        is_image: newisimage,
-                        instructions: newinstructions,
-                        description: this.description,
-                        author: "",
-                        updater: "",
-                        is_public: this.is_public,
-                        permissions: this.permissions,
-                        source: this.source,
-                        time_created: datetime,
-                        last_updated: datetime,
-                })
+                    category_values: funct_ref(category_values2),
+                    category_names: newcategorynames,
+                    is_image: newisimage,
+                    instructions: newinstructions,
+                    title: this.title,
+                    description: this.description,
+                    author: this.user.uid,
+                    updater: this.user.uid,
+                    is_public: this.is_public,
+                    permissions: newPermissions,
+                    source: this.source,
+                    time_created: datetime,
+                    last_updated: datetime,
+                }).then(() => {this.new_async(this.$refs.duplicate_success.show(), 1000).then(() => {this.$router.push("/searchintegram")}) })
             })
             .catch((error) => { 
             });
@@ -401,6 +554,7 @@ export default {
             let string_category_names = []
             let string_is_image = []
             let string_instructions = ""
+            let string_title = ""
             let string_description = ""
             let string_author = ""
             let string_updater = ""
@@ -411,7 +565,7 @@ export default {
             let string_last_updated = ""
             let found = false
             let funct_ref = this.string_to_array
-            integramsRef.get().then(function(snapshot) {
+            integramsRef.get(params_id).then(function(snapshot) {
                 snapshot.forEach(function(childSnapshot) {
                     let id = childSnapshot.id;
                     if (id == params_id) {
@@ -419,6 +573,7 @@ export default {
                         string_category_names = childSnapshot.get('category_names')
                         string_is_image = childSnapshot.get('is_image')
                         string_instructions = childSnapshot.get('instructions')
+                        string_title = childSnapshot.get('title')
                         string_description = childSnapshot.get('description')
                         string_author = childSnapshot.get('author')
                         string_updater= childSnapshot.get('updater')
@@ -433,28 +588,33 @@ export default {
             }).then(() => {
                 if (found) {
                     this.category_values = string_category_values 
+                    this.old_values = this.category_values
                     this.category_names = string_category_names
                     this.is_image = string_is_image
+                    this.old_isimage = this.is_image
                     this.instructions = string_instructions
+                    this.title = string_title
                     this.description = string_description
                     this.author = string_author
+                    this.getAuthorUserRecord()
                     this.updater = string_updater
+                    this.getUpdaterUserRecord()
                     this.is_public = string_is_public
                     this.permissions = string_permissions
+                    this.getCollaboratorUserRecord()
+                    this.checkIdentity()
                     this.source = string_source
                     this.time_created = string_time_created
                     this.last_updated = string_last_updated
                     this.numvalues = this.category_values.length
                     this.numcategories = this.category_values[0].length 
                     this.numinstructions = this.instructions.length
-                    this.change_instructions()      
-                    this.order_in_category() 
+                    this.change_instructions()   
                     this.initialize()
                     this.getPicture()
                     this.$forceUpdate()
                 } else {
-                    this.$refs.no_puzzle.show()
-                    this.$router.push("/searchintegram");
+                    this.new_async(this.$refs.no_puzzle.show(), 1000).then(() => {this.$router.push("/searchintegram")})   
                 }
             })
       },
@@ -483,50 +643,80 @@ export default {
             }
         }
     },
+    delay(operation, delay) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+            resolve(operation);
+            }, delay);
+        });
+    },
+    async new_async(operation, delay) {
+        await this.delay(operation, delay);
+    }
+  },   
+  beforeUpdate() {
+    this.initialize()  
   },  
   beforeMount() {
     this.initialize() 
     this.fetch_puzzle()
   },  
+  mounted() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User 
+        this.user = user
+        // ...
+      } else {
+        // User is signed out
+        // ... 
+        this.new_async(this.$refs.no_user.show(), 1000).then(() => {this.$router.push("/login")})  
+      }
+    })
+  }
 }
 </script>
 
 <template> 
+  <Navbar></Navbar>
+  <body class="mybody">
     <div class="myrow">
-        <va-slider v-model="numvalues" @focusout="update_order=true;initialize()" :min="3" :max="5" track-label-visible>
+        <va-slider v-model="numvalues" :min="3" :max="5" track-label-visible>
             <template #label>
                 <span>Broj pojmova</span>
             </template>
             <template #append>
-                <va-input type="number" v-model="numvalues" @focusout="update_order=true;initialize()" :min="3" :max="5"/>
+                <va-input type="number" v-model="numvalues" :min="3" :max="5"/>
             </template>
         </va-slider>
     </div> 
     <br>
     <div class="myrow">
-        <va-slider v-model="numcategories" @focusout="update_order=true;initialize()" :min="3" :max="5" track-label-visible>
+        <va-slider v-model="numcategories" :min="3" :max="5" track-label-visible>
             <template #label>
                 <span>Broj kategorija</span>
             </template>
             <template #append>
-                <va-input type="number" v-model="numcategories" @focusout="update_order=true;initialize()" :min="3" :max="5"/>
+                <va-input type="number" v-model="numcategories" :min="3" :max="5"/>
             </template>
         </va-slider>
     </div> 
     <br>
     <div class="myrow">
-        <va-slider v-model="numinstructions" @focusout="update_order=false;" :min="5" :max="10" track-label-visible>
+        <va-slider v-model="numinstructions" :min="5" :max="10" track-label-visible>
             <template #label>
                 <span>Broj opisnih uputa</span>
             </template>
             <template #append>
-                <va-input type="number" v-model="numinstructions" @focusout="update_order=false;" :min="5" :max="10"/>
+                <va-input type="number" v-model="numinstructions" :min="5" :max="10"/>
             </template>
         </va-slider>
     </div> 
     <br>  
     <div class="myrow" v-for="i in numinstructions"  v-bind:key="i">
-        <va-input v-model="instructions[i-1]" type="text" @focusout="check_same();update_order=false;"
+        <va-input v-model="instructions[i-1]" type="text" @focusout="check_same();"
             :label="i + '. uputa'" 
         /> 
     </div>
@@ -537,26 +727,26 @@ export default {
             <th v-for="i in numcategories" v-bind:key="i" :class="{first: i == 1, second: i == 2, third: i == 3, fourth: i == 4, fifth: i == 5}">
                 <va-chip>{{i}}. kategorija</va-chip>    
                 &nbsp;
-                <va-switch v-model="is_image[i-1]" true-inner-label="Slika" false-inner-label="Nije slika" @click="clear_category(i - 1);$update_order=false;$forceUpdate()" class="mr-4" /> 
+                <va-switch v-model="is_image[i-1]" true-inner-label="Slika" false-inner-label="Nije slika" @click="clear_category(i - 1);$forceUpdate()" class="mr-4" /> 
                 <br> <br>
-                <va-input :label="'Naslov ' + i + '. kategorije'" type="text" v-model="category_names[i-1]" @focusout="check_same();update_order=false;$forceUpdate()"/> 
+                <va-input :label="'Naslov ' + i + '. kategorije'" type="text" v-model="category_names[i-1]" @focusout="check_same();$forceUpdate()"/> 
                    <br> 
  <va-divider />
             </th>
         </tr> 
         <tr v-for="k in numvalues" v-bind:key="k">            
             <td v-for="j in numcategories" v-bind:key="j" style="width:15%" :class="{first:  j == 1, second: j == 2, third: j == 3, fourth: j == 4, fifth: j == 5}">
-                <span  v-if="is_image[j-1]==true">
-                    <va-button  style="  display:inline-block;width:25%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    @click="click_file(k-1,j-1)">   
-                        <span    style="  display:inline-block;width:100%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != [] && this.category_values[k-1][j-1].name != undefined">{{this.category_values[k-1][j-1].name}}</span>
-                        <span    style="  display:inline-block;width:100%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != [] && this.category_values[k-1][j-1].name == undefined">{{this.category_values[k-1][j-1]}}</span>
-                        <span  v-if="this.category_values[k-1][j-1] == '' || this.category_values[k-1][j-1] == []">Odaberi sliku</span></va-button>  
-             
-                <input   file-types="image/*" type="file" :id='"fileinput" + (k-1) + ":" + (j-1)'  
-                style="display: none;visibility: hidden;width:0%"
-                @input="image_uploaded(k-1,j-1);check_too_long();check_same();update_order=false;$forceUpdate()" /></span>
-                <va-input :label="'Vrijednost ' + j + '. kategorije za ' + k + '. pojam'" v-else type="text" v-model="category_values[k-1][j-1]" @focusout="check_too_long();check_same();update_order=false;$forceUpdate()"/>
-
+                <span v-if="is_image[j-1]==true">
+                    <va-button style="display:inline-block;overflow-wrap:anywhere" @click="click_file(k-1,j-1)">   
+                        <span v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != [] && this.category_values[k-1][j-1].name != undefined">{{this.category_values[k-1][j-1].name}}</span>
+                        <span v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != [] && this.category_values[k-1][j-1].name == undefined">{{this.category_values[k-1][j-1]}}</span>
+                        <span v-if="this.category_values[k-1][j-1] == '' || this.category_values[k-1][j-1] == []">Odaberi sliku</span>
+                    </va-button>  
+                    <input file-types="image/*" type="file" :id='"fileinput" + (k-1) + ":" + (j-1)'  
+                    style="display: none;visibility: hidden;width:0%"
+                    @input="image_uploaded(k-1,j-1);check_same();$forceUpdate()" />
+                </span>
+                <va-input :label="'Vrijednost ' + j + '. kategorije za ' + k + '. pojam'" v-else type="text" v-model="category_values[k-1][j-1]" @focusout="check_same();$forceUpdate()"/>
             </td>
         </tr> 
     </table> 
@@ -566,63 +756,25 @@ export default {
             {{alert}}
         </va-alert> 
     </div> 
-    <br>   
-    <table class="integram_solve"> 
-        <tr>            
-            <td>&nbsp;</td>
-            <td class="rotated_text" v-for="i in numvalues*(numcategories-1)" v-bind:key="i"
-                :class="{second: Math.floor((i-1)/numvalues)+1==1,third: Math.floor((i-1)/numvalues)+1==2,
-                fourth: Math.floor((i-1)/numvalues)+1==3,fifth: Math.floor((i-1)/numvalues)+1==4}">
-                <span class="checkmark, text_column" 
-                v-if="is_image[Math.floor((i-1)/numvalues)+1]==false && too_long[Math.floor((i-1)/numvalues)+1]==false">
-                {{category_values[order[Math.floor((i-1)/numvalues)+1][(i-1)%numvalues]][Math.floor((i-1)/numvalues)+1]}}</span>
-                <span class="checkmark, text_column" v-else>{{Math.floor((i-1)/numvalues)+2}}{{alphabet[order[Math.floor((i-1)/numvalues)+1][(i-1)%numvalues]]}}</span>
-            </td>
-        </tr> 
-        <tr v-for="j in numvalues" v-bind:key="j">
-            <td class="first">
-                <span class="checkmark, text_row" v-if="is_image[0]==false && too_long[0]==false">{{category_values[order[0][j-1]][0]}}</span>
-                <span class="checkmark, text_row" v-else>{{1}}{{alphabet[order[0][j-1]]}}</span>
-            </td>
-            <td v-for="i in numvalues*(numcategories-1)" v-bind:key="i">
-                <span class="checkmark" v-if="order[0][j-1]==order[Math.floor((i-1)/numvalues)+1][(i-1)%numvalues]">&#128504;</span>
-                <span class="checkmark" v-else>&#215;</span>
-            </td>
-        </tr> 
-        <tr v-for="j in numvalues*(numcategories-2)" v-bind:key="j">
-            <td :class="{second: numcategories-1-Math.floor((j-1)/numvalues)==1,third: numcategories-1-Math.floor((j-1)/numvalues)==2,
-                fourth: numcategories-1-Math.floor((j-1)/numvalues)==3,fifth: numcategories-1-Math.floor((j-1)/numvalues)==4}">
-                <span class="checkmark, text_row" v-if="is_image[numcategories-1-Math.floor((j-1)/numvalues)]==false && too_long[numcategories-1-Math.floor((j-1)/numvalues)]==false">
-                {{category_values[order[numcategories-1-Math.floor((j-1)/numvalues)][(j-1)%numvalues]][numcategories-1-Math.floor((j-1)/numvalues)]}}
-                </span>
-                <span class="checkmark, text_row" v-else>{{numcategories-Math.floor((j-1)/numvalues)}}{{alphabet[order[Math.floor((j-1)/numvalues)+1][(j-1)%numvalues]]}}</span>
-            </td>
-            <td v-for="i in numvalues*(numcategories-Math.floor((j-1)/numvalues)-2)" v-bind:key="i">
-            <span class="checkmark" v-if="order[numcategories-1-Math.floor((j-1)/numvalues)][(j-1)%numvalues]==order[Math.floor((i-1)/numvalues)+1][(i-1)%numvalues]">&#128504;</span>
-            <span class="checkmark" v-else>&#215;</span>
-            </td>
-        </tr> 
-    </table>
-    
-    <br>
-    <div v-for="i in numcategories" v-bind:key="i">
-        <va-card v-if="too_long[i-1]==true && is_image[i-1]==false">
-            <va-card-title>{{i}}. kategorija</va-card-title>
-            <va-card-content><div v-for="j in numvalues" v-bind:key="j">
-                <div :class="{first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</div> {{category_values[j-1][i-1]}}
-            </div> </va-card-content>
-        </va-card>
-        <span v-if="is_image[i-1]==true">
-            {{i}}. kategorija:<br>
-            <span v-for="j in numvalues" v-bind:key="j"> 
-                <div class="image_container" > 
+    <br> 
+    <div class="myrow" v-for="i in numcategories" v-bind:key="i"> 
+        <va-card v-if="is_image[i-1]==true">
+            <va-card-title><va-chip>{{i}}. kategorija</va-chip></va-card-title> 
+            <va-card-content> 
+                <div v-for="j in numvalues" v-bind:key="j" class="image_container" > 
                     <img :id='"img" + (j-1) + ":" + (i-1)' alt="No image" style="width:100%;">
-                    <div :class="{topleft: true, first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</div>
+                    <div :class="{padded: true, topleft: true, first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</div>
                 </div>
-            </span>
-        </span>
+            </va-card-content>
+        </va-card> 
     </div> 
     <div class="myrow">
+        <va-input
+            class="mb-4"
+            v-model="title"
+            type="text"
+            label="Naslov zagonetke" 
+        />
         <va-input
             class="mb-4"
             v-model="description"
@@ -641,28 +793,42 @@ export default {
         />
     </div> 
     <div class="myrow"> 
+        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{authorUserRecord.displayName}} ({{authorUserRecord.email}})</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
+        <br>
+        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updaterUserRecord.displayName}} ({{updaterUserRecord.email}})</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
+    </div> 
+    <div class="myrow" v-if="permission_to_edit_visibility"> 
         Dozvola uređivanja
         <va-switch style="display: inline-block;margin-left: 1%;margin-top: 1%" v-model="is_public" true-inner-label="Svi" false-inner-label="Samo suradnici" class="mr-4" /> 
-        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Korisničko ime" label="Ime suradnika">
+        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Email adresa" label="Email adresa suradnika">
             <template #append> 
-                <va-icon @click="permissions.push(collaborator);$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
+                <va-icon @click="checkIfUserExists();$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
             </template>
         </va-input> 
     </div>
-    <div class="myrow"> 
+    <div class="myrow" v-if="permission_to_edit_visibility">  
             Suradnici: 
             <va-chip style="display: inline-block;margin-left: 1%;margin-top: 1%" 
-            v-for="(permission, i) in permissions" :key="i">
+            v-for="(permission, i) in permissionsUserRecords" :key="i">
                 <va-icon style="display: inline-block" @click="permissions.splice(i,1)" name="clear" class="mr-2"/>
-                {{permission}}
+                {{permission.displayName}} ({{permission.email}})
             </va-chip> 
     </div>
-    <div class="myrow" v-if="!warning">
-        <va-button @click="store()">Izmijeni postojeću zagonetku</va-button>
+    <div class="myrow" v-if="!alert">
+        <va-button @click="store()">Izmijeni postojeću zagonetku</va-button>&nbsp;
         <va-button @click="duplicate()">Spremi izmjene kao novu zagonetku</va-button>
-    </div> 
-    <!--<button @click="update_order=true;$forceUpdate()">Promjeni redoslijed</button>-->
+    </div>  
     <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
+    <va-modal ref="no_user" hide-default-actions message="Ne možete uređivati zagonetku jer niste prijavljeni." stateful />
+    <va-modal ref="permission" hide-default-actions message="Ne možete uređivati zagonetku jer niste autor niti suradnik." stateful />
+    <va-modal ref="duplicate_success" hide-default-actions message="Nova zagonetka je uspješno spremljena." stateful />
+    <va-modal ref="store_success" hide-default-actions message="Postojeća zagonetka je uspješno izmijenjena." stateful />
+    <va-modal ref="no_collaborator" hide-default-actions message="Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom." stateful />
+    <va-modal ref="me_collaborator" hide-default-actions message="Ne možete dodati samog sebe kao suradnika." stateful />
+    <va-modal ref="duplicate_collaborator" hide-default-actions message="Ne možete dodati istu osobu kao suradnika dvaput." stateful />
+  </body>
 </template>
 
 <style scoped>
@@ -708,7 +874,8 @@ table  {
 .image_container {
   display: inline-block;
   position: relative;
-  width: 100px;
+  width: 19%;
+  margin-right: 1%;
   text-align: center;
 }
 /* Top left text */
@@ -739,5 +906,11 @@ table  {
 }
 .wrong {
     color: red;
+}  
+.padded {
+  padding: 5px;
+  border-radius: 50%;
+  margin: 5px;
+  font-weight: bold;
 }
 </style>

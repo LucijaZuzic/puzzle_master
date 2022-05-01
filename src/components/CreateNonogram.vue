@@ -1,15 +1,22 @@
 <script> 
 
 import { nonogramsRef } from "../main.js"
+import { usersRef } from "../main.js"
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import Navbar from './Navbar.vue'
 
 export default {
+  components: {
+    Navbar
+  },  
   data() {
     return {
-        warning: "",
-        author: "",   
-        updater: "",
+        user: null,
+        title: "",
+        warning: "",   
         is_public: false,
         permissions: [],
+        permissionsUserRecords: [],
         collaborator: "",
         description: '',
         source: '',
@@ -30,6 +37,44 @@ export default {
     }
   },
   methods: {
+      checkIfUserExists() {  
+          let email = this.collaborator
+          let found = false
+          let uid = ""
+          let displayName = ""
+          if (this.user.email == email) {
+              this.$refs.me_collaborator.show()
+          } else { 
+            usersRef.get().then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let some_email = childSnapshot.get("email"); 
+                    if (email == some_email) {
+                        found = true
+                        uid = childSnapshot.id
+                        displayName = childSnapshot.get("displayName")
+                    }
+                });
+            }).then(() => {  
+                if (found == true) {
+                    let duplicate = false
+                    for (let i = 0; i < this.permissions.length; i++) {  
+                        if (this.permissions[i] == uid) {
+                            duplicate = true
+                            break
+                        }
+                    } 
+                    if (duplicate == true) {
+                        this.$refs.duplicate_collaborator.show()
+                    } else {
+                        this.permissions.push(uid)
+                        this.permissionsUserRecords.push({"displayName": displayName, "email": email})
+                    }
+                } else {
+                    this.$refs.no_collaborator.show()
+                }
+            })  
+          }
+      }, 
     reset() {
         this.solution = new Array()
         for (let i = 0; i < this.rownum; i++) {
@@ -316,16 +361,27 @@ export default {
         nonogramsRef.add({
             solution: funct_ref(newsolution),
             colors: newcolors,
+            title: this.title,
             description: this.description,
-            author: "",
-            updater: "",
+            author: this.user.uid,
+            updater: this.user.uid,
             is_public: this.is_public,
             permissions: this.permissions,
             source: this.source,
             time_created: datetime,
             last_updated: datetime,
-        })
+          }).then(() => {this.new_async(this.$refs.store_success.show(), 1000).then(() => {this.$router.push("/searchnonogram")}) })
     },
+    delay(operation, delay) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+            resolve(operation);
+            }, delay);
+        });
+    },
+    async new_async(operation, delay) {
+        await this.delay(operation, delay);
+    }
   }, 
   beforeMount() {
       this.expand_color_list() 
@@ -345,11 +401,28 @@ export default {
     }
     this.colorcol()
     this.colorrow()
-  },
+  },  
+  mounted() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User 
+        this.user = user
+        // ...
+      } else {
+        // User is signed out
+        // ...
+        this.new_async(this.$refs.no_user.show(), 1000).then(() => {this.$router.push("/login")}) 
+      }
+    })
+  }
 }
 </script>
 
 <template> 
+  <Navbar></Navbar>
+  <body class="mybody">
     <div class="myrow">
         <va-slider v-model="rownum" @focusout="initialize()" :min="1" :max="50" track-label-visible>
             <template #label>
@@ -445,6 +518,12 @@ export default {
     <div class="myrow">
         <va-input
             class="mb-4"
+            v-model="title"
+            type="text"
+            label="Naslov zagonetke" 
+        />
+        <va-input
+            class="mb-4"
             v-model="description"
             type="textarea"
             label="Opis zagonetke"
@@ -463,23 +542,29 @@ export default {
     <div class="myrow"> 
         Dozvola uređivanja
         <va-switch style="display: inline-block;margin-left: 1%;margin-top: 1%" v-model="is_public" true-inner-label="Svi" false-inner-label="Samo suradnici" class="mr-4" /> 
-        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Korisničko ime" label="Ime suradnika">
+        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Email adresa" label="Email adresa suradnika">
             <template #append> 
-                <va-icon @click="permissions.push(collaborator);$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
+                <va-icon @click="checkIfUserExists();$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
             </template>
         </va-input> 
     </div>
-    <div class="myrow"> 
+    <div class="myrow">  
             Suradnici: 
             <va-chip style="display: inline-block;margin-left: 1%;margin-top: 1%" 
-            v-for="(permission, i) in permissions" :key="i">
+            v-for="(permission, i) in permissionsUserRecords" :key="i">
                 <va-icon style="display: inline-block" @click="permissions.splice(i,1)" name="clear" class="mr-2"/>
-                {{permission}}
+                {{permission.displayName}} ({{permission.email}})
             </va-chip> 
     </div>
     <div class="myrow" v-if="warning.length== 0"> 
         <va-button @click="store()">Spremi zagonetku</va-button>  
-    </div>   
+    </div>    
+    <va-modal ref="no_user" hide-default-actions message="Ne možete kreirati zagonetku jer niste prijavljeni." stateful />
+    <va-modal ref="store_success" hide-default-actions message="Nova zagonetka je uspješno spremljena." stateful />
+    <va-modal ref="no_collaborator" hide-default-actions message="Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom." stateful />
+    <va-modal ref="me_collaborator" hide-default-actions message="Ne možete dodati samog sebe kao suradnika." stateful />
+    <va-modal ref="duplicate_collaborator" hide-default-actions message="Ne možete dodati istu osobu kao suradnika dvaput." stateful />
+  </body>
 </template>
 
 <style scoped>

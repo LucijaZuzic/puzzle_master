@@ -1,10 +1,18 @@
-<script setup>
-
+<script> 
+ 
+import Navbar from './Navbar.vue' 
+export default {
+  components: {
+    Navbar
+  } 
+}
 </script>
 
-<template>
-  <header>
-  </header> 
+<template> 
+  <Navbar></Navbar>
+  <body class="mybody">
+    Welcome home
+  </body>
 </template>
 
 <style>

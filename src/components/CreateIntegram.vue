@@ -1,34 +1,75 @@
 <script>
 import { ref, uploadBytes } from "firebase/storage";
-
+import { usersRef } from "../main.js"
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import Navbar from './Navbar.vue'
 import { projectStorage } from "../main.js"
-import { integramsRef } from "../main.js"
+import { integramsRef } from "../main.js" 
+
 export default {
+  components: {
+    Navbar
+  },
   data() {
     return {
-      numcategories: 5,
-      numvalues: 5,
-      numinstructions: 6,
-        author: "",   
-        time_created: '',
-        last_updated: '',
-        updater: "",
+        user: null,
+        title: "",
+        numcategories: 5,
+        numvalues: 5,
+        numinstructions: 6,   
         is_public: false,
         permissions: [],
+        permissionsUserRecords: [],
         collaborator: "",
         description: '',
         source: '',
-      alert: '',
-      alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      max_len_display: 20,
-      update_order: true,
-      instructions: [],
-      solution: [],
-      mode: -1,
-      mark_error: false
+        alert: '',
+        alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        max_len_display: 20,
+        instructions: [],
+        solution: [],
+        mode: -1, 
     }
   },
   methods: {
+      checkIfUserExists() {  
+          let email = this.collaborator
+          let found = false
+          let uid = ""
+          let displayName = ""
+          if (this.user.email == email) {
+              this.$refs.me_collaborator.show()
+          } else { 
+            usersRef.get().then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let some_email = childSnapshot.get("email"); 
+                    if (email == some_email) {
+                        found = true
+                        uid = childSnapshot.id
+                        displayName = childSnapshot.get("displayName")
+                    }
+                });
+            }).then(() => {  
+                if (found == true) {
+                    let duplicate = false
+                    for (let i = 0; i < this.permissions.length; i++) {  
+                        if (this.permissions[i] == uid) {
+                            duplicate = true
+                            break
+                        }
+                    } 
+                    if (duplicate == true) {
+                        this.$refs.duplicate_collaborator.show()
+                    } else {
+                        this.permissions.push(uid)
+                        this.permissionsUserRecords.push({"displayName": displayName, "email": email})
+                    }
+                } else {
+                    this.$refs.no_collaborator.show()
+                }
+            })  
+          }
+      }, 
       initialize() { 
           let oldvalues = []
           let maxcol = this.numcategories
@@ -59,37 +100,28 @@ export default {
               this.category_values.push(category_values_row)
           }
           let oldnames = []
-          let oldisimage = []
-          let oldtoolong = []
+          let oldisimage = [] 
           let maxnames = this.numcategories
           if (this.category_names) {
               oldnames = this.category_names
-              oldisimage = this.is_image 
-              oldtoolong = this.too_long 
+              oldisimage = this.is_image  
               if (oldnames.length > maxnames) {
                   maxnames = oldnames.length
               }
           }
           this.category_names = []
-          this.is_image = []
-          this.too_long = []
+          this.is_image = [] 
           for (let i = 0; i < maxnames; i++) {
               if (oldnames[i]) {
                 this.category_names.push(oldnames[i])
-                this.is_image.push(oldisimage[i])
-                this.too_long.push(oldtoolong[i])
+                this.is_image.push(oldisimage[i]) 
               } else {
                 this.category_names.push('')
-                this.is_image.push(false)
-                this.too_long.push(false)
+                this.is_image.push(false) 
               }
           } 
-          this.change_instructions()        
-          if (this.update_order) {
-            this.order_in_category()
-          }    
-          this.check_same()
-          this.check_too_long()
+          this.change_instructions()         
+          this.check_same() 
       },
       change_instructions() {
           let oldinstructions = []
@@ -113,21 +145,33 @@ export default {
           this.alert = ""
             for (let j = 0; j < this.numinstructions; j++) { 
                     if (this.instructions[j] == "") {
-                        this.alert += (j+1).toString() + ". uputa nema tekst.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (j+1).toString() + ". uputa nema tekst."  
                     } 
             }
             for (let j = 0; j < this.numcategories; j++) { 
                     if (this.category_names[j] == "") {
-                        this.alert += (j+1).toString() + ". kategorija nema naziv.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (j+1).toString() + ". kategorija nema naziv."  
                     } 
             }
           for (let i = 0; i < this.numcategories; i++) {
             for (let j = 0; j < this.numvalues; j++) {  
                 if (this.category_values[j][i] == "" || this.category_values[j][i] == []) {
                     if (this.is_image[i]) {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema sliku za " + (j+1).toString() + ". pojam.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema sliku za " + (j+1).toString() + ". pojam."  
                     } else {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema vrijednost za " + (j+1).toString() + ". pojam.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") nema vrijednost za " + (j+1).toString() + ". pojam."  
 
                     }
                 }
@@ -136,14 +180,20 @@ export default {
             for (let j = 0; j < this.numinstructions; j++) { 
                 for (let k = j + 1; k < this.numinstructions; k++) { 
                     if (this.instructions[j] == this.instructions[k] && this.instructions[j] && this.instructions[k]) {
-                        this.alert += (j+1).toString() + ". uputa (" + this.instructions[j] + ") i "  + (k+1).toString() + ". uputa (" + this.instructions[k] + ") imaju isti tekst.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (j+1).toString() + ". uputa (" + this.instructions[j] + ") i "  + (k+1).toString() + ". uputa (" + this.instructions[k] + ") imaju isti tekst."  
                     }
                 }
             }
             for (let j = 0; j < this.numcategories; j++) { 
                 for (let k = j + 1; k < this.numcategories; k++) { 
                     if (this.category_names[j] == this.category_names[k] && this.category_names[j] && this.category_names[k]) {
-                        this.alert += (j+1).toString() + ". kategorija (" + this.category_names[j] + ") i "  + (k+1).toString() + ". kategorija (" + this.category_names[k] + ") imaju isti naziv.\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (j+1).toString() + ". kategorija (" + this.category_names[j] + ") i "  + (k+1).toString() + ". kategorija (" + this.category_names[k] + ") imaju isti naziv."  
                     }
                 }
             }
@@ -151,61 +201,19 @@ export default {
               for (let j = 0; j < this.numvalues; j++) { 
                 for (let k = j + 1; k < this.numvalues; k++) { 
                     if (this.category_values[j][i] == this.category_values[k][i] && this.category_values[j][i] && this.category_values[k][i]) {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku vrijednost za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ").\n"  
+                        if (this.alert != "") {
+                            this.alert += " "
+                        }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku vrijednost za " + (j+1).toString() + ". pojam (" + this.category_values[j][i] + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i] + ")."  
                     } 
                     if (this.is_image[i] && this.category_values[j][i] != "" && this.category_values[j][i] != []  && this.category_values[k][i] != "" && this.category_values[k][i] != [] 
                     && this.category_values[j][i].name == this.category_values[k][i].name && this.category_values[j][i] && this.category_values[k][i]) {
-                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i].name + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i].name + ").\n"  
-                    }
-                }
-              }
-          }
-      },
-      check_too_long() {
-          this.too_long = []
-          for (let j = 0; j < this.numcategories; j++) {
-            this.too_long.push(false) 
-            for (let i = 0; i < this.numvalues; i++) {
-                if (this.is_image[j] == false && this.category_values[i][j].length > this.max_len_display) {
-                    this.too_long[j] = true;
-                    break;
-                }
-            }
-          }
-      },
-      order_in_category() {
-          this.order = [] 
-          for (let i = 0; i < this.numcategories; i++) {
-              let category_order = []
-              let used = []
-              for (let j = 0; j < this.numvalues; j++) { 
-                  used.push(0)
-              }
-              for (let j = 0; j < this.numvalues; j++) { 
-                  let x = Math.floor(Math.random() * this.numvalues)
-                  while (used[x]) {
-                        x = Math.floor(Math.random() * this.numvalues)
-                  }
-                  used[x] = 1;
-                  category_order.push(x);
-              }
-              this.order.push(category_order)
-          }
-          this.solution = []
-          for (let i = 0; i < this.numcategories; i++) {
-              for (let j = 0; j < this.numvalues; j++) { 
-                let solution_row = []
-                
-                for (let k = 0; k < this.numcategories; k++) {
-                    for (let l = 0; l < this.numvalues; l++) { 
-                        if (this.order[i][j] == this.order[k][l]) {
-                            solution_row.push(1)
-                        } else {
-                            solution_row.push(0)
+                        if (this.alert != "") {
+                            this.alert += " "
                         }
+                        this.alert += (i+1).toString() + ". kategorija (" + this.category_names[i] + ") ima jednaku sliku za " + (j+1).toString() + ". pojam (" + this.category_values[j][i].name + ") i "  + (k+1).toString() + ". pojam (" + this.category_values[k][i].name + ")."  
                     }
                 }
-                this.solution.push(solution_row)
               }
           }
       },
@@ -238,7 +246,7 @@ export default {
                   string += ","
               }
               string += "[" 
-              for (let j = 0; j < array.length; j++) {
+              for (let j = 0; j < array[i].length; j++) {
                 if (j != 0) {
                   string += "\\,"
                 }
@@ -268,9 +276,10 @@ export default {
                     category_names: newcategorynames,
                     is_image: newisimage,
                     instructions: newinstructions,
+                    title: this.title,
                     description: this.description,
-                    author: "",
-                    updater: "",
+                    author: this.user.uid,
+                    updater: this.user.uid,
                     is_public: this.is_public,
                     permissions: this.permissions,
                     source: this.source,
@@ -309,62 +318,93 @@ export default {
                         category_names: newcategorynames,
                         is_image: newisimage,
                         instructions: newinstructions,
+                        title: this.title,
                         description: this.description,
-                        author: "",
-                        updater: "",
+                        author: this.user.uid,
+                        updater: this.user.uid,
                         is_public: this.is_public,
                         permissions: this.permissions,
                         source: this.source,
                         time_created: datetime,
                         last_updated: datetime,
-                })
+                }).then(() => {this.new_async(this.$refs.store_success.show(), 1000).then(() => {this.$router.push("/searchintegram")}) })
             })
             .catch((error) => { 
             });
+        },
+        delay(operation, delay) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                resolve(operation);
+                }, delay);
+            });
+        },
+        async new_async(operation, delay) {
+            await this.delay(operation, delay);
         }
   }, 
+  beforeUpdate() {
+    this.initialize()  
+  },  
   beforeMount() {
     this.initialize() 
   },  
+  mounted() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User 
+        this.user = user
+        // ...
+      } else {
+        // User is signed out
+        // ... 
+        this.new_async(this.$refs.no_user.show(), 1000).then(() => {this.$router.push("/login")})  
+      }
+    })
+  }
 }
 </script>
 
 <template> 
+  <Navbar></Navbar>
+  <body class="mybody">
     <div class="myrow">
-        <va-slider v-model="numvalues" @focusout="update_order=true;initialize()" :min="3" :max="5" track-label-visible>
+        <va-slider v-model="numvalues" :min="3" :max="5" track-label-visible>
             <template #label>
                 <span>Broj pojmova</span>
             </template>
             <template #append>
-                <va-input type="number" v-model="numvalues" @focusout="update_order=true;initialize()" :min="3" :max="5"/>
+                <va-input type="number" v-model="numvalues" :min="3" :max="5"/>
             </template>
         </va-slider>
     </div> 
     <br>
     <div class="myrow">
-        <va-slider v-model="numcategories" @focusout="update_order=true;initialize()" :min="3" :max="5" track-label-visible>
+        <va-slider v-model="numcategories" :min="3" :max="5" track-label-visible>
             <template #label>
                 <span>Broj kategorija</span>
             </template>
             <template #append>
-                <va-input type="number" v-model="numcategories" @focusout="update_order=true;initialize()" :min="3" :max="5"/>
+                <va-input type="number" v-model="numcategories" :min="3" :max="5"/>
             </template>
         </va-slider>
     </div> 
     <br>
     <div class="myrow">
-        <va-slider v-model="numinstructions" @focusout="update_order=false;" :min="5" :max="10" track-label-visible>
+        <va-slider v-model="numinstructions" :min="5" :max="10" track-label-visible>
             <template #label>
                 <span>Broj opisnih uputa</span>
             </template>
             <template #append>
-                <va-input type="number" v-model="numinstructions" @focusout="update_order=false;" :min="5" :max="10"/>
+                <va-input type="number" v-model="numinstructions" :min="5" :max="10"/>
             </template>
         </va-slider>
     </div> 
     <br>  
     <div class="myrow" v-for="i in numinstructions"  v-bind:key="i">
-        <va-input v-model="instructions[i-1]" type="text" @focusout="check_same();update_order=false;"
+        <va-input v-model="instructions[i-1]" type="text" @focusout="check_same();"
             :label="i + '. uputa'" 
         /> 
     </div>
@@ -375,24 +415,25 @@ export default {
             <th v-for="i in numcategories" v-bind:key="i" :class="{first: i == 1, second: i == 2, third: i == 3, fourth: i == 4, fifth: i == 5}">
                 <va-chip>{{i}}. kategorija</va-chip>    
                 &nbsp;
-                <va-switch v-model="is_image[i-1]" true-inner-label="Slika" false-inner-label="Nije slika" @click="clear_category(i - 1);$update_order=false;$forceUpdate()" class="mr-4" /> 
+                <va-switch v-model="is_image[i-1]" true-inner-label="Slika" false-inner-label="Nije slika" @click="clear_category(i - 1);$forceUpdate()" class="mr-4" /> 
                 <br> <br>
-                <va-input :label="'Naslov ' + i + '. kategorije'" type="text" v-model="category_names[i-1]" @focusout="check_same();update_order=false;$forceUpdate()"/> 
+                <va-input :label="'Naslov ' + i + '. kategorije'" type="text" v-model="category_names[i-1]" @focusout="check_same();$forceUpdate()"/> 
                    <br> 
  <va-divider />
             </th>
         </tr> 
         <tr v-for="k in numvalues" v-bind:key="k">            
             <td v-for="j in numcategories" v-bind:key="j" style="width:15%" :class="{first:  j == 1, second: j == 2, third: j == 3, fourth: j == 4, fifth: j == 5}">
-                <span  v-if="is_image[j-1]==true">
-                    <va-button  style="  display:inline-block;width:25%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    @click="click_file(k-1,j-1)">   
-                        <span    style="  display:inline-block;width:100%; overflow: hidden;    white-space: nowrap;   text-overflow: ellipsis;  "    v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != []">{{this.category_values[k-1][j-1].name}}</span>
-                        <span  v-else>Odaberi sliku</span></va-button>  
-             
-                <input   file-types="image/*" type="file" :id='"fileinput" + (k-1) + ":" + (j-1)'  
-                style="display: none;visibility: hidden;width:0%"
-                @input="image_uploaded(k-1,j-1);check_too_long();check_same();update_order=false;$forceUpdate()" /></span>
-                <va-input :label="'Vrijednost ' + j + '. kategorije za ' + k + '. pojam'" v-else type="text" v-model="category_values[k-1][j-1]" @focusout="check_too_long();check_same();update_order=false;$forceUpdate()"/>
+                <span v-if="is_image[j-1]==true">
+                    <va-button style="display:inline-block;overflow-wrap:anywhere" @click="click_file(k-1,j-1)">   
+                        <span v-if="this.category_values[k-1][j-1] != '' && this.category_values[k-1][j-1] != []">{{this.category_values[k-1][j-1].name}}</span>
+                        <span v-else>Odaberi sliku</span>
+                    </va-button>       
+                    <input file-types="image/*" type="file" :id='"fileinput" + (k-1) + ":" + (j-1)'  
+                    style="display: none;visibility: hidden;width:0%"
+                    @input="image_uploaded(k-1,j-1);check_same();$forceUpdate()" />
+                </span>
+                <va-input :label="'Vrijednost ' + j + '. kategorije za ' + k + '. pojam'" v-else type="text" v-model="category_values[k-1][j-1]" @focusout="check_same();$forceUpdate()"/>
 
             </td>
         </tr> 
@@ -403,65 +444,25 @@ export default {
             {{alert}}
         </va-alert> 
     </div> 
-    <br> 
-    <table class="integram_solve"> 
-        <tr>            
-            <td>&nbsp;</td>
-            <td class="rotated_text" v-for="i in numvalues*(numcategories-1)" v-bind:key="i"
-                :class="{second: Math.floor((i-1)/numvalues)+1==1,third: Math.floor((i-1)/numvalues)+1==2,
-                fourth: Math.floor((i-1)/numvalues)+1==3,fifth: Math.floor((i-1)/numvalues)+1==4}">
-                <span class="checkmark, text_column" 
-                v-if="is_image[Math.floor((i-1)/numvalues)+1]==false && too_long[Math.floor((i-1)/numvalues)+1]==false">
-                {{category_values[order[Math.floor((i-1)/numvalues)+1][(i-1)%numvalues]][Math.floor((i-1)/numvalues)+1]}}</span>
-                <span class="checkmark, text_column" v-else>{{Math.floor((i-1)/numvalues)+2}}{{alphabet[order[Math.floor((i-1)/numvalues)+1][(i-1)%numvalues]]}}</span>
-            </td>
-        </tr> 
-        <tr v-for="j in numvalues" v-bind:key="j">
-            <td class="first">
-                <span class="checkmark, text_row" v-if="is_image[0]==false && too_long[0]==false">{{category_values[order[0][j-1]][0]}}</span>
-                <span class="checkmark, text_row" v-else>{{1}}{{alphabet[order[0][j-1]]}}</span>
-            </td>
-            <td v-for="i in numvalues*(numcategories-1)" v-bind:key="i">
-                <span class="checkmark" v-if="order[0][j-1]==order[Math.floor((i-1)/numvalues)+1][(i-1)%numvalues]">&#128504;</span>
-                <span class="checkmark" v-else>&#215;</span>
-            </td>
-        </tr> 
-        <tr v-for="j in numvalues*(numcategories-2)" v-bind:key="j">
-            <td :class="{second: numcategories-1-Math.floor((j-1)/numvalues)==1,third: numcategories-1-Math.floor((j-1)/numvalues)==2,
-                fourth: numcategories-1-Math.floor((j-1)/numvalues)==3,fifth: numcategories-1-Math.floor((j-1)/numvalues)==4}">
-                <span class="checkmark, text_row" v-if="is_image[numcategories-1-Math.floor((j-1)/numvalues)]==false && too_long[numcategories-1-Math.floor((j-1)/numvalues)]==false">
-                {{category_values[order[numcategories-1-Math.floor((j-1)/numvalues)][(j-1)%numvalues]][numcategories-1-Math.floor((j-1)/numvalues)]}}
-                </span>
-                <span class="checkmark, text_row" v-else>{{numcategories-Math.floor((j-1)/numvalues)}}{{alphabet[order[Math.floor((j-1)/numvalues)+1][(j-1)%numvalues]]}}</span>
-            </td>
-            <td v-for="i in numvalues*(numcategories-Math.floor((j-1)/numvalues)-2)" v-bind:key="i">
-            <span class="checkmark" v-if="order[numcategories-1-Math.floor((j-1)/numvalues)][(j-1)%numvalues]==order[Math.floor((i-1)/numvalues)+1][(i-1)%numvalues]">&#128504;</span>
-            <span class="checkmark" v-else>&#215;</span>
-            </td>
-        </tr> 
-    </table>
-    
-    <br>
-    <div v-for="i in numcategories" v-bind:key="i">
-        <span v-if="too_long[i-1]==true && is_image[i-1]==false">
-            {{i}}. kategorija:
-            <span v-for="j in numvalues" v-bind:key="j">
-                <span :class="{first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</span> {{category_values[j-1][i-1]}}
-            </span>
-        </span>
-        <span v-if="is_image[i-1]==true">
-            {{i}}. kategorija:<br>
-            <span v-for="j in numvalues" v-bind:key="j"> 
-                {{category_values[j-1][i-1]}}
-                {{category_values[j-1][i-1].name}}
-                <div class="image_container" > 
-                    <img :id='"img" + (j-1) + ":" + (i-1)' :src="returnURL(category_values[j-1][i-1])"  alt="No image" style="width:100%;">
-                    <div :class="{topleft: true, first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</div>
+    <br>   
+    <div class="myrow" v-for="i in numcategories" v-bind:key="i"> 
+        <va-card v-if="is_image[i-1]==true">
+            <va-card-title><va-chip>{{i}}. kategorija</va-chip></va-card-title> 
+            <va-card-content> 
+                <div v-for="j in numvalues" v-bind:key="j" class="image_container" > 
+                    <img :id='"img" + (j-1) + ":" + (i-1)' :src="returnURL(category_values[j-1][i-1])" alt="No image" style="width:100%;">
+                    <div :class="{padded: true, topleft: true, first: i==1, second: i==2, third: i==3, fourth: i==4, fifth: i==5}">{{i}}{{alphabet[j-1]}}</div>
                 </div>
-            </span>
-        </span>
-    </div> 
+            </va-card-content>
+        </va-card> 
+    </div>  
     <div class="myrow">
+        <va-input
+            class="mb-4"
+            v-model="title"
+            type="text"
+            label="Naslov zagonetke" 
+        />
         <va-input
             class="mb-4"
             v-model="description"
@@ -482,24 +483,29 @@ export default {
     <div class="myrow"> 
         Dozvola uređivanja
         <va-switch style="display: inline-block;margin-left: 1%;margin-top: 1%" v-model="is_public" true-inner-label="Svi" false-inner-label="Samo suradnici" class="mr-4" /> 
-        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Korisničko ime" label="Ime suradnika">
+        <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="collaborator" placeholder="Email adresa" label="Email adresa suradnika">
             <template #append> 
-                <va-icon @click="permissions.push(collaborator);$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
+                <va-icon @click="checkIfUserExists();$forceUpdate()" color="primary" class="mr-4" name="add_circle"/>   
             </template>
         </va-input> 
     </div>
-    <div class="myrow"> 
+    <div class="myrow">  
             Suradnici: 
             <va-chip style="display: inline-block;margin-left: 1%;margin-top: 1%" 
-            v-for="(permission, i) in permissions" :key="i">
+            v-for="(permission, i) in permissionsUserRecords" :key="i">
                 <va-icon style="display: inline-block" @click="permissions.splice(i,1)" name="clear" class="mr-2"/>
-                {{permission}}
+                {{permission.displayName}} ({{permission.email}})
             </va-chip> 
     </div>
     <div  v-if="!alert" class="myrow"> 
         <va-button @click="store()">Spremi zagonetku</va-button>  
-    </div>  
-    <!--<button @click="update_order=true;initialize();$forceUpdate()">Promjeni redoslijed</button>-->
+    </div>       
+    <va-modal ref="no_user" hide-default-actions message="Ne možete kreirati zagonetku jer niste prijavljeni." stateful />
+    <va-modal ref="store_success" hide-default-actions message="Nova zagonetka je uspješno spremljena." stateful />
+    <va-modal ref="no_collaborator" hide-default-actions message="Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom." stateful />
+    <va-modal ref="me_collaborator" hide-default-actions message="Ne možete dodati samog sebe kao suradnika." stateful />
+    <va-modal ref="duplicate_collaborator" hide-default-actions message="Ne možete dodati istu osobu kao suradnika dvaput." stateful />
+  </body>
 </template>
 
 <style scoped>
@@ -545,7 +551,8 @@ table  {
 .image_container {
   display: inline-block;
   position: relative;
-  width: 100px;
+  width: 19%;
+  margin-right: 1%;
   text-align: center;
 }
 /* Top left text */
@@ -576,5 +583,11 @@ table  {
 }
 .wrong {
     color: red;
+}
+.padded {
+  padding: 5px;
+  border-radius: 50%;
+  margin: 5px;
+  font-weight: bold;
 }
 </style>

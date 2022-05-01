@@ -1,16 +1,32 @@
 <script>
 import { numberCrosswordsRef } from "../main.js"
+import { numberCrosswordsRecordsRef } from "../main.js"
+import { usersRef } from "../main.js"
+import { getAuth, onAuthStateChanged } from "firebase/auth"
+import { ref, getDownloadURL } from "firebase/storage"
+import { projectStorage } from "../main.js"
+
+import Navbar from './Navbar.vue' 
 
 export default {
-  params: ["id"],
+  components: {
+    Navbar
+  }, 
   data() {
     return {   
+        image: null,
+        imageURL: "",
+        user: null,
+        title: "",
+        cheat: false,
         showModal: false,
         time_elapsed: 0,
         description: "This",
         source: "Feniks",
         author: "",
+        authorUserRecord: {displayName: "", email: ""}, 
         updater: "",
+        updaterUserRecord: {displayName: "", email: ""},
         rows: 0,
         victory: false,
         numbers_by_len: [],
@@ -29,6 +45,51 @@ export default {
     }
   },
   methods: {
+      getAuthorUserRecord() { 
+        let some_id = this.author
+        let newRecord = {}
+        usersRef.get(some_id).then(function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+                let id = childSnapshot.id; 
+                if (id == some_id) {
+                    newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                }
+            });
+        }).then(() => { 
+            this.authorUserRecord = newRecord
+        }) 
+    },
+      getUpdaterUserRecord() { 
+        let some_id = this.updater
+        let newRecord = {}
+        usersRef.get(some_id).then(function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+                let id = childSnapshot.id; 
+                if (id == some_id) {
+                    newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                }
+            });
+        }).then(() => { 
+            this.updaterUserRecord = newRecord
+        }) 
+      },
+      getCollaboratorUserRecord() { 
+          this.permissionsUserRecords = []
+          for (let i = 0; i < this.permissions; i++) {
+            let some_id = this.permissions[i]
+            let newRecord = {}
+            usersRef.get(some_id).then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    let id = childSnapshot.id; 
+                    if (id == some_id) {
+                        newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
+                    }
+                });
+            }).then(() => { 
+                this.permissionsUserRecords.push(newRecord)
+            }) 
+          }  
+      }, 
         initialize() {
             this.rows = this.solution.length
             this.columns = this.solution[0].length
@@ -57,6 +118,7 @@ export default {
             }
         },
         show_solution() {
+            this.cheat = true;
             clearInterval(this.interval)
             this.values = []
             for (let i = 0; i < this.rows; i++) {
@@ -66,6 +128,7 @@ export default {
                 }
                 this.values.push(one_row)
             }
+            this.check_victory()  
             this.$forceUpdate()
         },
         parse_numbers() {
@@ -280,23 +343,68 @@ export default {
                 }
             }
         },
+        delay(operation, delay) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                resolve(operation);
+                }, delay);
+            });
+        },
+        async new_async(operation, delay) {
+            await this.delay(operation, delay);
+        },
         check_victory() {
-            this.victory = true;
+            this.victory = true
             for (let i = 0; i < this.rows; i++) {
                 for (let j = 0; j < this.columns; j++) {
                     if (this.values[i][j] != this.solution[i][j]) {
-                        this.victory = false;
-                        return;
+                        this.victory = false
+                        return
                     }
                 }
             }
-            if (this.victory) {
+            if (this.victory) { 
                 clearInterval(this.interval)
-                this.$refs.solved.show()
-                this.selected_number = -1;
-                this.selected_number_x = -1;
-                this.selected_number_y = -1;
+                this.selected_number = -1
+                this.selected_number_x = -1
+                this.selected_number_y = -1
+                this.new_async(this.$refs.solved.show(), 1000).then(() => {
+                    if (this.user && !this.cheat) {
+                        this.new_async(this.store(), 1000).then(() => {
+                            this.$router.push("/searchnumbercrossword")
+                        })
+                    } else {
+                        if (!this.user) {
+                            this.new_async(this.$refs.no_user.show(), 1000).then(() => {
+                                if (this.cheat) {
+                                    this.new_async(this.$refs.no_cheat.show(), 1000).then(() => {
+                                        this.$router.push("/login")
+                                    })
+                                } else {
+                                    this.$router.push("/login")
+                                }
+                            }) 
+                        } else {
+                            if (this.cheat) {
+                                this.new_async(this.$refs.no_cheat.show(), 1000).then(() => {
+                                    this.$router.push("/searchnumbercrossword")
+                                })
+                            } else {
+                                this.$router.push("/searchnumbercrossword")
+                            }
+                        }
+                    }
+                }) 
             }
+        }, 
+        store() {  
+            let datetime = new Date()  
+            numberCrosswordsRecordsRef.add({
+                puzzleID: this.$route.params.id,
+                user: this.user.uid, 
+                score: this.time_elapsed,
+                time: datetime, 
+            })
         },
         startTimer() {
             this.time_elapsed = 0
@@ -353,12 +461,28 @@ export default {
                     return array
                 }
         },
+      getPicture() {
+        if (this.image == null) {
+            this.imageURL = ""
+            return
+        }    
+        var reference = ref(projectStorage, this.image)
+        // Get the download URL
+        getDownloadURL(reference)
+        .then((url) => {
+            this.imageURL = url
+        })
+        .catch((error) => { 
+        });  
+    },  
         fetch_puzzle() {
             let params_id= this.$route.params.id
             let string_solution = []
             let string_is_special = []
             let string_is_revealed = []
+            let string_title = ""
             let string_description = ""
+            let string_image = ""
             let string_author = ""
             let string_updater = ""
             let string_is_public = false
@@ -368,14 +492,16 @@ export default {
             let string_last_updated = ""
             let found = false
             let funct_ref = this.string_to_array
-            numberCrosswordsRef.get().then(function(snapshot) {
+            numberCrosswordsRef.get(params_id).then(function(snapshot) {
                 snapshot.forEach(function(childSnapshot) {
                     let id = childSnapshot.id;
                     if (id == params_id) {
                         string_solution = funct_ref(childSnapshot.get('solution'))
                         string_is_special = funct_ref(childSnapshot.get('is_special'))
                         string_is_revealed = funct_ref(childSnapshot.get('is_revealed'))
+                        string_title = childSnapshot.get('title')
                         string_description = childSnapshot.get('description')
+                        string_image = childSnapshot.get('image')
                         string_author = childSnapshot.get('author')
                         string_updater= childSnapshot.get('updater')
                         string_is_public = childSnapshot.get('is_public')
@@ -391,19 +517,24 @@ export default {
                     this.solution = string_solution
                     this.is_special = string_is_special
                     this.is_revealed = string_is_revealed
+                    this.title = string_title
                     this.description = string_description
+                    this.image = string_image
                     this.author = string_author
+                    this.getAuthorUserRecord()
                     this.updater = string_updater
+                    this.getUpdaterUserRecord()
                     this.is_public = string_is_public
                     this.permissions = string_permissions
                     this.source = string_source
                     this.time_created = string_time_created
                     this.last_updated = string_last_updated
                     this.initialize()
+                    this.getPicture()
                     this.$forceUpdate()
                 } else {
                     this.$refs.no_puzzle.show()
-                    this.$router.push("/searchnonogram");
+                    this.$router.push("/searchnumbercrossword");
                 }
             })
       }
@@ -413,6 +544,19 @@ export default {
         this.fetch_puzzle() 
     },
     mounted() {
+        const auth = getAuth();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, see docs for a list of available properties
+                // https://firebase.google.com/docs/reference/js/firebase.User 
+                this.user = user;
+                // ...
+            } else {
+                // User is signed out
+                // ...
+                this.$refs.no_user_dialog.show()
+            }
+        });
         this.$refs.show_error.show()
         this.startTimer()
     }
@@ -420,6 +564,8 @@ export default {
 </script>
 
 <template>
+  <Navbar></Navbar>
+  <body class="mybody">
     <div class="myrow">
         <va-switch style="float: left" v-model="number_orientation" true-inner-label="Okomito" false-inner-label="Vodoravno" class="mr-4" />  
         <va-checkbox class="flex mb-2 md6" style="float: left" label="Prikaži greške" v-model="show_error" />
@@ -470,6 +616,20 @@ export default {
         </span>
         <br> 
     </div> 
+    <div class="myrow" v-if="image">
+        <img id='img' :src="imageURL"  alt="No image" style="width:50%">
+    </div>    
+    <div class="myrow" v-if="!image">
+        <va-alert style="white-space: pre-wrap;" color="warning" title="Prazna slika" center class="mb-4">
+            Niste dodali sliku uz zagonetku.
+        </va-alert> 
+    </div>   
+    <div class="myrow">
+        <va-card>
+            <va-card-title>Naslov zagonetke</va-card-title>
+            <va-card-content>{{title}}</va-card-content>
+        </va-card>
+    </div>
     <div class="myrow">
         <va-card>
             <va-card-title>Opis zagonetke</va-card-title>
@@ -483,15 +643,16 @@ export default {
         </va-card>
     </div>
     <div class="myrow"> 
-        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{author}}</va-chip>  
+        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{authorUserRecord.displayName}} ({{authorUserRecord.email}})</va-chip>  
         <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
         <br>
-        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updater}}</va-chip> 
+        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updaterUserRecord.displayName}} ({{updaterUserRecord.email}})</va-chip>  
         <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
-    </div>
+    </div> 
     <div class="myrow">
-        <va-button @click="show_solution();$forceUpdate()">Otkrij sva polja</va-button>
-    </div>    
+        <va-button @click="show_solution()">Otkrij sva polja</va-button>
+    </div>   
+    
     <va-modal ref="show_error" message="Želite li da greške budu uznačene?" @ok="show_error=true" stateful ok-text="Da" cancel-text="Ne" />
     <va-modal ref="barrier" hide-default-actions message="Broj ne može započeti na barijeri." stateful />
     <va-modal ref="set" hide-default-actions message="Broj je već postavljen." stateful />
@@ -502,7 +663,11 @@ export default {
     <va-modal ref="horizontal_length" hide-default-actions message="Broj nije postavljen vodoravno jer nema dovoljno slobodnih mjesta." stateful />
     <va-modal ref="horizontal_begin" hide-default-actions message="Broj nije postavljen vodoravno jer prethodni element reda nije barijera niti početak reda." stateful />
     <va-modal ref="solved" hide-default-actions message="Uspješno ste riješili zagonetku." stateful />
+    <va-modal ref="no_user" hide-default-actions message="Ne može se spremiti vaš rezultat jer niste prijavljeni." stateful />
+    <va-modal ref="no_user_dialog" @cancel="$router.push('/login')" ok-text="Da" cancel-text="Ne" message="Ne može se spremiti vaš rezultat jer niste prijavljeni. Želite li svejedno nastaviti?" stateful />
+    <va-modal ref="no_cheat" hide-default-actions message="Ne može se spremiti vaš rezultat jer ste odabrali da se otkrije rješenje." stateful />
     <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
+    </body>
 </template>
 
 <style scoped>
