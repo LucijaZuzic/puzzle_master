@@ -104,32 +104,7 @@ export default {
                 this.permissionsUserRecords.push(newRecord)
             }) 
           }  
-      }, 
-      checkIdentity() {
-        this.permission_to_edit_visibility = false
-        if (this.author == this.user.uid) {
-            this.permission_to_edit_visibility = true
-            return
-        } 
-        let is_collaborator = false
-        for (let i = 0; i < this.permissions.length; i++) {
-            if (this.permissions[i] == this.user.uid) {
-                is_collaborator = true
-                break
-            }
-        }
-        if (is_collaborator == true) {
-            this.permission_to_edit_visibility = false
-            return
-        } else {
-            if (this.is_public == true) {
-                this.permission_to_edit_visibility = false
-                return
-            } else {
-                this.new_async(this.$refs.permission.show(), 1000).then(() => {this.$router.push("/searchinitial")})  
-            }
-        }  
-      },
+      },  
       checkIfUserExists() {  
           let email = this.collaborator
           let found = false
@@ -377,8 +352,7 @@ export default {
                 this.getUpdaterUserRecord()
                 this.is_public = string_is_public
                 this.permissions = string_permissions
-                this.getCollaboratorUserRecord()
-                this.checkIdentity()
+                this.getCollaboratorUserRecord() 
                 this.source = string_source
                 this.time_created = string_time_created
                 this.last_updated = string_last_updated
@@ -753,8 +727,7 @@ export default {
     <va-modal ref="collision_letter" hide-default-actions message="Nova riječ ne može započeti na odabranom polju jer su u odabranom smjeru neka polja već popunjena." stateful />
 
     <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
-    <va-modal ref="no_user" hide-default-actions message="Ne možete uređivati zagonetku jer niste prijavljeni." stateful />
-    <va-modal ref="permission" hide-default-actions message="Ne možete uređivati zagonetku jer niste autor niti suradnik." stateful /> 
+    <va-modal ref="no_user" hide-default-actions message="Ne možete uređivati zagonetku jer niste prijavljeni." stateful /> 
  
   </body>
 </template>
