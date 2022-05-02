@@ -2,33 +2,41 @@
 <script>
     import { getAuth, onAuthStateChanged } from "firebase/auth"
     import { integramsRef } from "../main.js"
-    import { integramsRecordsRef } from "../main.js"
+    import { integramsRecordsRef, integramsRatingsRef } from "../main.js"
     import RecordsTable from "./RecordsTable.vue" 
+    import RatingsTable from "./RatingsTable.vue" 
     import { usersRef } from "../main.js"
     export default {
         emits: ["selectedIntegrams"], 
-        props: ["puzzleList", "selectMode", "start_time", "end_time"], 
+        props: ["friend", "puzzleList", "selectMode", "start_time", "end_time"], 
         components: {
-            RecordsTable
+            RecordsTable,
+            RatingsTable
         },
         mounted() {   
-            const auth = getAuth()
-            onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is signed in, see docs for a list of available properties
-                // https://firebase.google.com/docs/reference/js/firebase.User
-                this.user = user
-                // ...
+            if (!this.$props.friend) {
+                const auth = getAuth()
+                onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
+                    this.user = user
+                    // ...
+                } else {
+                    // User is signed out
+                    // ... 
+                }
+                }); 
             } else {
-                // User is signed out
-                // ... 
+                this.user = this.$props.friend
             }
-            });
         },
         data() {
             return { 
+                value: 'all',
                 user: null,
                 integramsRecordsRef: integramsRecordsRef,
+                integramsRatingsRef: integramsRatingsRef,
                 puzzles: [],
                 selectedItemsEmitted: [],
                 new_item: "",
@@ -48,6 +56,7 @@
                     {key: 'categories', sortable: true},
                     {key: 'values', sortable: true}, 
                     {key: 'num_instructions', sortable: true}, 
+                    {key: 'rating', sortable: true}, 
                     {key: 'title', sortable: true},
                     {key: 'description', sortable: true},
                     {key: 'source', sortable: true},
@@ -92,7 +101,7 @@
                         let array = array_string.substring(1, array_string.length - 1).split(",")
                         return array
                     }
-            },
+            }, 
             fetch_puzzles() {
                 this.puzzles = [] 
                 let funct_ref = this.string_to_array
@@ -109,42 +118,62 @@
                                 }
                             }
                         }
-                        if (inList == true) {
-                            let category_values = funct_ref(childSnapshot.get('category_values').replace('\,',','))  
-                            usersRef.get(childSnapshot.get('author')).then(function(snapshotAuthor) {
-                                snapshotAuthor.forEach(function(childSnapshotAuthor) {
-                                    let idAuthor = childSnapshotAuthor.id; 
-                                    if (idAuthor == childSnapshot.get('author')) { 
-                                        usersRef.get(childSnapshot.get('updater')).then(function(snapshotUpdater) {
-                                        snapshotUpdater.forEach(function(childSnapshotUpdater) {
-                                                let idUpdater = childSnapshotUpdater.id; 
-                                                if (idUpdater == childSnapshot.get('updater')) {  
-                                                    let newDeletePermission = {granted: false, id: childSnapshot.id}
-                                                    if (me.user) {
-                                                        newDeletePermission = {granted: childSnapshotAuthor.id == me.user.uid, id: childSnapshot.id}
-                                                    }
-                                                    me.puzzles.push({
-                                                        categories: category_values[0].length,
-                                                        values: category_values.length,
-                                                        num_instructions: childSnapshot.get('instructions').length,
-                                                        title: childSnapshot.get('title'), 
-                                                        description: childSnapshot.get('description'), 
-                                                        source: childSnapshot.get('source'), 
-                                                        is_public: childSnapshot.get('is_public'), 
-                                                        author_display_name: childSnapshotAuthor.get('displayName'), 
-                                                        author_email: childSnapshotAuthor.get('email'), 
-                                                        time_created: new Date(childSnapshot.get('time_created').seconds * 1000).toLocaleString(),  
-                                                        updater_display_name: childSnapshotUpdater.get('displayName'), 
-                                                        updater_email: childSnapshotUpdater.get('email'), 
-                                                        last_updated: new Date(childSnapshot.get('last_updated').seconds * 1000).toLocaleString(), 
-                                                        id: childSnapshot.id, 
-                                                        deletePermission: newDeletePermission
-                                                    })
-                                                }
-                                            });
-                                        }) 
+                        if (inList == true) { 
+                            let sum_ratings = 0
+                            let num_ratings = 0
+                            integramsRatingsRef.get().then(function(snapshotRating) {
+                                snapshotRating.forEach(function(childSnapshotRating) {  
+                                    let idPuzzle = childSnapshotRating.get('puzzleID') 
+                                    let match = true
+                                    if (idPuzzle != childSnapshot.id) {  
+                                        match = false
+                                    } 
+                                    if (match == true) {
+                                        sum_ratings += parseFloat(childSnapshotRating.get("rating")) 
+                                        num_ratings += 1
                                     }
                                 });
+                            }).then(() => {
+                                if (num_ratings == 0) {
+                                    num_ratings = 1
+                                }
+                                let category_values = funct_ref(childSnapshot.get('category_values').replace('\,',','))  
+                                usersRef.get(childSnapshot.get('author')).then(function(snapshotAuthor) {
+                                    snapshotAuthor.forEach(function(childSnapshotAuthor) {
+                                        let idAuthor = childSnapshotAuthor.id; 
+                                        if (idAuthor == childSnapshot.get('author')) { 
+                                            usersRef.get(childSnapshot.get('updater')).then(function(snapshotUpdater) {
+                                            snapshotUpdater.forEach(function(childSnapshotUpdater) {
+                                                    let idUpdater = childSnapshotUpdater.id; 
+                                                    if (idUpdater == childSnapshot.get('updater')) {  
+                                                        let newDeletePermission = {granted: false, id: childSnapshot.id}
+                                                        if (me.user) {
+                                                            newDeletePermission = {granted: childSnapshotAuthor.id == me.user.uid, id: childSnapshot.id}
+                                                        }
+                                                        me.puzzles.push({
+                                                            categories: category_values[0].length,
+                                                            values: category_values.length,
+                                                            num_instructions: childSnapshot.get('instructions').length,
+                                                            rating: sum_ratings / num_ratings,
+                                                            title: childSnapshot.get('title'), 
+                                                            description: childSnapshot.get('description'), 
+                                                            source: childSnapshot.get('source'), 
+                                                            is_public: childSnapshot.get('is_public'), 
+                                                            author_display_name: childSnapshotAuthor.get('displayName'), 
+                                                            author_email: childSnapshotAuthor.get('email'), 
+                                                            time_created: new Date(childSnapshot.get('time_created').seconds * 1000),  
+                                                            updater_display_name: childSnapshotUpdater.get('displayName'), 
+                                                            updater_email: childSnapshotUpdater.get('email'), 
+                                                            last_updated: new Date(childSnapshot.get('last_updated').seconds * 1000), 
+                                                            id: childSnapshot.id, 
+                                                            deletePermission: newDeletePermission
+                                                        })
+                                                    }
+                                                });
+                                            }) 
+                                        }
+                                    });
+                                }) 
                             }) 
                         }
                     });
@@ -225,6 +254,7 @@
         <template #header(categories)>Broj kategorija</template>
         <template #header(values)>Broj pojmova</template>
         <template #header(num_instructions)>Broj uputa</template>
+        <template #header(rating)>Ocjena</template>
         <template #header(title)>Naslov zagonetke</template>
         <template #header(description)>Opis zagonetke</template>
         <template #header(author_display_name)>Autor (ime)</template>
@@ -236,6 +266,22 @@
         <template #header(time_created)>Vrijeme kreiranja</template>
         <template #header(last_updated)>Vrijeme zadnje izmjene</template>
         <template #header(deletePermission)>Izbriši</template>
+        <template #cell(time_created)="{ source: time_created }"> 
+            {{time_created.toLocaleString()}} 
+        </template>
+        <template #cell(last_updated)="{ source: last_updated }"> 
+            {{last_updated.toLocaleString()}} 
+        </template>
+        <template #cell(author_email)="{ source: author_email }">
+            <router-link v-bind:to="{ name: 'profile', params: { email: author_email }}">
+                {{author_email}}
+            </router-link> 
+        </template>
+        <template #cell(updater_email)="{ source: updater_email }">
+            <router-link v-bind:to="{ name: 'profile', params: { email: updater_email }}">
+                {{updater_email}}
+            </router-link> 
+        </template>
         <template #cell(id)="{ source: id }">
             <router-link v-bind:to="{ name: 'edit_integram', params: { id: id }}">
                 <va-icon name="mode_edit"/>
@@ -267,30 +313,51 @@
             </tr>
         </template>
     </va-data-table> 
-    <span v-if="!start_time && !end_time && selectMode == 'single'"> 
+    <div class="myrow" v-if="!start_time && !end_time && selectMode == 'single'"> 
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+            <template #tabs> 
+            <va-tab
+                label="Svi rekordi za odabrani integram"
+                name="all"
+            />
+            <va-tab
+                label="Rekordi korisnika za odabrani integram"
+                name="mine"
+            />
+            <va-tab
+                label="Ocjena za integram"
+                name="rate"
+            />
+            </template>
+        </va-tabs>
+        <span v-for="item in selectedItemsEmitted" :key="item.id">  
+            <RatingsTable v-if="value=='rate'" :dbRef="integramsRatingsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RatingsTable> 
+            <RecordsTable v-if="value=='all'" :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id"></RecordsTable> 
+            <RecordsTable v-if="user && value=='mine'" :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RecordsTable>
+        </span></div> 
+    <div class="myrow" v-if="start_time && end_time && selectMode == 'single'"> 
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+            <template #tabs> 
+            <va-tab
+                label="Svi rekordi za odabrani integram unutar vremena turnira"
+                name="all"
+            />
+            <va-tab
+                label="Rekordi korisnika za odabrani integram unutar vremena turnira"
+                name="mine"
+            />
+            <va-tab
+                label="Ocjena za integram"
+                name="rate"
+            />
+            </template>
+        </va-tabs>
         <span v-for="item in selectedItemsEmitted" :key="item.id"> 
-            <br>
-            <h2 class="display-2">Svi rekordi za odabrani integram</h2>
-            <RecordsTable :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id"></RecordsTable>
-            <br>
-            <span v-if="user">
-                <h2 class="display-2">Moji rekordi za odabrani integram</h2>
-                <RecordsTable :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RecordsTable>
-            </span>
+            <RatingsTable v-if="value=='rate'" :dbRef="integramsRatingsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RatingsTable> 
+            <RecordsTable v-if="value=='all'" :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :start_time="start_time" :end_time="end_time"></RecordsTable> 
+            <RecordsTable v-if="user && value=='mine'" :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid" :start_time="start_time" :end_time="end_time"></RecordsTable>
         </span>
-    </span>
-    <span v-if="start_time && end_time && selectMode == 'single'"> 
-        <span v-for="item in selectedItemsEmitted" :key="item.id"> 
-            <br>
-            <h2 class="display-2">Svi rekordi za odabrani integram</h2>
-            <RecordsTable :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :start_time="start_time" :end_time="end_time"></RecordsTable>
-            <br>
-            <span v-if="user">
-                <h2 class="display-2">Moji rekordi za odabrani integram</h2>
-                <RecordsTable :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid" :start_time="start_time" :end_time="end_time"></RecordsTable>
-            </span>
-        </span>
-    </span>  
+    </div>  
 </template>
 
 <style>

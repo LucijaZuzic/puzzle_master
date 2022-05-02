@@ -2,8 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import {createRouter, createWebHashHistory} from 'vue-router'
 
-import Home from './components/Home.vue'
-import SignInSuccess from './components/SignInSuccess.vue'
+import Home from './components/Home.vue' 
 import Login from './components/Login.vue'
 import CreateTournament from './components/CreateTournament.vue'
 import SearchTournament from './components/TournamentsTable.vue'
@@ -25,11 +24,12 @@ import SearchCryptogram from './components/SearchCryptogram.vue'
 import EditCryptogram from './components/EditCryptogram.vue' 
 import SolveCryptogram from './components/SolveCryptogram.vue'
 
-
 import CreateInitial from './components/CreateInitial.vue'
 import SearchInitial from './components/SearchInitial.vue'
 import EditInitial from './components/EditInitial.vue' 
 import SolveInitial from './components/SolveInitial.vue'
+
+import FriendProfile from './components/FriendProfile.vue'
 /*import BootstrapVue3 from "bootstrap-vue-3";
 
 import "bootstrap/dist/css/bootstrap.css"; 
@@ -50,8 +50,7 @@ import 'vuestic-ui/dist/vuestic-ui.css'
 // Each route should map to a component.
 // We'll talk about nested routes later.
 const routes = [
-    { path: '/', component: Home },
-    { path: '/signinsuccess', component: SignInSuccess },
+    { path: '/', component: Home }, 
     { path: '/login', component: Login },
     { path: '/searchtournament', component: SearchTournament },
     { path: '/createtournament', component: CreateTournament },
@@ -67,6 +66,8 @@ const routes = [
     { path: '/solveintegram/:id', component: SolveIntegram, name: 'solve_integram' },
     { path: '/solvenonogram/:id', component: SolveNonogram, name: 'solve_nonogram' },
     { path: '/solvenumbercrossword/:id', component: SolveNumberCrossword, name: 'solve_number_crossword' }, 
+    
+    { path: '/profile/:email', component: FriendProfile, name: 'profile' },
 
     { path: '/createcryptogram', component: CreateCryptogram }, 
     { path: '/searchcryptogram', component: SearchCryptogram }, 
@@ -131,8 +132,16 @@ const integramsRecordsRef = projectFirestore.collection('integramsRecords')
 const cryptogramsRef = projectFirestore.collection('cryptograms') 
 const cryptogramsRecordsRef = projectFirestore.collection('cryptogramsRecords') 
 
-const initialRef = projectFirestore.collection('initial') 
-const initialRecordsRef = projectFirestore.collection('initialRecords') 
+const initialsRef = projectFirestore.collection('initial') 
+const initialsRecordsRef = projectFirestore.collection('initialRecords') 
+
+
+const numberCrosswordsRatingsRef = projectFirestore.collection('numberCrosswordsRatings') 
+const nonogramsRatingsRef = projectFirestore.collection('nonogramsRatings') 
+const integramsRatingsRef = projectFirestore.collection('integramsRatings') 
+const initialsRatingsRef = projectFirestore.collection('initialsRatings') 
+const cryptogramsRatingsRef = projectFirestore.collection('cryptogramsRatings')  
+
 // Initialize the FirebaseUI Widget using Firebase.
 var ui = new firebaseui.auth.AuthUI(firebase.auth());
 // Set up sign-in methods
@@ -141,7 +150,7 @@ var uiConfig = {
     firebase.auth.EmailAuthProvider.PROVIDER_ID,
     firebase.auth.GoogleAuthProvider.PROVIDER_ID
   ],
-  signInSuccessUrl: ['/signinsuccess']
+  signInSuccessUrl: ['/']
   // Other config options...
 }
 export { ui, uiConfig, 
@@ -149,5 +158,6 @@ export { ui, uiConfig,
   numberCrosswordsRef, nonogramsRef, integramsRef,
   numberCrosswordsRecordsRef, nonogramsRecordsRef,integramsRecordsRef, 
   cryptogramsRef, cryptogramsRecordsRef,
-  initialRef, initialRecordsRef,
+  initialsRef, initialsRecordsRef,
+  numberCrosswordsRatingsRef, nonogramsRatingsRef, integramsRatingsRef, initialsRatingsRef, cryptogramsRatingsRef,
   usersRef, tournamentsRef };

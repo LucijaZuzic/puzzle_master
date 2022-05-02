@@ -37,13 +37,13 @@ export default {
     <va-navbar color="primary" class="mb-2">
       <template #left>
         <va-navbar-item>
-          <router-link to="/searchnonogram">
-            Nonogrami
+          <router-link to="/searchintegram">
+            Integrami 
           </router-link>
         </va-navbar-item>
         <va-navbar-item>
-          <router-link to="/searchintegram">
-            Integrami 
+          <router-link to="/searchnonogram">
+            Nonogrami
           </router-link>
         </va-navbar-item>  
         <va-navbar-item>
@@ -68,7 +68,11 @@ export default {
         </va-navbar-item>
       </template>
       <template v-if="user" #center>
-        <va-navbar-item>Dobrodošli {{user.displayName}}</va-navbar-item> 
+        <va-navbar-item>
+          <router-link  :to="'/profile/' + user.email">
+            Dobrodošli {{user.displayName}}
+          </router-link>
+        </va-navbar-item> 
       </template>
       <template #right>
         <va-navbar-item @click="signOut()" v-if="user != null">

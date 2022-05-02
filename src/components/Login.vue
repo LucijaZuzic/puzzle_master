@@ -40,6 +40,7 @@ export default {
 <template>
   <Navbar></Navbar>
   <body class="mybody">
+    <h1 class="display-1">Prijava</h1>
     <section id="firebaseui-auth-container"></section>      
   </body>
 </template>

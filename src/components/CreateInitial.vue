@@ -1,5 +1,5 @@
 <script> 
-import { initialRef } from "../main.js"
+import { initialsRef } from "../main.js"
 import { usersRef } from "../main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from './Navbar.vue'
@@ -13,7 +13,7 @@ export default {
   },  
   data() {
     return {
-        word_warning: '',
+        word_warning: '', 
         word: "",
         image: null,
         imageURL: "",
@@ -31,7 +31,7 @@ export default {
         warning: true,
         source: "",  
         is_special: [], 
-        alphabet: ["A", "B", "C", "Č", "Ć", "D", "Đ", "DŽ", "E", "F", "G", "H", "I", "J", "K", "L", "LJ", "M", "N", "NJ", "O", "P", "R", "S", "Š", "T", "U", "V", "Z", "Ž", "X", "Y", "Z"],
+        alphabet: ["A", "B", "C", "Č", "Ć", "D", "Đ", "Ǆ", "E", "F", "G", "H", "I", "J", "K", "L", "Ǉ", "M", "N", "Ǌ", "O", "P", "R", "S", "Š", "T", "U", "V", "W", "X", "Y", "Z", "Ž"],
         description: '',
     }
   },
@@ -81,7 +81,7 @@ export default {
             })  
           }
       }, 
-      initialize() {
+      initialize() { 
           this.rows = parseInt(this.rows)
           this.columns = parseInt(this.columns) 
           let oldsolution = []
@@ -144,7 +144,7 @@ export default {
         }
         this.check_full()
       }, 
-      reset() {
+      reset() { 
           let new_special = []
           let new_values = []
            for (let i = 0; i < this.rows; i++) {
@@ -180,10 +180,11 @@ export default {
               string += "[" + array[i].toString() + "]"
           }
           return string + "]"
-      },  
+      },   
       check_word() {
           this.word_warning = ''
-          for (let i = 0; i < this.word.length; i++) {
+          this.word = this.word.toUpperCase()
+          for (let i = 0; i < this.word.length; i++) { 
               if (!this.alphabet.includes(this.word[i])) {
                   if (this.word_warning != '') {
                     this.word_warning += ' '
@@ -274,7 +275,26 @@ export default {
               this.solution[y_new][x_new] = new_word[letter_number]
           }
           this.words_by_dir[this.get_dir(dirx, diry)].push([x, y, new_word])
+          this.words_by_dir[this.get_dir(dirx, diry)].sort(this.sortFunction)
       },
+        sortFunction(a, b) {
+            if (a[2] === b[2]) {
+                if (a[1] === b[1]) {
+                    if (a[0] === b[0]) {
+                        return 0;
+                    }
+                    else {
+                        return (a[0] < b[0]) ? -1 : 1;
+                    }
+                }
+                else {
+                    return (a[1] < b[1]) ? -1 : 1;
+                }
+            }
+            else {
+                return (a[2] < b[2]) ? -1 : 1;
+            }
+        },
       place_word(x, y, new_word, dirx, diry, show_warning) {
         if (!new_word) {
             return
@@ -286,7 +306,7 @@ export default {
             this.is_special[y][x] = (this.is_special[y][x] + 1) % 2
             return
         }
-        if (this.word_warning == '') {
+        if (this.word_warning == '' || !show_warning) {
             //if (this.check_start(x, y, show_warning) == false) {
                 if (this.check_dir(x, y, new_word, dirx, diry, show_warning) == true) {
                     this.add_word(x, y, new_word, dirx, diry)
@@ -341,7 +361,7 @@ export default {
                     newspecial[i].push(this.is_special[i][j])
                  }
             }  
-            initialRef.add({
+            initialsRef.add({
                     solution: funct_ref(newsolution),
                     is_special: funct_ref(newspecial),
                     dir1: funct_ref(this.words_by_dir[0]),
@@ -376,7 +396,7 @@ export default {
                     .catch((error) => {  
                     }).then(() => {
                         let imageLocation = reference 
-                        initialRef.doc(some_id).update({
+                        initialsRef.doc(some_id).update({
                             solution: funct_ref(newsolution),
                             is_special: funct_ref(newspecial),
                             dir1: funct_ref(this.words_by_dir[0]),
@@ -401,6 +421,19 @@ export default {
                     })
             }) 
         }, 
+    remove_dir(i) {
+        this.words_by_dir[i] = []
+        let old_words = this.words_by_dir
+        this.reset()  
+        for (let i = 0; i < old_words.length; i++) {
+            for (let j = 0; j < old_words[i].length; j++) {
+                let dirs = this.get_dirxy(i)
+                this.add_word(old_words[i][j][0], old_words[i][j][1], old_words[i][j][2], dirs[0], dirs[1])
+            }
+        }
+        this.check_full()
+        this.$forceUpdate()
+    },
     delay(operation, delay) {
         return new Promise(resolve => {
             setTimeout(() => {
@@ -462,7 +495,8 @@ export default {
             </template>
         </va-slider>
     </div>  
-    <div class="myrow">  <va-button style="margin-left: 1%;margin-top: 1%" @click="mode_x=-1;mode_y=-1">&#8598;</va-button> 
+    <div class="myrow">  
+        <va-button style="margin-left: 1%;margin-top: 1%" @click="mode_x=-1;mode_y=-1">&#8598;</va-button> 
         <va-button style="margin-left: 1%;margin-top: 1%" @click="mode_x=-1;mode_y=0">&#8592;</va-button> 
         <va-button style="margin-left: 1%;margin-top: 1%" @click="mode_x=-1;mode_y=1">&#8601;</va-button> 
         <va-button style="margin-left: 1%;margin-top: 1%" @click="mode_x=0;mode_y=-1">&#8593;</va-button>  
@@ -475,9 +509,12 @@ export default {
     </div>
     <br>
     <div class="myrow">  
+        <va-button style="margin-left: 1%;margin-top: 1%" @click="word+='Ǆ'">Ǆ</va-button> 
+        <va-button style="margin-left: 1%;margin-top: 1%" @click="word+='Ǉ'">Ǉ</va-button> 
+        <va-button style="margin-left: 1%;margin-top: 1%" @click="word+='Ǌ'">Ǌ</va-button>  
         <va-input style="display: inline-block;margin-left: 1%;margin-top: 1%" type="text" v-model="word" placeholder="Nova riječ" label="Dodaj riječ" @focusout="check_word()"/>
         <br><br>
-        <va-alert v-if="word_warning!=''" color="warning" :title="'Neka slova u riječi ne pripadaju abcedi'" center class="mb-4">
+        <va-alert v-if="word_warning!=''" color="warning" :title="'Neka slova u riječi ne pripadaju abecedi'" center class="mb-4">
             {{word_warning}}
         </va-alert>  
         <va-alert v-if="warning" color="warning" :title="'Nisu unesena sva slova'" center class="mb-4">
@@ -507,14 +544,14 @@ export default {
     <div class="myrow">
         <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
             <va-chip outline v-if="words_in_dir.length > 0" style="margin-left: 2%;margin-top: 2%">
-                <va-chip v-if="i == 0">&#8598;</va-chip> 
-                <va-chip v-if="i == 1">&#8592;</va-chip> 
-                <va-chip v-if="i == 2">&#8601;</va-chip> 
-                <va-chip v-if="i == 3">&#8593;</va-chip>  
-                <va-chip v-if="i == 4">&#8595;</va-chip> 
-                <va-chip v-if="i == 5">&#8599;</va-chip> 
-                <va-chip v-if="i == 6">&#8594;</va-chip> 
-                <va-chip v-if="i == 7">&#8600;</va-chip> 
+                <va-chip v-if="i == 0" oncontextmenu="return false;" @click.right="remove_dir(i)">&#8598;</va-chip> 
+                <va-chip v-if="i == 1" oncontextmenu="return false;" @click.right="remove_dir(i)">&#8592;</va-chip> 
+                <va-chip v-if="i == 2" oncontextmenu="return false;" @click.right="remove_dir(i)">&#8601;</va-chip> 
+                <va-chip v-if="i == 3" oncontextmenu="return false;" @click.right="remove_dir(i)">&#8593;</va-chip>  
+                <va-chip v-if="i == 4" oncontextmenu="return false;" @click.right="remove_dir(i)">&#8595;</va-chip> 
+                <va-chip v-if="i == 5" oncontextmenu="return false;" @click.right="remove_dir(i)">&#8599;</va-chip> 
+                <va-chip v-if="i == 6" oncontextmenu="return false;" @click.right="remove_dir(i)">&#8594;</va-chip> 
+                <va-chip v-if="i == 7" oncontextmenu="return false;" @click.right="remove_dir(i)">&#8600;</va-chip> 
                 <va-list fit v-for="page_number in Math.ceil(words_in_dir.length / page_length)" v-bind:key="page_number">
                     <va-list-item v-for="j in Math.min(words_in_dir.length, page_number * page_length) - ((page_number - 1) * page_length)" v-bind:key="j">
                         <span oncontextmenu="return false;"  @click.right="remove_word(i, (page_number - 1) * page_length + j - 1)">

@@ -1,5 +1,5 @@
 <script> 
-import { initialRecordsRef, initialRef } from "../main.js"
+import { initialsRecordsRef, initialsRef } from "../main.js"
 import { usersRef } from "../main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from './Navbar.vue'
@@ -41,7 +41,7 @@ export default {
         time_created: '',
         last_updated: '',
         is_special: [], 
-        alphabet: ["A", "B", "C", "Č", "Ć", "D", "Đ", "DŽ", "E", "F", "G", "H", "I", "J", "K", "L", "LJ", "M", "N", "NJ", "O", "P", "R", "S", "Š", "T", "U", "V", "Z", "Ž", "X", "Y", "Z"],
+        alphabet: ["A", "B", "C", "Č", "Ć", "D", "Đ", "Ǆ", "E", "F", "G", "H", "I", "J", "K", "L", "Ǉ", "M", "N", "Ǌ", "O", "P", "R", "S", "Š", "T", "U", "V", "W", "X", "Y", "Z", "Ž"],
         description: '',
     }
   },
@@ -310,7 +310,7 @@ export default {
         let string_last_updated = ""
         let found = false
         let funct_ref = this.string_to_array
-        initialRef.get(params_id).then(function(snapshot) {
+        initialsRef.get(params_id).then(function(snapshot) {
             snapshot.forEach(function(childSnapshot) {
                 let id = childSnapshot.id;
                 if (id == params_id) {
@@ -482,7 +482,7 @@ export default {
       },
         store() {  
             let datetime = new Date()  
-            initialRecordsRef.add({
+            initialsRecordsRef.add({
                 puzzleID: this.$route.params.id,
                 user: this.user.uid, 
                 score: this.time_elapsed,
@@ -596,9 +596,15 @@ export default {
   beforeMount() {
       this.initialize() 
       this.fetch_puzzle()
-  }, 
-  beforeUpdate() { 
   },  
+  created() {
+    this.$watch(
+      () => this.$route.params,
+      (toParams, previousParams) => {
+        this.$router.go()
+      }
+    )
+  },
     mounted() {
         const auth = getAuth();
         onAuthStateChanged(auth, (user) => {
@@ -615,9 +621,7 @@ export default {
         });
         this.$refs.show_error.show()
         this.startTimer()
-    },
-  computed: {
-  }
+    } 
 }
 </script>
 
@@ -669,7 +673,7 @@ export default {
                         <span :class="{selected: word_index == (page_number - 1) * page_length + j - 1 && get_dir(mode_x, mode_y) == i, placed: placed_words[i][(page_number - 1) * page_length + j - 1] == 1}"
                         oncontextmenu="return false;"  @click.right="remove_word(i, (page_number - 1) * page_length + j - 1)" 
                         @click.left="select_word(i, (page_number - 1) * page_length + j - 1)"> 
-                            {{words_in_dir[(page_number - 1) * page_length + j - 1][2]}}&nbsp;({{words_in_dir[(page_number - 1) * page_length + j - 1][1]+1}},{{words_in_dir[(page_number - 1) * page_length + j - 1][0]+1}})
+                            {{words_in_dir[(page_number - 1) * page_length + j - 1][2]}}
                         </span>
                     </va-list-item> 
                 </va-list>

@@ -2,33 +2,41 @@
 <script> 
     import { getAuth, onAuthStateChanged } from "firebase/auth"
     import { numberCrosswordsRef } from "../main.js"
-    import { numberCrosswordsRecordsRef } from "../main.js"
+    import { numberCrosswordsRecordsRef, numberCrosswordsRatingsRef } from "../main.js"
     import RecordsTable from "./RecordsTable.vue" 
+    import RatingsTable from "./RatingsTable.vue" 
     import { usersRef } from "../main.js"
     export default { 
         emits: ["selectedNumberCrosswords"],
-        props: ["puzzleList", "selectMode", "start_time", "end_time"], 
+        props: ["friend", "puzzleList", "selectMode", "start_time", "end_time"], 
         components: {
-            RecordsTable
+            RecordsTable,
+            RatingsTable
         },
         mounted() {   
-            const auth = getAuth()
-            onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is signed in, see docs for a list of available properties
-                // https://firebase.google.com/docs/reference/js/firebase.User
-                this.user = user
-                // ...
+            if (!this.$props.friend) {
+                const auth = getAuth()
+                onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
+                    this.user = user
+                    // ...
+                } else {
+                    // User is signed out
+                    // ... 
+                }
+                }); 
             } else {
-                // User is signed out
-                // ... 
+                this.user = this.$props.friend
             }
-            });
         },
         data() {
             return { 
+                value: 'all',
                 user: null,
                 numberCrosswordsRecordsRef: numberCrosswordsRecordsRef,
+                numberCrosswordsRatingsRef: numberCrosswordsRatingsRef,
                 puzzles: [], 
                 selectedItemsEmitted: [],
                 new_item: "",
@@ -47,6 +55,7 @@
                 columns: [
                     {key: 'rows', sortable: true},
                     {key: 'columns', sortable: true},
+                    {key: 'rating', sortable: true}, 
                     {key: 'title', sortable: true},
                     {key: 'description', sortable: true},
                     {key: 'source', sortable: true},
@@ -109,6 +118,24 @@
                             }
                         }
                         if (inList == true) {
+                            let sum_ratings = 0
+                            let num_ratings = 0
+                            numberCrosswordsRatingsRef.get().then(function(snapshotRating) {
+                                snapshotRating.forEach(function(childSnapshotRating) {  
+                                    let idPuzzle = childSnapshotRating.get('puzzleID') 
+                                    let match = true
+                                    if (idPuzzle != childSnapshot.id) {  
+                                        match = false
+                                    } 
+                                    if (match == true) {
+                                        sum_ratings += parseFloat(childSnapshotRating.get("rating")) 
+                                        num_ratings += 1
+                                    }
+                                });
+                            }).then(() => {
+                                if (num_ratings == 0) {
+                                    num_ratings = 1
+                                }
                             let solution = funct_ref(childSnapshot.get('solution')) 
                             usersRef.get(childSnapshot.get('author')).then(function(snapshotAuthor) {
                                 snapshotAuthor.forEach(function(childSnapshotAuthor) {
@@ -125,28 +152,30 @@
                                                     me.puzzles.push({
                                                         rows: solution.length,
                                                         columns: solution[0].length,
+                                                        rating: sum_ratings / num_ratings,
                                                         title: childSnapshot.get('title'), 
                                                         description: childSnapshot.get('description'), 
                                                         source: childSnapshot.get('source'), 
                                                         is_public: childSnapshot.get('is_public'), 
                                                         author_display_name: childSnapshotAuthor.get('displayName'), 
                                                         author_email: childSnapshotAuthor.get('email'), 
-                                                        time_created: new Date(childSnapshot.get('time_created').seconds * 1000).toLocaleString(), 
+                                                        time_created: new Date(childSnapshot.get('time_created').seconds * 1000), 
                                                         updater_display_name: childSnapshotUpdater.get('displayName'), 
                                                         updater_email: childSnapshotUpdater.get('email'), 
-                                                        last_updated: new Date(childSnapshot.get('last_updated').seconds * 1000).toLocaleString(), 
+                                                        last_updated: new Date(childSnapshot.get('last_updated').seconds * 1000), 
                                                         id: childSnapshot.id, 
                                                         deletePermission: newDeletePermission
-                                                    })
-                                                }
-                                            });
-                                        }) 
-                                    }
-                                });
+                                                            })
+                                                        }
+                                                    });
+                                                }) 
+                                            }
+                                        });
+                                    }) 
                             }) 
                         }
                     });
-                }) 
+                })
             },
             sortByOptions () {
                 return this.columns.map(({ key }) => key)
@@ -222,6 +251,7 @@
         <template #header(id)>Akcije</template>
         <template #header(rows)>Broj redaka</template>
         <template #header(columns)>Broj stupaca</template>
+        <template #header(rating)>Ocjena</template>
         <template #header(title)>Naslov zagonetke</template>
         <template #header(description)>Opis zagonetke</template>
         <template #header(author_display_name)>Autor (ime)</template>
@@ -233,6 +263,22 @@
         <template #header(time_created)>Vrijeme kreiranja</template>
         <template #header(last_updated)>Vrijeme zadnje izmjene</template>
         <template #header(deletePermission)>Izbriši</template>
+        <template #cell(time_created)="{ source: time_created }"> 
+            {{time_created.toLocaleString()}} 
+        </template>
+        <template #cell(last_updated)="{ source: last_updated }"> 
+            {{last_updated.toLocaleString()}} 
+        </template>
+        <template #cell(author_email)="{ source: author_email }">
+            <router-link v-bind:to="{ name: 'profile', params: { email: author_email }}">
+                {{author_email}}
+            </router-link> 
+        </template>
+        <template #cell(updater_email)="{ source: updater_email }">
+            <router-link v-bind:to="{ name: 'profile', params: { email: updater_email }}">
+                {{updater_email}}
+            </router-link> 
+        </template>
         <template #cell(id)="{ source: id }">
             <router-link v-bind:to="{ name: 'edit_number_crossword', params: { id: id }}">
                 <va-icon name="mode_edit"/>
@@ -264,30 +310,52 @@
             </tr>
         </template>
     </va-data-table>
-    <span v-if="!start_time && !end_time && selectMode == 'single'"> 
-        <span v-for="item in selectedItemsEmitted" :key="item.id"> 
-            <br>
-            <h2 class="display-2">Svi rekordi za odabranu brojevnu križaljku</h2>
-            <RecordsTable :dbRef="numberCrosswordsRecordsRef" :puzzleId="selectedItemsEmitted[0].id"></RecordsTable>
-            <br>
-            <span v-if="user">
-                <h2 class="display-2">Moji rekordi za odabranu brojevnu križaljku</h2>
-                <RecordsTable :dbRef="numberCrosswordsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RecordsTable>
-            </span>
+    <div class="myrow" v-if="!start_time && !end_time && selectMode == 'single'"> 
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+            <template #tabs> 
+            <va-tab
+                label="Svi rekordi za odabranu brojevnu križaljku"
+                name="all"
+            />
+            <va-tab
+                label="Rekordi korisnika za odabranu brojevnu križaljku"
+                name="mine"
+            />
+            <va-tab
+                label="Ocjena za brojevnu križaljku"
+                name="rate"
+            />
+            </template>
+        </va-tabs>
+        <span v-for="item in selectedItemsEmitted" :key="item.id">  
+            <RatingsTable v-if="value=='rate'" :dbRef="numberCrosswordsRatingsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RatingsTable>
+            <RecordsTable v-if="value=='all'" :dbRef="numberCrosswordsRecordsRef" :puzzleId="selectedItemsEmitted[0].id"></RecordsTable> 
+            <RecordsTable v-if="user && value=='mine'" :dbRef="numberCrosswordsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RecordsTable>
         </span>
-    </span>
-    <span v-if="start_time && end_time && selectMode == 'single'"> 
-        <span v-for="item in selectedItemsEmitted" :key="item.id"> 
-            <br>
-            <h2 class="display-2">Svi rekordi za odabranu brojevnu križaljku</h2>
-            <RecordsTable :dbRef="numberCrosswordsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :start_time="start_time" :end_time="end_time"></RecordsTable>
-            <br>
-            <span v-if="user">
-                <h2 class="display-2">Moji rekordi za odabranu brojevnu križaljku</h2>
-                <RecordsTable :dbRef="numberCrosswordsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid" :start_time="start_time" :end_time="end_time"></RecordsTable>
-            </span>
+    </div> 
+    <div class="myrow" v-if="start_time && end_time && selectMode == 'single'"> 
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+            <template #tabs> 
+            <va-tab
+                label="Svi rekordi za odabranu brojevnu križaljku unutar vremena turnira"
+                name="all"
+            />
+            <va-tab
+                label="Rekordi korisnika za odabranu brojevnu križaljku unutar vremena turnira"
+                name="mine"
+            />
+            <va-tab
+                label="Ocjena za brojevnu križaljku"
+                name="rate"
+            />
+            </template>
+        </va-tabs>
+        <span v-for="item in selectedItemsEmitted" :key="item.id">  
+            <RatingsTable v-if="value=='rate'" :dbRef="numberCrosswordsRatingsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RatingsTable>
+            <RecordsTable v-if="value=='all'" :dbRef="numberCrosswordsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :start_time="start_time" :end_time="end_time"></RecordsTable> 
+            <RecordsTable v-if="user && value=='mine'" :dbRef="numberCrosswordsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid" :start_time="start_time" :end_time="end_time"></RecordsTable>
         </span>
-    </span>  
+    </div>  
 </template>
 
 <style>

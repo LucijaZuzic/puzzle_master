@@ -594,6 +594,14 @@ export default {
     this.initialize()
     this.check_equal_colors()
   },
+  created() { 
+    this.$watch(
+      () => this.$route.params,
+      (toParams, previousParams) => {
+        this.$router.go()
+      }
+    )
+  },
   beforeUpdate() {
     this.expand_color_list() 
     this.initialize()

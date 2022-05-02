@@ -1,17 +1,20 @@
  
 <script>
- 
-    import { usersRef } from "../main.js"
+import { usersRef } from "../main.js"
     import NoDataToDisplay from './NoDataToDisplay.vue'
     export default {  
         components: { 
             NoDataToDisplay
         },
-        props: ["dbRef", "puzzleId", "userId", "start_time", "end_time"],
+        props: ["dbRef", "puzzleId", "userId"],
         data() {
             return { 
-                user_records: [], 
-                selectedItemsEmitted: [],
+                already_rated: false,
+                documentRated: '',
+                sum_ratings: 0, 
+                value: 0,
+                comment: "",
+                user_ratings: [],  
                 new_item: "",
                 new_item_tag: "",
                 filterBy: '',
@@ -21,14 +24,15 @@
                 filters: [],
                 filtered: [],
                 columns: [],
-                sortBy: 'score',
+                sortBy: 'rating',
                 sortingOrder: 'asc',
                 perPage: 10,
                 currentPage: 1,
                 columns: [ 
                     {key: 'user_display_name', sortable: true},
                     {key: 'user_email', sortable: true},
-                    {key: 'score', sortable: true},
+                    {key: 'rating', sortable: true},
+                    {key: 'comment', sortable: true},
                     {key: 'time', sortable: true},
                 ],
                 sortingOrderOptions: [
@@ -61,32 +65,33 @@
                 return hours + ":" + minutes + ":" + seconds;
             }, 
             fetch_users() {
-                this.user_records = []
+                this.user_ratings = []
                 let me = this  
                 this.$props.dbRef.get().then(function(snapshot) {
                     snapshot.forEach(function(childSnapshot) {  
                         let idPuzzle = childSnapshot.get('puzzleID')
                         let idUser = childSnapshot.get('user')
+                        let idRating = childSnapshot.id
+                        if (me.$props.userId == idUser) {
+                            me.already_rated = true
+                            me.documentRated = idRating
+                        }
                         let record = new Date(childSnapshot.get('time').seconds * 1000)
                         let match = true
                         if (me.$props.puzzleId && idPuzzle != me.$props.puzzleId) {  
                             match = false
-                        }
-                        if (me.$props.userId && idUser != me.$props.userId) {  
-                            match = false
                         } 
-                        if (me.$props.start_time && me.$props.end_time && (record < me.$props.start_time || record > me.$props.end_time)) {  
-                            match = false
-                        }
                         if (match == true) {
                             usersRef.get(idUser).then(function(snapshotUser) {
                                 snapshotUser.forEach(function(childSnapshotUser) {
                                     let foundUser = childSnapshotUser.id; 
-                                    if (foundUser == idUser) {  
-                                        me.user_records.push({
+                                    if (foundUser == idUser) { 
+                                        me.sum_ratings += parseFloat(childSnapshot.get("rating")) 
+                                        me.user_ratings.push({
                                             user_display_name: childSnapshotUser.get("displayName"),
                                             user_email: childSnapshotUser.get("email"),
-                                            score: me.format(childSnapshot.get("score")),
+                                            rating: parseFloat(childSnapshot.get("rating")),
+                                            comment: childSnapshot.get("comment"),
                                             time: record,
                                         })
                                     }
@@ -95,6 +100,27 @@
                         }
                     });
                 }) 
+            },
+            submit() {
+                if (this.already_rated == false) {
+                    let datetime = new Date()
+                    this.$props.dbRef.add({  
+                        puzzleID: this.$props.puzzleId,
+                        user: this.$props.userId,
+                        rating: this.value,
+                        comment: this.comment,
+                        time: datetime,
+                    }).then(() => {this.$refs.store_success.show();this.fetch_users()})
+                } else {
+                    let datetime = new Date()
+                    this.$props.dbRef.doc(this.documentRated).update({ 
+                        puzzleID: this.$props.puzzleId,
+                        user: this.$props.userId,
+                        rating: this.value,
+                        comment: this.comment,
+                        time: datetime,
+                    }).then(() => {this.$refs.store_success.show();this.fetch_users()})
+                }
             },
             sortByOptions () {
                 return this.columns.map(({ key }) => key)
@@ -117,7 +143,12 @@
 </script>
 
 <template>   
-    <span v-if="user_records.length > 0">
+    <div class="myrow" v-if="user_ratings.length > 0"> 
+        <va-chip>
+            Ocjena: {{sum_ratings/user_ratings.length}} 
+        </va-chip>
+    </div>
+    <span v-if="user_ratings.length > 0">
         <div class="myrow">
             <va-input
             class="flex mb-2 md6" style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 25%" 
@@ -147,10 +178,10 @@
             /> 
         </div> 
         <va-data-table 
-            :items="user_records"
+            :items="user_ratings"
             :filter="filter"
             :columns="columns"
-            :hoverable="true" 
+            :hoverable="true"  
             :per-page="perPage"     
             :current-page="currentPage"
             v-model:sort-by="sortBy"
@@ -161,7 +192,8 @@
             :filter-method="customFilteringFn" > 
             <template #header(user_display_name)>Korisnik (ime)</template>
             <template #header(user_email)>Korisnik (email)</template>
-            <template #header(score)>Rezultat</template>
+            <template #header(rating)>Ocjena</template>
+            <template #header(comment)>Komentar</template>
             <template #header(time)>Datum i vrijeme</template> 
             <template #cell(time)="{ source: time }"> 
                 {{time.toLocaleString()}} 
@@ -183,8 +215,36 @@
                 </tr>
             </template>
         </va-data-table> 
-    </span>
-    <NoDataToDisplay v-if="user_records.length <= 0" customMessage="Nema rekorda koji zadovoljavaju kriterije"></NoDataToDisplay> 
+    </span>  
+    <NoDataToDisplay v-if="user_ratings.length <= 0" customMessage="Nema ocjena za odabranu zagonetku"></NoDataToDisplay> 
+    <div class="myrow" v-if="$props.userId">
+        <va-list-item >
+            <va-list-item-section avatar>
+                <va-avatar>
+                    {{value}}
+                </va-avatar>
+            </va-list-item-section>
+            <va-list-item-section>
+                <va-list-item-label caption>
+                    <va-rating 
+                        style="display:inline-block"
+                        v-model="value"
+                        halves
+                        hover 
+                        size="large"
+                    />
+                </va-list-item-label>
+            </va-list-item-section>
+        </va-list-item>
+    </div>  
+    <div class="myrow" v-if="$props.userId">
+        <va-input type="textarea" placeholder="Obrazložite ocjenu" label="Komentar" v-model="comment"></va-input>
+    </div>  
+    <div class="myrow" v-if="$props.userId">
+        <va-button @click="submit()">Ocjenite</va-button> 
+    </div>  
+    <va-modal ref="store_success" hide-default-actions message="Nova ocjena je uspješno spremljena." stateful /> 
+    <va-modal ref="update_success" hide-default-actions message="Ocjena je uspješno ažurirana." stateful />
 </template>
 
 <style>

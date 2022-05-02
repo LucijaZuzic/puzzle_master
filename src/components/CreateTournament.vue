@@ -12,6 +12,7 @@
     export default {
         data() { 
             return {
+                value: 'integram',
                 user: null,
                 start_time: new Date(),
                 start_date: new Date(), 
@@ -165,20 +166,41 @@
         </va-alert> 
     </div> 
     <br>
-    <h2 class="display-2">Integrami</h2>
-    <IntegramTable @selected-integrams="selectIntegrams" selectMode="multiple"></IntegramTable> 
     <br>
-    <h2 class="display-2">Nonogrami</h2>
-    <NonogramTable  @selected-nonograms="selectNonograms" selectMode="multiple"></NonogramTable> 
-    <br>
-    <h2 class="display-2">Brojevne križaljke</h2>
-    <NumberCrosswordTable  @selected-number-crosswords="selectNumberCrosswords"  selectMode="multiple"></NumberCrosswordTable> 
-    <br> 
-    <h2 class="display-2">Kriptogrami</h2>
-    <CryptogramTable  @selected-cryptograms="selectCryptograms"  selectMode="multiple"></CryptogramTable>  
-    <br> 
-    <h2 class="display-2">Inicijalne osmosmjerke</h2>
-    <InitialTable  @selected-initials="selectInitials"  selectMode="multiple"></InitialTable>  
+    <va-tabs v-model="value" vertical>
+        <template #tabs> 
+        <va-tab
+            label="Integrami"
+            name="integram"
+        />
+        <va-tab
+            label="Nonogrami"
+            name="nonogram"
+        />
+        <va-tab
+            label="Brojevne križaljke"
+            name="numberCrossword"
+        />
+        <va-tab
+            label="Kriptogrami"
+            name="cryptogram"
+        />
+        <va-tab
+            label="Inicijalne osmosmjerke"
+            name="initial"
+        />
+        </template>
+    </va-tabs>
+    <IntegramTable v-if="value=='integram'" @selected-integrams="selectIntegrams" selectMode="multiple"></IntegramTable> 
+
+    <NonogramTable v-if="value=='nonogram'" @selected-nonograms="selectNonograms" selectMode="multiple"></NonogramTable> 
+
+    <NumberCrosswordTable v-if="value=='numberCrossword'" @selected-number-crosswords="selectNumberCrosswords"  selectMode="multiple"></NumberCrosswordTable> 
+
+    <CryptogramTable v-if="value=='cryptogram'" @selected-cryptograms="selectCryptograms"  selectMode="multiple"></CryptogramTable>  
+
+    <InitialTable v-if="value=='initial'" @selected-initials="selectInitials"  selectMode="multiple"></InitialTable>  
+    
     <div class="myrow" v-if="!(selectedIntegrams.length > 0 || selectedNonograms.length > 0 || selectedNumberCrosswords.length > 0 || selectedCryptograms.length > 0 || selectedInitials.length > 0)">
         <va-alert style="white-space: pre-wrap;" color="warning" title="Nije odabrana niti jedna zagonetka" center class="mb-4">
             Odaberite barem jednu zagoentku da biste organizirali turnir.

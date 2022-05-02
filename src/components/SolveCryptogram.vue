@@ -12,6 +12,10 @@ export default {
   },
   data() {
       return {
+        border_top: [[]],
+        border_bottom: [[]],
+        border_left: [[]],
+        border_right: [[]],
         time_elapsed: 0,
         show_error: false,
         author: "",  
@@ -39,12 +43,35 @@ export default {
         num_letters: 1,
         rows: 1,
         columns: 1, 
-        letter_alert: "",
-        alphabet: ["A", "B", "C", "Č", "Ć", "D", "Đ", "DŽ", "E", "F", "G", "H", "I", "J", "K", "L", "LJ", "M", "N", "NJ", "O", "P", "R", "S", "Š", "T", "U", "V", "Z", "Ž", "X", "Y", "Z"],
+        letter_alert: "", 
+        alphabet: ["A", "B", "C", "Č", "Ć", "D", "Đ", "DŽ", "E", "F", "G", "H", "I", "J", "K", "L", "LJ", "M", "N", "NJ", "O", "P", "R", "S", "Š", "T", "U", "V", "W", "X", "Y", "Z", "Ž"],
         letters: [],
       }
   },
   methods: {
+        check_letter() {
+            this.letter_alert = ""  
+            for (let i = 0; i < this.num_letters; i++) {  
+                this.values[i] = this.values[i].toUpperCase()
+                if (!this.alphabet.includes(this.values[i])) {
+                    if (this.letter_alert != "") {
+                        this.letter_alert += " "
+                    }
+                    this.letter_alert += (i) + ". slovo (" + this.values[i] + ") nije u zadanoj abecedi."
+                } 
+            }
+            for (let i = 0; i < this.num_letters; i++) { 
+                for (let j = i + 1; j < this.num_letters; j++) { 
+                    if (this.values[i] == this.values[j]) {
+                        if (this.letter_alert != "") {
+                            this.letter_alert += " "
+                        }
+                        this.letter_alert += (i) + ". slovo (" + this.values[i] + ") i " + (j) + " slovo (" + this.values[j] + ") je jednako."
+                    }
+                }
+            }
+            this.$forceUpdate()
+        },
       shuffleOrder() {
           let new_order = [] 
           let old_letters = []  
@@ -158,12 +185,19 @@ export default {
           this.columns = parseInt(this.columns)
           let oldsolution = []
           let oldisspecial = [] 
+          let oldtop = [] 
+          let oldbottom = [] 
+          let oldleft = [] 
+          let oldright = [] 
           let maxcol = this.columns
           let maxrow = this.rows
           if (this.solution) {
                oldsolution = this.solution;
                oldisspecial = this.is_special; 
-               
+               oldtop = this.border_top; 
+               oldbottom = this.border_bottom; 
+               oldleft = this.border_left; 
+               oldright = this.border_right; 
                if (oldsolution.length > maxrow) {
                    maxrow = oldsolution.length
                }
@@ -173,29 +207,49 @@ export default {
           }
           this.solution = []
           this.is_special = []  
+          this.border_top = []; 
+          this.border_bottom = []; 
+          this.border_left = []; 
+          this.border_right = []; 
           for (let i = 0; i < maxrow; i++) {
-              let solution_row = [] 
+              let solution_row = []
               let special_row = [] 
+              this.border_top.push([])
+              this.border_bottom.push([])
+              this.border_left.push([])
+              this.border_right.push([])
               for (let j = 0; j < maxcol; j++) { 
                     if (oldsolution[i]) {
                         if (oldsolution[i].length > j) {
                             solution_row.push(oldsolution[i][j])
-                            special_row.push(oldisspecial[i][j]) 
+                            special_row.push(oldisspecial[i][j])
+                            this.border_top[i].push(oldtop[i][j])  
+                            this.border_bottom[i].push(oldbottom[i][j]) 
+                            this.border_left[i].push(oldleft[i][j]) 
+                            this.border_right[i].push(oldright[i][j]) 
                         } else {
                             solution_row.push(-2)
                             special_row.push(0) 
+                            this.border_top[i].push(0)  
+                            this.border_bottom[i].push(0) 
+                            this.border_left[i].push(0) 
+                            this.border_right[i].push(0) 
                         }
                     }  else {
                         solution_row.push(-2)
                         special_row.push(0) 
+                        this.border_top[i].push(0)  
+                        this.border_bottom[i].push(0) 
+                        this.border_left[i].push(0) 
+                        this.border_right[i].push(0) 
                     }
               }
-              this.solution.push(solution_row) 
+              this.solution.push(solution_row)
               this.is_special.push(special_row) 
               for (let j = 0; j < maxcol; j++) {
                 if (oldsolution[i]) {
                     if (oldsolution[i].length > j) {
-                        this.solution[i][j] = oldsolution[i][j]  
+                        this.solution[i][j] = oldsolution[i][j]
                         this.is_special[i][j] = oldisspecial[i][j] 
                     }
                 }
@@ -247,6 +301,10 @@ export default {
             let params_id= this.$route.params.id
             let string_solution = [] 
             let string_is_special = []
+            let string_top = []
+            let string_bottom = []
+            let string_left = []
+            let string_right = []
             let string_letters = ""
             let string_image = ""
             let string_title = ""
@@ -266,6 +324,10 @@ export default {
                     if (id == params_id) {
                         string_solution = funct_ref(childSnapshot.get('solution'))
                         string_is_special = funct_ref(childSnapshot.get('is_special'))
+                        string_top = funct_ref(childSnapshot.get('border_top'))
+                        string_bottom = funct_ref(childSnapshot.get('border_bottom'))
+                        string_left = funct_ref(childSnapshot.get('border_left'))
+                        string_right = funct_ref(childSnapshot.get('border_right'))
                         string_letters = childSnapshot.get('letters') 
                         string_image = childSnapshot.get('image') 
                         string_title = childSnapshot.get('title')
@@ -284,6 +346,10 @@ export default {
                 if (found) {
                     this.solution = string_solution 
                     this.is_special = string_is_special
+                    this.border_top = string_top
+                    this.border_bottom = string_bottom
+                    this.border_left = string_left
+                    this.border_right = string_right
                     this.letters = string_letters 
                     this.image = string_image
                     this.title = string_title
@@ -403,7 +469,16 @@ export default {
     this.fetch_puzzle()
   },  
   beforeUpdate() {
+      this.check_letter()
       this.check_victory() 
+  },
+  created() {
+    this.$watch(
+      () => this.$route.params,
+      (toParams, previousParams) => {
+        this.$router.go()
+      }
+    )
   },
   mounted() {
     const auth = getAuth();
@@ -431,20 +506,32 @@ export default {
         <va-checkbox class="flex mb-2 md6" style="float: left" label="Prikaži greške" v-model="show_error" />
         <va-chip style="float: right" outline>{{format(time_elapsed)}}</va-chip>
     </div>
+    <div class="myrow" v-if="letter_alert != ''">
+        <va-alert style="white-space: pre-wrap;" color="warning" title="Udvostručena i nedozvoljena slova" center class="mb-4">
+            {{letter_alert}}
+        </va-alert> 
+    </div> 
     <div class="myrow"> 
-            <va-chip outline style="margin-left: 1%;margin-top: 1%" v-for="i in (num_letters)" v-bind:key="i">
-                <sup>{{i - 1}}</sup><input v-model="values[i - 1]" type="text"  />
-            </va-chip> 
+            <va-input
+                class="mb-4" v-for="i in (num_letters)" v-bind:key="i" @click="mode=i - 1"
+                v-model="values[i - 1]" style="margin-left: 1%;width:60px; height:48px;display: inline-block"
+                type="text"
+                :label="'' + (i-1) + ''"
+                :min-rows="3"
+                :max-rows="5"
+            />
     </div> 
     <br> 
     <div class="myrow">
         <table class="numbers_table">
             <tr v-for="i in (rows)" v-bind:key="i">
                 <td v-for="j in (columns)" v-bind:key="j"  
-                :class="{black: solution[i - 1][j - 1] == -1, special: is_special[i - 1][j - 1] == 1, wrong: letters[solution[i - 1][j - 1]] != values[solution[i - 1][j - 1]] && show_error }">
+                :class="{black: solution[i - 1][j - 1] == -1, special: is_special[i - 1][j - 1] == 1, wrong: letters[solution[i - 1][j - 1]] != values[solution[i - 1][j - 1]] && show_error,
+                bordertop: border_top[i - 1][j - 1] == 1, borderbottom: border_bottom[i - 1][j - 1] == 1,
+                borderleft: border_left[i - 1][j - 1] == 1, borderright: border_right[i - 1][j - 1] == 1, }">
                         <div>
                             <span v-if="solution[i - 1][j - 1] == -2 || solution[i - 1][j - 1] == -1"></span>
-                            <span v-else><sup>{{solution[i - 1][j - 1]}}</sup>{{values[solution[i - 1][j - 1]]}}</span>
+                            <span v-else><sup>{{solution[i - 1][j - 1]}}</sup>&nbsp;{{values[solution[i - 1][j - 1]]}}</span>
                         </div>
                 </td>
             </tr>
@@ -484,9 +571,10 @@ export default {
         <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
     </div> 
     <div class="myrow">
-        <va-button @click="show_solution()">Otkrij sva polja</va-button>
+        <va-button @click="$refs.show_solution_modal.show()">Otkrij sva polja</va-button>
     </div>    
     <va-modal ref="show_error" message="Želite li da greške budu uznačene?" @ok="show_error=true" stateful ok-text="Da" cancel-text="Ne" />
+    <va-modal ref="show_solution_modal" message="Želite li da se otkriju sva polja? U tom slučaju vaš rezultat neće biti spremljen." @ok="show_solution()" stateful ok-text="Da" cancel-text="Ne" />
     <va-modal ref="barrier" hide-default-actions message="Broj ne može biti na barijeri." stateful />
     <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
     <va-modal ref="solved" hide-default-actions message="Uspješno ste riješili zagonetku." stateful />

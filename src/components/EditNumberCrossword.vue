@@ -774,6 +774,14 @@ export default {
     beforeUpdate() {
         this.initialize() 
     }, 
+  created() { 
+    this.$watch(
+      () => this.$route.params,
+      (toParams, previousParams) => {
+        this.$router.go()
+      }
+    )
+  },
     mounted() {
         const auth = getAuth();
         onAuthStateChanged(auth, (user) => {

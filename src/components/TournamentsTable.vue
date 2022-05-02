@@ -8,6 +8,7 @@
     import NumberCrosswordTable from "./NumberCrosswordTable.vue" 
     import CryptogramTable from "./CryptogramTable.vue" 
     import InitialTable from "./InitialTable.vue"
+    import NoDataToDisplay from "./NoDataToDisplay.vue" 
     import { usersRef } from "../main.js"
     export default {
         emits: ["selectedNonograms"],  
@@ -18,7 +19,8 @@
     NonogramTable,
     NumberCrosswordTable,
     CryptogramTable,
-    InitialTable
+    InitialTable,
+    NoDataToDisplay
 },
         mounted() {   
             const auth = getAuth()
@@ -36,6 +38,7 @@
         },
         data() {
             return {
+                value: 'integram',
                 user: null, 
                 tournaments: [],
                 selectedItemsEmitted: [],
@@ -248,33 +251,64 @@
             </tr>
         </template>
     </va-data-table>  
-    <span v-for="item in selectedItemsEmitted" :key="item.id">  
-        <br>
-        <span v-if="item.selectedIntegrams.length > 0">
-            <h2 class="display-2">Integrami koji ulaze u turnir</h2>
+    <div class="myrow">
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+            <template #tabs> 
+            <va-tab
+                label="Integrami koji ulaze u turnir"
+                name="integram"
+            />
+            <va-tab
+                label="Nonogrami koji ulaze u turnir"
+                name="nonogram"
+            />
+            <va-tab
+                label="Brojevne križaljke koje ulaze u turnir"
+                name="numberCrossword"
+            />
+            <va-tab
+                label="Kriptogrami koji ulaze u turnir"
+                name="cryptogram"
+            />
+            <va-tab
+                label="Inicijalne osmosmjerke koje ulaze u turnir"
+                name="initial"
+            />
+            </template>
+        </va-tabs>
+    </div>
+    <div class="myrow" v-for="item in selectedItemsEmitted" :key="item.id">  
+        <span v-if="value == 'integram' && item.selectedIntegrams.length > 0">
             <IntegramTable selectMode="single" :puzzleList="item.selectedIntegrams" :start_time="item.start_time" :end_time="item.end_time"></IntegramTable> 
-            <br>
         </span>
-        <span v-if="item.selectedNonograms.length > 0">
-            <h2 class="display-2">Nonogrami koji ulaze u turnir</h2>
+        <span v-if="value == 'integram' && item.selectedIntegrams.length <= 0">
+            <NoDataToDisplay customMessage="Na turniru nema integrama"></NoDataToDisplay> 
+        </span>
+        <span v-if="value == 'nonogram' && item.selectedNonograms.length > 0">
             <NonogramTable selectMode="single" :puzzleList="item.selectedNonograms" :start_time="item.start_time" :end_time="item.end_time"></NonogramTable> 
-            <br>
         </span>
-        <span v-if="item.selectedNumberCrosswords.length > 0">
-            <h2 class="display-2">Brojevne križaljke koji ulaze u turnir</h2>
+        <span v-if="value == 'nonogram' && item.selectedNonograms.length <= 0">
+            <NoDataToDisplay customMessage="Na turniru nema nonograma"></NoDataToDisplay> 
+        </span>
+        <span v-if="value == 'numberCrossword' && item.selectedNumberCrosswords.length > 0">
             <NumberCrosswordTable selectMode="single" :puzzleList="item.selectedNumberCrosswords" :start_time="item.start_time" :end_time="item.end_time"></NumberCrosswordTable>
-            <br> 
         </span>
-        <span v-if="item.selectedCryptograms.length > 0">
-            <h2 class="display-2">Kriptogrami koji ulaze u turnir</h2>
+        <span v-if="value == 'numberCrossword' && item.selectedNumberCrosswords.length <= 0">
+            <NoDataToDisplay customMessage="Na turniru nema brojevnih križaljki"></NoDataToDisplay> 
+        </span>
+        <span v-if="value == 'cryptogram' && item.selectedCryptograms.length > 0">
             <CryptogramTable selectMode="single" :puzzleList="item.selectedCryptograms" :start_time="item.start_time" :end_time="item.end_time"></CryptogramTable> 
-            <br> 
         </span>
-        <span v-if="item.selectedInitials.length > 0">
-            <h2 class="display-2">Incijalne osmosmjerke koji ulaze u turnir</h2>
+        <span v-if="value == 'cryptogram' && item.selectedCryptograms.length <= 0">
+            <NoDataToDisplay customMessage="Na turniru nema kriptograma"></NoDataToDisplay> 
+        </span>
+        <span v-if="value == 'initial' && item.selectedInitials.length > 0">
             <InitialTable selectMode="single" :puzzleList="item.selectedInitials" :start_time="item.start_time" :end_time="item.end_time"></InitialTable> 
         </span>
-    </span>
+        <span v-if="value == 'initial' && item.selectedInitials.length <= 0">
+            <NoDataToDisplay customMessage="Na turniru nema inicijalnih osmosmjerki"></NoDataToDisplay> 
+        </span>
+    </div>
     </body>
 </template>
 

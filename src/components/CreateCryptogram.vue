@@ -24,12 +24,16 @@ export default {
         is_public: false,
         solution: [[]],
         is_special: [[]],
+        border_top: [[]],
+        border_bottom: [[]],
+        border_left: [[]],
+        border_right: [[]],
         num_letters: 1,
         rows: 1,
         columns: 1,
         mode: -2,
         letter_alert: "",
-        alphabet: ["A", "B", "C", "Č", "Ć", "D", "Đ", "DŽ", "E", "F", "G", "H", "I", "J", "K", "L", "LJ", "M", "N", "NJ", "O", "P", "R", "S", "Š", "T", "U", "V", "Z", "Ž", "X", "Y", "Z"],
+        alphabet: ["A", "B", "C", "Č", "Ć", "D", "Đ", "DŽ", "E", "F", "G", "H", "I", "J", "K", "L", "LJ", "M", "N", "NJ", "O", "P", "R", "S", "Š", "T", "U", "V", "W", "X", "Y", "Z", "Ž"],
         letters: [],
       }
   },
@@ -77,11 +81,19 @@ export default {
           this.columns = parseInt(this.columns)
           let oldsolution = []
           let oldisspecial = [] 
+          let oldtop = [] 
+          let oldbottom = [] 
+          let oldleft = [] 
+          let oldright = [] 
           let maxcol = this.columns
           let maxrow = this.rows
           if (this.solution) {
                oldsolution = this.solution;
                oldisspecial = this.is_special; 
+               oldtop = this.border_top; 
+               oldbottom = this.border_bottom; 
+               oldleft = this.border_left; 
+               oldright = this.border_right; 
                if (oldsolution.length > maxrow) {
                    maxrow = oldsolution.length
                }
@@ -91,21 +103,41 @@ export default {
           }
           this.solution = []
           this.is_special = []  
+          this.border_top = []; 
+          this.border_bottom = []; 
+          this.border_left = []; 
+          this.border_right = []; 
           for (let i = 0; i < maxrow; i++) {
               let solution_row = []
               let special_row = [] 
-              for (let j = 0; j < maxcol; j++) {
+              this.border_top.push([])
+              this.border_bottom.push([])
+              this.border_left.push([])
+              this.border_right.push([])
+              for (let j = 0; j < maxcol; j++) { 
                     if (oldsolution[i]) {
                         if (oldsolution[i].length > j) {
                             solution_row.push(oldsolution[i][j])
-                            special_row.push(oldisspecial[i][j]) 
+                            special_row.push(oldisspecial[i][j])
+                            this.border_top[i].push(oldtop[i][j])  
+                            this.border_bottom[i].push(oldbottom[i][j]) 
+                            this.border_left[i].push(oldleft[i][j]) 
+                            this.border_right[i].push(oldright[i][j]) 
                         } else {
                             solution_row.push(-2)
                             special_row.push(0) 
+                            this.border_top[i].push(0)  
+                            this.border_bottom[i].push(0) 
+                            this.border_left[i].push(0) 
+                            this.border_right[i].push(0) 
                         }
                     }  else {
                         solution_row.push(-2)
                         special_row.push(0) 
+                        this.border_top[i].push(0)  
+                        this.border_bottom[i].push(0) 
+                        this.border_left[i].push(0) 
+                        this.border_right[i].push(0) 
                     }
               }
               this.solution.push(solution_row)
@@ -126,7 +158,7 @@ export default {
                if (oldletters.length > maxletters) {
                    maxletters = oldletters.length
                } 
-          }
+          } 
           this.letters = [];
           for (let i = 0; i < maxletters; i++) {
                 if (oldletters.length > i) {
@@ -253,6 +285,7 @@ export default {
         check_letter() {
             this.letter_alert = ""  
             for (let i = 0; i < this.num_letters; i++) {  
+                this.letters[i] = this.letters[i].toUpperCase()
                 if (!this.alphabet.includes(this.letters[i])) {
                     if (this.letter_alert != "") {
                         this.letter_alert += " "
@@ -273,6 +306,29 @@ export default {
             this.$forceUpdate()
         },
         change_number(x, y) {
+            if (this.mode <= -4) { 
+                if (this.solution[x][y] == -1) { 
+                    return
+                }
+                if (this.mode == -4 && x != 0 && this.solution[x - 1][y] != -1) {
+                    this.border_top[x][y] = (this.border_top[x][y] + 1) % 2
+                    this.border_bottom[x - 1][y] = (this.border_bottom[x - 1][y] + 1) % 2
+                }
+                if (this.mode == -5 && x != this.rows - 1 && this.solution[x + 1][y] != -1) { 
+                    this.border_bottom[x][y] = (this.border_bottom[x][y] + 1) % 2
+                    this.border_top[x + 1][y] = (this.border_top[x + 1][y] + 1) % 2
+                }
+                if (this.mode == -6 && y != 0 && this.solution[x][y - 1] != -1) { 
+                    this.border_left[x][y] = (this.border_left[x][y] + 1) % 2
+                    this.border_right[x][y - 1] = (this.border_right[x][y - 1] + 1) % 2
+                }
+                if (this.mode == -7 && y != this.columns - 1 && this.solution[x][y + 1] != -1) {
+                    this.border_right[x][y] = (this.border_right[x][y] + 1) % 2
+                    this.border_left[x][y + 1] = (this.border_left[x][y + 1] + 1) % 2
+                }
+                this.$forceUpdate()
+                return
+            }
             if (this.mode == -3) {
                 if (this.solution[x][y] == -1) {
                     this.$refs.special_barrier.show()
@@ -285,9 +341,41 @@ export default {
                         this.$refs.barrier_special.show()
                     } else {
                         this.solution[x][y] = this.mode
+                        this.border_bottom[x][y] = 0
+                        this.border_top[x][y] = 0
+                        this.border_left[x][y] = 0
+                        this.border_right[x][y] = 0    
+                        if (x != 0) {
+                            this.border_bottom[x - 1][y] = 0
+                        }
+                        if (x != this.rows - 1) {
+                            this.border_top[x + 1][y] = 0
+                        }
+                        if (y != 0) {
+                            this.border_right[x][y - 1] = 0
+                        }
+                        if (y != this.columns - 1) {
+                            this.border_left[x][y + 1] = 0
+                        }
                     }
                 } else {
                     this.solution[x][y] = this.mode
+                    this.border_bottom[x][y] = 0
+                    this.border_top[x][y] = 0
+                    this.border_left[x][y] = 0
+                    this.border_right[x][y] = 0    
+                    if (x != 0) {
+                        this.border_bottom[x - 1][y] = 0
+                    }
+                    if (x != this.rows - 1) {
+                        this.border_top[x + 1][y] = 0
+                    }
+                    if (y != 0) {
+                        this.border_right[x][y - 1] = 0
+                    }
+                    if (y != this.columns - 1) {
+                        this.border_left[x][y + 1] = 0
+                    }
                 }
             }
         },
@@ -330,12 +418,24 @@ export default {
             let funct_ref = this.array_to_string
             let newsolution = []
             let newspecial = []
+            let newtop = []
+            let newbottom = []
+            let newleft = []
+            let newright = []
             for (let i = 0; i < this.rows; i++) {
                 newsolution.push([])
                 newspecial.push([])
+                newtop.push([])
+                newbottom.push([])
+                newleft.push([])
+                newright.push([])
                 for (let j = 0; j < this.columns; j++) {
                     newsolution[i].push(this.solution[i][j])
                     newspecial[i].push(this.is_special[i][j])
+                    newtop[i].push(this.border_top[i][j])
+                    newbottom[i].push(this.border_bottom[i][j])
+                    newleft[i].push(this.border_left[i][j])
+                    newright[i].push(this.border_right[i][j])
                 }
             }
             let newletters = []
@@ -345,6 +445,10 @@ export default {
             cryptogramsRef.add({
                     solution: funct_ref(newsolution),
                     is_special: funct_ref(newspecial), 
+                    border_top: funct_ref(newtop), 
+                    border_bottom: funct_ref(newbottom), 
+                    border_left: funct_ref(newleft), 
+                    border_right: funct_ref(newright), 
                     title: this.title,
                     letters: newletters,
                     description: this.description,
@@ -373,6 +477,10 @@ export default {
                         cryptogramsRef.doc(some_id).update({
                             solution: funct_ref(newsolution),
                             is_special: funct_ref(newspecial), 
+                            border_top: funct_ref(newtop), 
+                            border_bottom: funct_ref(newbottom), 
+                            border_left: funct_ref(newleft), 
+                            border_right: funct_ref(newright), 
                             title: this.title,
                             letters: newletters,
                             description: this.description,
@@ -450,17 +558,28 @@ export default {
     </div> 
     <br>  
     <div class="myrow" v-if="letter_alert">
-        <va-alert style="white-space: pre-wrap;" color="warning" title="Udvostručena slova" center class="mb-4">
+        <va-alert style="white-space: pre-wrap;" color="warning" title="Udvostručena i nedozvoljena slova" center class="mb-4">
             {{letter_alert}}
         </va-alert> 
     </div> 
-    <div class="myrow">
-            <va-chip outline style="margin-left: 1%;margin-top: 1%" v-for="i in (num_letters)" v-bind:key="i" @click="mode=i - 1"  >
-                <sup>{{i - 1}}</sup><input v-model="letters[i - 1]" type="text" @input="check_letter()"/>
-            </va-chip> 
+    <div class="myrow"> 
+            <va-input
+                class="mb-4" v-for="i in (num_letters)" v-bind:key="i" @click="mode=i - 1"
+                v-model="letters[i - 1]" style="margin-left: 1%;width:60px; height:48px;display: inline-block"
+                type="text"
+                :label="'' + (i-1) + ''"
+                :min-rows="3"
+                :max-rows="5"
+            />
             <va-button style="margin-left: 1%;margin-top: 1%" @click="mode=-2">?</va-button>
             <va-button @click="mode=-1" style="background-color: black;margin-left: 1%;margin-top: 1%">Barijera</va-button>
-            <va-button @click="mode=-3" style="background-color: salmon;margin-left: 1%;margin-top: 1%">Dio rješenja</va-button> 
+            <va-button @click="mode=-3" style="background-color: salmon;margin-left: 1%;margin-top: 1%">Dio rješenja</va-button>&nbsp;
+    </div>  
+    <div class="myrow">
+            <table class="numbers_table"><tr><td class="bordertop" @click="mode=-4"></td></tr></table>&nbsp;
+            <table class="numbers_table"><tr><td class="borderbottom" @click="mode=-5"></td></tr></table>&nbsp;   
+            <table class="numbers_table"><tr><td class="borderleft" @click="mode=-6"></td></tr></table>&nbsp;   
+            <table class="numbers_table"><tr><td class="borderright" @click="mode=-7"></td></tr></table>&nbsp; 
     </div> 
     <br>
     <div class="myrow">
@@ -478,10 +597,12 @@ export default {
         <table class="numbers_table">
             <tr v-for="i in (rows)" v-bind:key="i">
                 <td v-for="j in (columns)" v-bind:key="j" @click="change_number(i-1,j-1)" 
-                :class="{black: solution[i - 1][j - 1] == -1, special: is_special[i - 1][j - 1] == 1}">
+                :class="{black: solution[i - 1][j - 1] == -1, special: is_special[i - 1][j - 1] == 1,
+                bordertop: border_top[i - 1][j - 1] == 1, borderbottom: border_bottom[i - 1][j - 1] == 1,
+                borderleft: border_left[i - 1][j - 1] == 1, borderright: border_right[i - 1][j - 1] == 1,}">
                         <div>
                             <span v-if="solution[i - 1][j - 1] == -2 || solution[i - 1][j - 1] == -1"></span>
-                            <span v-else><sup>{{solution[i - 1][j - 1]}}</sup>{{letters[solution[i - 1][j - 1]]}}</span>
+                            <span v-else><sup>{{solution[i - 1][j - 1]}}</sup>&nbsp;{{letters[solution[i - 1][j - 1]]}}</span>
                         </div>
                 </td>
             </tr>
@@ -586,4 +707,16 @@ export default {
 .special {
     background-color: salmon;
 } 
+.bordertop {
+    border-top: dashed !important;
+}
+.borderbottom {
+    border-bottom: dashed !important; 
+}
+.borderleft {
+    border-left: dashed !important; 
+}
+.borderright {
+    border-right: dashed !important; 
+}
 </style>

@@ -442,6 +442,14 @@ export default {
   beforeMount() { 
     this.fetch_puzzle() 
   },
+  created() { 
+    this.$watch(
+      () => this.$route.params,
+      (toParams, previousParams) => {
+        this.$router.go()
+      }
+    )
+  },
   beforeUpdate() {
     this.update_colors()
     this.parse_sequence()

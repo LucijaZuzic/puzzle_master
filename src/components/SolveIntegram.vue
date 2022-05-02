@@ -60,6 +60,14 @@ export default {
     this.$refs.show_error.show()
     this.startTimer()
   },
+  created() { 
+    this.$watch(
+      () => this.$route.params,
+      (toParams, previousParams) => {
+        this.$router.go()
+      }
+    )
+  },
   methods: {
       getAuthorUserRecord() { 
         let some_id = this.author
