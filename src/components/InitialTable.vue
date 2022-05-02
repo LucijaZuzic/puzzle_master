@@ -294,7 +294,7 @@
         <template #bodyAppend>
             <tr>
                 <td colspan="11" style="text-align: left">
-                    <router-link to="/createInitial"> 
+                    <router-link to="/createinitial"> 
                         <va-icon color="primary" class="mr-4" name="add_circle"/> Nova zagonetka
                     </router-link>
                 </td>

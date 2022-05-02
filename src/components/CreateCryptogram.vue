@@ -495,8 +495,114 @@ export default {
                         }).then(() => {this.new_async(this.$refs.store_success.show(), 1000).then(() => {this.$router.push("/searchcryptogram")}) })
                     })
             }) 
+        }, 
+    modeChange(event) {
+        switch (event.code) {
+            case "ArrowUp":
+                this.mode++
+                if (this.mode >= this.num_letters) {
+                    this.mode = -7
+                }
+                break;
+            case "ArrowDown": 
+                this.mode--
+                if (this.mode < -7) {
+                    this.mode = this.num_letters - 1
+                }
+                break;
+            case "ArrowRight":
+                this.mode++
+                if (this.mode >= this.num_letters) {
+                    this.mode = -7
+                }
+                break;
+            case "ArrowLeft": 
+                this.mode--
+                if (this.mode < -7) {
+                    this.mode = this.num_letters - 1
+                }
+                break;
+            case "KeyW":
+                this.mode++
+                if (this.mode >= this.num_letters) {
+                    this.mode = -7
+                }
+                break;
+            case "KeyS": 
+                this.mode--
+                if (this.mode < -7) {
+                    this.mode = this.num_letters - 1
+                }
+                break;
+            case "KeyD":
+                this.mode++
+                if (this.mode >= this.num_letters) {
+                    this.mode = -7
+                }
+                break;
+            case "KeyA": 
+                this.mode--
+                if (this.mode < -7) {
+                    this.mode = this.num_letters - 1
+                }
+                break;
+            case "Digit0": 
+                this.mode = 0
+                break; 
+            case "Digit1": 
+                if (this.num_letters > 1) {
+                    this.mode = 1
+                }
+                break; 
+            case "Digit2": 
+                if (this.num_letters > 2) {
+                    this.mode = 2
+                }
+                break; 
+            case "Digit3": 
+                if (this.num_letters > 3) {
+                    this.mode = 3
+                }
+                break; 
+            case "Digit4": 
+                if (this.num_letters > 4) {
+                    this.mode = 4
+                }
+                break; 
+            case "Digit5": 
+                if (this.num_letters > 5) {
+                    this.mode = 5
+                }
+                break; 
+            case "Digit6": 
+                if (this.num_letters > 6) {
+                    this.mode = 6
+                }
+                break; 
+            case "Digit7": 
+                if (this.num_letters > 7) {
+                    this.mode = 7
+                }
+                break; 
+            case "Digit8": 
+                if (this.num_letters > 8) {
+                    this.mode = 8
+                }
+                break; 
+            case "Digit9": 
+                if (this.num_letters > 9) {
+                    this.mode = 9
+                }
+                break; 
         }
+    } 
   },
+    created() { 
+      window.addEventListener('keyup', this.modeChange);
+    },
+    beforeDestroy() {
+      window.removeEventListener('keyup', this.modeChange);
+    },
   beforeMount() {
       this.initialize() 
   }, 

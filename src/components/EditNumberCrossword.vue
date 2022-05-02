@@ -756,6 +756,88 @@ export default {
                 }
             }
         },
+    modeChange(event) {
+        switch (event.code) {
+            case "ArrowUp":
+                this.mode++
+                if (this.mode > 10) {
+                    this.mode = -3
+                }
+                break;
+            case "ArrowDown": 
+                this.mode--
+                if (this.mode < -3) {
+                    this.mode = 10
+                }
+                break;
+            case "ArrowRight":
+                this.mode++
+                if (this.mode > 10) {
+                    this.mode = -3
+                }
+                break;
+            case "ArrowLeft": 
+                this.mode--
+                if (this.mode < -3) {
+                    this.mode = 10
+                }
+                break;
+            case "KeyW":
+                this.mode++
+                if (this.mode > 10) {
+                    this.mode = -3
+                }
+                break;
+            case "KeyS": 
+                this.mode--
+                if (this.mode < -3) {
+                    this.mode = 10
+                }
+                break;
+            case "KeyD":
+                this.mode++
+                if (this.mode > 10) {
+                    this.mode = -3
+                }
+                break;
+            case "KeyA": 
+                this.mode--
+                if (this.mode < -3) {
+                    this.mode = 10
+                }
+                break;
+            case "Digit0": 
+                this.mode = 0
+                break; 
+            case "Digit1": 
+                this.mode = 1
+                break; 
+            case "Digit2": 
+                this.mode = 2
+                break; 
+            case "Digit3": 
+                this.mode = 3
+                break; 
+            case "Digit4": 
+                this.mode = 4
+                break; 
+            case "Digit5": 
+                this.mode = 5
+                break; 
+            case "Digit6": 
+                this.mode = 6
+                break; 
+            case "Digit7": 
+                this.mode = 7
+                break; 
+            case "Digit8": 
+                this.mode = 8
+                break; 
+            case "Digit9": 
+                this.mode = 9
+                break; 
+        }
+    }, 
         delay(operation, delay) {
             return new Promise(resolve => {
                 setTimeout(() => {
@@ -767,6 +849,9 @@ export default {
             await this.delay(operation, delay);
         }
     },
+    beforeDestroy() {
+      window.removeEventListener('keyup', this.modeChange);
+    },
     beforeMount() {
         this.initialize() 
         this.fetch_puzzle()
@@ -775,6 +860,7 @@ export default {
         this.initialize() 
     }, 
   created() { 
+    window.addEventListener('keyup', this.modeChange);
     this.$watch(
       () => this.$route.params,
       (toParams, previousParams) => {

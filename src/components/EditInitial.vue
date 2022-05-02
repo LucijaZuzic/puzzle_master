@@ -803,6 +803,74 @@ export default {
     },
     async new_async(operation, delay) {
         await this.delay(operation, delay);
+    },
+    modeChange(event) {
+        switch (event.code) {
+            case "ArrowUp":
+                this.mode_x = 0
+                this.mode_y = -1
+                break;
+            case "ArrowDown": 
+                this.mode_x = 0
+                this.mode_y = 1
+                break;
+            case "ArrowRight":
+                this.mode_x = 1
+                this.mode_y = 0
+                break;
+            case "ArrowLeft": 
+                this.mode_x = -1
+                this.mode_y = 0
+                break;
+            case "KeyW":
+                this.mode_x = 0
+                this.mode_y = -1
+                break;
+            case "KeyS": 
+                this.mode_x = 0
+                this.mode_y = 1
+                break;
+            case "KeyD":
+                this.mode_x = 1
+                this.mode_y = 0
+                break;
+            case "KeyA": 
+                this.mode_x = -1
+                this.mode_y = 0
+                break;
+            case "Digit1": 
+                this.mode_x = -1
+                this.mode_y = -1
+                break; 
+            case "Digit2": 
+                this.mode_x = -1
+                this.mode_y = 0
+                break; 
+            case "Digit3": 
+                this.mode_x = -1
+                this.mode_y = 1
+                break; 
+            case "Digit4": 
+                this.mode_x = 0
+                this.mode_y = -1
+                break; 
+            case "Digit5": 
+                this.mode_x = 0
+                this.mode_y = 1
+                break; 
+            case "Digit6": 
+                this.mode_x = 1
+                this.mode_y = -1
+                break; 
+            case "Digit7": 
+                this.mode_x = 1
+                this.mode_y = 0
+                break; 
+            case "Digit8": 
+                this.mode_x = 1
+                this.mode_y = 1
+                break;  
+        }
     }
   },
   beforeMount() {
@@ -811,8 +879,12 @@ export default {
   }, 
   beforeUpdate() {
       this.initialize() 
-  },  
+  }, 
+    beforeDestroy() {
+      window.removeEventListener('keyup', this.modeChange);
+    },
   created() { 
+    window.addEventListener('keyup', this.modeChange);
     this.$watch(
       () => this.$route.params,
       (toParams, previousParams) => {

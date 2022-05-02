@@ -429,6 +429,88 @@ export default {
             }
         }
       },
+    modeChange(event) {
+        switch (event.code) {
+            case "ArrowUp":
+                this.mode++
+                if (this.mode > 10) {
+                    this.mode = -3
+                }
+                break;
+            case "ArrowDown": 
+                this.mode--
+                if (this.mode < -3) {
+                    this.mode = 10
+                }
+                break;
+            case "ArrowRight":
+                this.mode++
+                if (this.mode > 10) {
+                    this.mode = -3
+                }
+                break;
+            case "ArrowLeft": 
+                this.mode--
+                if (this.mode < -3) {
+                    this.mode = 10
+                }
+                break;
+            case "KeyW":
+                this.mode++
+                if (this.mode > 10) {
+                    this.mode = -3
+                }
+                break;
+            case "KeyS": 
+                this.mode--
+                if (this.mode < -3) {
+                    this.mode = 10
+                }
+                break;
+            case "KeyD":
+                this.mode++
+                if (this.mode > 10) {
+                    this.mode = -3
+                }
+                break;
+            case "KeyA": 
+                this.mode--
+                if (this.mode < -3) {
+                    this.mode = 10
+                }
+                break;
+            case "Digit0": 
+                this.mode = 0
+                break; 
+            case "Digit1": 
+                this.mode = 1
+                break; 
+            case "Digit2": 
+                this.mode = 2
+                break; 
+            case "Digit3": 
+                this.mode = 3
+                break; 
+            case "Digit4": 
+                this.mode = 4
+                break; 
+            case "Digit5": 
+                this.mode = 5
+                break; 
+            case "Digit6": 
+                this.mode = 6
+                break; 
+            case "Digit7": 
+                this.mode = 7
+                break; 
+            case "Digit8": 
+                this.mode = 8
+                break; 
+            case "Digit9": 
+                this.mode = 9
+                break; 
+        }
+    }, 
     delay(operation, delay) {
         return new Promise(resolve => {
             setTimeout(() => {
@@ -440,6 +522,12 @@ export default {
         await this.delay(operation, delay);
     }
   },
+    created() { 
+      window.addEventListener('keyup', this.modeChange);
+    },
+    beforeDestroy() {
+      window.removeEventListener('keyup', this.modeChange);
+    },
   beforeMount() {
       this.initialize() 
   }, 
@@ -494,7 +582,7 @@ export default {
     <div class="myrow">
             <va-button style="margin-left: 1%;margin-top: 1%" v-for="i in (10)" v-bind:key="i" @click="mode=i - 1"  >
                 {{i - 1}}
-            </va-button> 
+            </va-button>   
             <va-button style="margin-left: 1%;margin-top: 1%" @click="mode=10">?</va-button>
             <va-button @click="mode=-1" style="background-color: black;margin-left: 1%;margin-top: 1%">Barijera</va-button>
             <va-button @click="mode=-2" style="background-color: salmon;margin-left: 1%;margin-top: 1%">Dio rješenja</va-button> 
@@ -512,7 +600,7 @@ export default {
     <div class="myrow">
         <table class="numbers_table">
             <tr v-for="i in (rows)" v-bind:key="i">
-                <td v-for="j in (columns)" v-bind:key="j" @click="change_number(i-1,j-1)" 
+                <td v-for="j in (columns)" v-bind:key="j" @click="change_number(i-1,j-1)"  
                 :class="{black: solution[i - 1][j - 1] == -1, 
                 help: is_revealed[i - 1][j - 1], special: is_special[i - 1][j - 1]}">
                         <div>

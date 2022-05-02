@@ -577,6 +577,106 @@ export default {
             }
         })
     },
+    modeChange(event) {
+        switch (event.code) {
+            case "ArrowUp":
+                this.mode++
+                if (this.mode >= this.num_colors) {
+                    this.mode = 0
+                }
+                break;
+            case "ArrowDown": 
+                this.mode--
+                if (this.mode < 0) {
+                    this.mode = this.num_colors - 1
+                }
+                break;
+            case "ArrowRight":
+                this.mode++
+                if (this.mode >= this.num_colors) {
+                    this.mode = 0
+                }
+                break;
+            case "ArrowLeft": 
+                this.mode--
+                if (this.mode < 0) {
+                    this.mode = this.num_colors - 1
+                }
+                break;
+            case "KeyW":
+                this.mode++
+                if (this.mode >= this.num_colors) {
+                    this.mode = 0
+                }
+                break;
+            case "KeyS": 
+                this.mode--
+                if (this.mode < 0) {
+                    this.mode = this.num_colors - 1
+                }
+                break;
+            case "KeyD":
+                this.mode++
+                if (this.mode >= this.num_colors) {
+                    this.mode = 0
+                }
+                break;
+            case "KeyA": 
+                this.mode--
+                if (this.mode < 0) {
+                    this.mode = this.num_colors - 1
+                }
+                break;
+            case "Digit0": 
+                this.mode = 0
+                break; 
+            case "Digit1": 
+                if (this.num_colors > 1) {
+                    this.mode = 1
+                }
+                break; 
+            case "Digit2": 
+                if (this.num_colors > 2) {
+                    this.mode = 2
+                }
+                break; 
+            case "Digit3": 
+                if (this.num_colors > 3) {
+                    this.mode = 3
+                }
+                break; 
+            case "Digit4": 
+                if (this.num_colors > 4) {
+                    this.mode = 4
+                }
+                break; 
+            case "Digit5": 
+                if (this.num_colors > 5) {
+                    this.mode = 5
+                }
+                break; 
+            case "Digit6": 
+                if (this.num_colors > 6) {
+                    this.mode = 6
+                }
+                break; 
+            case "Digit7": 
+                if (this.num_colors > 7) {
+                    this.mode = 7
+                }
+                break; 
+            case "Digit8": 
+                if (this.num_colors > 8) {
+                    this.mode = 8
+                }
+                break; 
+            case "Digit9": 
+                if (this.num_colors > 9) {
+                    this.mode = 9
+                }
+                break; 
+        }
+    }, 
     delay(operation, delay) {
         return new Promise(resolve => {
             setTimeout(() => {
@@ -588,13 +688,17 @@ export default {
         await this.delay(operation, delay);
     }
   }, 
+    beforeDestroy() {
+      window.removeEventListener('keyup', this.modeChange);
+    },
   beforeMount() {
     this.fetch_puzzle()
     this.expand_color_list() 
     this.initialize()
     this.check_equal_colors()
   },
-  created() { 
+  created() {
+    window.addEventListener('keyup', this.modeChange); 
     this.$watch(
       () => this.$route.params,
       (toParams, previousParams) => {

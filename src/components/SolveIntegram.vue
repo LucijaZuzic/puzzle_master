@@ -878,6 +878,12 @@ export default {
         </tr> 
     </table>
     <br>
+    <br>
+    <va-button @click="mode=-1">?</va-button>&nbsp;
+    <va-button @click="mode=1">&#128504;</va-button>&nbsp;
+    <va-button @click="mode=0">&#215;</va-button>&nbsp;
+    <va-button @click="clear_values()">Kreni ispočetka</va-button> 
+    <br>
     <div class="myrow" v-for="i in numcategories" v-bind:key="i">
         <va-card v-if="too_long[i-1]==true && is_image[i-1]==false">
             <va-card-title><va-chip>{{i}}. kategorija</va-chip></va-card-title> 
@@ -909,11 +915,7 @@ export default {
             </va-card-content>
         </va-card> 
     </div> 
-    <br><br>
-    <va-button @click="mode=-1">?</va-button>&nbsp;
-    <va-button @click="mode=1">&#128504;</va-button>&nbsp;
-    <va-button @click="mode=0">&#215;</va-button>&nbsp;
-    <va-button @click="clear_values()">Kreni ispočetka</va-button> 
+    <br>
     <div class="myrow">
         <va-card>
             <va-card-title>Naslov zagonetke</va-card-title>
