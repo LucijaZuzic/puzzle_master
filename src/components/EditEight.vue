@@ -1,9 +1,7 @@
 <script>
-import { initialsRef } from "../main.js";
+import { eightsRef } from "../main.js";
 import { usersRef } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import Navbar from "./Navbar.vue";
-import LoadingBar from "./LoadingBar.vue";
 import {
   ref,
   uploadBytes,
@@ -12,6 +10,9 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { projectStorage } from "../main.js";
+
+import Navbar from "./Navbar.vue";
+import LoadingBar from "./LoadingBar.vue";
 
 export default {
   components: {
@@ -287,11 +288,11 @@ export default {
               special_row.push(oldisspecial[i][j]);
             } else {
               solution_row.push("");
-              special_row.push(0);
+              special_row.push(1);
             }
           } else {
             solution_row.push("");
-            special_row.push(0);
+            special_row.push(1);
           }
         }
         this.solution.push(solution_row);
@@ -307,7 +308,9 @@ export default {
       }
       for (let i = 0; i < this.solution.length; i++) {
         for (let j = 0; j < this.solution[i].length; j++) {
-          this.solution[i][j] = "";
+          if (this.is_special[i][j] == 0) {
+            this.solution[i][j] = "";
+          }
         }
       }
       let old_words = this.words_by_dir;
@@ -334,7 +337,7 @@ export default {
         let special_row = [];
         let solution_row = [];
         for (let j = 0; j < this.columns; j++) {
-          special_row.push(0);
+          special_row.push(1);
           solution_row.push("");
         }
         new_special.push(special_row);
@@ -395,7 +398,7 @@ export default {
       let string_last_updated = "";
       let found = false;
       let funct_ref = this.string_to_array;
-      initialsRef
+      eightsRef
         .get(params_id)
         .then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -459,7 +462,7 @@ export default {
               this.$vaToast.init("Ne postoji zagonetka s tim brojem."),
               1000
             ).then(() => {
-              this.$router.push("/search-initial");
+              this.$router.push("/search-eight");
             });
           }
         });
@@ -595,6 +598,7 @@ export default {
         let x_new = x + letter_number * dirx;
         let y_new = y + letter_number * diry;
         this.solution[y_new][x_new] = new_word[letter_number];
+        this.is_special[y_new][x_new] = 0;
       }
       this.words_by_dir[this.get_dir(dirx, diry)].push([x, y, new_word]);
       this.words_by_dir[this.get_dir(dirx, diry)].sort(this.sortFunction);
@@ -615,18 +619,22 @@ export default {
       }
     },
     place_word(x, y, new_word, dirx, diry, show_warning) {
-      if (dirx == -2 || diry == -2) {
-        if (this.check_start(x, y, false) == false) {
-          this.is_special[y][x] = (this.is_special[y][x] + 1) % 2;
-        } else {
-          this.$vaToast.init("Početno slovo riječi ne može biti dio rješenja.");
-        }
-        return;
-      }
       if (!new_word) {
         return;
       }
       if (new_word.length == 0) {
+        return;
+      }
+      if (dirx == -2 || diry == -2) {
+        if (this.is_special[y][x] == 0) {
+          return;
+        }
+        if (new_word.length > 1) {
+          this.$vaToast.init("Dio rješenja se dodaje samo slovo po slovo.");
+          return;
+        }
+        this.solution[y][x] = new_word[0];
+        this.$forceUpdate();
         return;
       }
       if (this.word_warning == "" || !show_warning) {
@@ -641,7 +649,6 @@ export default {
               number_of_dirs++;
             }
           }
-          this.page_length = Math.ceil(number_of_words / number_of_dirs);
           this.check_full();
         }
         //}
@@ -691,7 +698,7 @@ export default {
           newspecial[i].push(this.is_special[i][j]);
         }
       }
-      initialsRef
+      eightsRef
         .doc(params_id)
         .update({
           solution: funct_ref(newsolution),
@@ -717,7 +724,7 @@ export default {
         })
         .then((docRef) => {
           if (this.image && this.image.name == undefined) {
-            initialsRef
+            eightsRef
               .doc(params_id)
               .update({
                 solution: funct_ref(newsolution),
@@ -748,7 +755,7 @@ export default {
                   ),
                   1000
                 ).then(() => {
-                  this.$router.push("/search-initial");
+                  this.$router.push("/search-eight");
                 });
               });
           } else {
@@ -765,7 +772,7 @@ export default {
             }
             let exstension =
               this.image.name.split(".")[this.image.name.split(".").length - 1];
-            const reference = "initial/" + params_id + "." + exstension;
+            const reference = "eight/" + params_id + "." + exstension;
             const storageRef = ref(projectStorage, reference);
             const metadata = {
               contentType: "image/" + exstension,
@@ -776,7 +783,7 @@ export default {
               .catch((error) => {})
               .then(() => {
                 let imageLocation = reference;
-                initialsRef
+                eightsRef
                   .doc(params_id)
                   .update({
                     solution: funct_ref(newsolution),
@@ -807,7 +814,7 @@ export default {
                       ),
                       1000
                     ).then(() => {
-                      this.$router.push("/search-initial");
+                      this.$router.push("/search-eight");
                     });
                   });
               });
@@ -843,7 +850,7 @@ export default {
       if (authorAdded == false) {
         newPermissions.push(this.author);
       }
-      initialsRef
+      eightsRef
         .add({
           solution: funct_ref(newsolution),
           is_special: funct_ref(newspecial),
@@ -880,7 +887,7 @@ export default {
               .catch((error) => {
                 // Uh-oh, an error occurred!
               });
-            const reference = "initial/" + some_id + "." + exstension;
+            const reference = "eight/" + some_id + "." + exstension;
             const storageRef = ref(projectStorage, reference);
             const metadata = {
               contentType: "image/" + exstension,
@@ -891,7 +898,7 @@ export default {
               .catch((error) => {})
               .then(() => {
                 let imageLocation = reference;
-                initialsRef
+                eightsRef
                   .doc(some_id)
                   .update({
                     solution: funct_ref(newsolution),
@@ -922,14 +929,14 @@ export default {
                       ),
                       1000
                     ).then(() => {
-                      this.$router.push("/search-initial");
+                      this.$router.push("/search-eight");
                     });
                   });
               });
           } else {
             let exstension =
               this.image.name.split(".")[this.image.name.split(".").length - 1];
-            const reference = "initial/" + some_id + "." + exstension;
+            const reference = "eight/" + some_id + "." + exstension;
             const storageRef = ref(projectStorage, reference);
             const metadata = {
               contentType: "image/" + exstension,
@@ -940,7 +947,7 @@ export default {
               .catch((error) => {})
               .then(() => {
                 let imageLocation = reference;
-                initialsRef
+                eightsRef
                   .doc(some_id)
                   .update({
                     solution: funct_ref(newsolution),
@@ -971,7 +978,7 @@ export default {
                       ),
                       1000
                     ).then(() => {
-                      this.$router.push("/search-initial");
+                      this.$router.push("/search-eight");
                     });
                   });
               });
@@ -1264,13 +1271,13 @@ export default {
     </div>
     <div class="myrow">
       <va-input
+        immediate-validation
+        :rules="[(value) => word_warning == '' || 'Nedozvoljena slova.']"
         style="display: inline-block; margin-left: 10px; margin-top: 10px"
         type="text"
         v-model="word"
         placeholder="Nova riječ"
         label="Dodaj riječ"
-        immediate-validation
-        :rules="[(value) => word_warning == '' || 'Nedozvoljena slova.']"
         @update:model-value="check_word()"
       />
     </div>
@@ -1292,10 +1299,7 @@ export default {
                   current_x = i;
                   current_y = j;
                 "
-                :class="{
-                  help: check_start(j - 1, i - 1, false),
-                  special: is_special[i - 1][j - 1],
-                }"
+                :class="{ special: is_special[i - 1][j - 1] }"
               >
                 {{ solution[i - 1][j - 1] }}
               </td>
@@ -1312,8 +1316,8 @@ export default {
         center
         class="mb-4"
       >
-        Morate unesti dovoljno riječi u osmosmjerku tako da sva polja budu
-        definirana barem pomoću jedne riječi.
+        Morate unesti dovoljno riječi i slova u osmosmjerku tako da sva polja
+        budu definirana.
       </va-alert>
     </div>
     <div class="myrow" v-if="count_special()">
@@ -1498,6 +1502,7 @@ export default {
     </div>
     <div class="myrow">
       <va-button
+        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
         :disabled="
           !(
             !warning &&
@@ -1511,8 +1516,9 @@ export default {
       >
         <va-icon name="mode_edit" />&nbsp;Izmijeni postojeću
         zagonetku</va-button
-      >&nbsp;
+      >
       <va-button
+        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
         :disabled="
           !(
             !warning &&

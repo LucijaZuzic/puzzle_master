@@ -7,21 +7,25 @@
     import NonogramTable from "./NonogramTable.vue" 
     import NumberCrosswordTable from "./NumberCrosswordTable.vue" 
     import CryptogramTable from "./CryptogramTable.vue" 
+    import NumberLetterTable from "./NumberLetterTable.vue"
     import InitialTable from "./InitialTable.vue"
+    import EightTable from "./EightTable.vue"
     import NoDataToDisplay from "./NoDataToDisplay.vue" 
     import { usersRef } from "../main.js"
     export default {
         emits: ["selectedNonograms"],  
         props: ["puzzleList", "selectMode", "start_time", "end_time"], 
         components: {
-    Navbar,
-    IntegramTable,
-    NonogramTable,
-    NumberCrosswordTable,
-    CryptogramTable,
-    InitialTable,
-    NoDataToDisplay
-},
+            Navbar,
+            IntegramTable,
+            NonogramTable,
+            NumberCrosswordTable,
+            CryptogramTable,
+            EightTable,
+            InitialTable,
+            NoDataToDisplay,
+            NumberLetterTable
+        },
         mounted() {   
             const auth = getAuth()
             onAuthStateChanged(auth, (user) => {
@@ -34,6 +38,7 @@
                 // User is signed out
                 // ... 
             }
+            return true
             });
         },
         data() {
@@ -64,7 +69,9 @@
                     {key: 'selectedNonograms', sortable: true}, 
                     {key: 'selectedNumberCrosswords', sortable: true}, 
                     {key: 'selectedCryptograms', sortable: true}, 
+                    {key: 'selectedNumberLetters', sortable: true}, 
                     {key: 'selectedInitials', sortable: true}, 
+                    {key: 'selectedEights', sortable: true}, 
                     {key: 'id', sortable: false}, 
                 ],
                 sortingOrderOptions: [
@@ -121,7 +128,9 @@
                                         selectedNonograms: childSnapshot.get('selectedNonograms'),
                                         selectedNumberCrosswords: childSnapshot.get('selectedNumberCrosswords'),
                                         selectedCryptograms: childSnapshot.get('selectedCryptograms'),
+                                        selectedNumberLetters: childSnapshot.get('selectedNumberLetters'),
                                         selectedInitials: childSnapshot.get('selectedInitials'),
+                                        selectedEights: childSnapshot.get('selectedEights'),
                                         id: newId
                                     })
                                 }
@@ -162,16 +171,16 @@
     <h1 class="display-1">Turniri</h1>
     <div class="myrow">
         <va-input
-        class="flex mb-2 md6" style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 25%" 
+        class="flex mb-2 md6" style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 25%" 
         placeholder="Unesite pojam za pretragu"
         v-model="filter"
         />  
-        <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" 
+        <va-checkbox style="display: inline-block;margin-left: 20px;margin-top: 20px" 
         class="flex mb-2 md6"
         label="Traži cijelu riječ"
         v-model="useCustomFilteringFn"
         /> 
-        <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+        <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
             label="Trenutna stranica"
             class="flex mb-2 md6"
             v-model="currentPage"
@@ -179,7 +188,7 @@
             :max="Math.ceil(this.filtered.length / this.perPage)"
             type="number"
         /> 
-        <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+        <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
             label="Broj pojmova na stranici"
             class="flex mb-2 md6"
             v-model="perPage"
@@ -213,7 +222,9 @@
         <template #header(selectedNonograms)>Broj nonograma</template> 
         <template #header(selectedNumberCrosswords)>Broj brojevnih križaljki</template> 
         <template #header(selectedCryptograms)>Broj kriptograma</template> 
+        <template #header(selectedNumberLetters)>Broj zagonetki tpa "Isti broj - Isto slovo"</template> 
         <template #header(selectedInitials)>Broj inicijalnih osmosmjerki</template> 
+        <template #header(selectedEights)>Broj osmosmjerki</template> 
         <template #cell(id)="{ source: id }"> 
             <va-icon v-if="id.granted == true" @click="deleteTournament(id.id)" name="delete"/>
         </template>  
@@ -229,13 +240,19 @@
         <template #cell(selectedCryptograms)="{ source: selectedCryptograms }">  
             {{selectedCryptograms.length}}
         </template> 
+        <template #cell(selectedNumberLetters)="{ source: selectedNumberLetters }">  
+            {{selectedNumberLetters.length}}
+        </template> 
         <template #cell(selectedInitials)="{ source: selectedInitials }">  
             {{selectedInitials.length}}
+        </template> 
+        <template #cell(selectedEights)="{ source: selectedEights }">  
+            {{selectedEights.length}}
         </template> 
         <template #bodyAppend>
             <tr>
                 <td colspan="12" style="text-align: left">
-                    <router-link to="/createtournament"> 
+                    <router-link to="/create-tournament"> 
                         <va-icon color="primary" class="mr-4" name="add_circle"/> Novi turnir
                     </router-link>
                 </td>
@@ -252,27 +269,35 @@
         </template>
     </va-data-table>  
     <div class="myrow">
-        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" style="width: 100%;">
             <template #tabs> 
             <va-tab
-                label="Integrami koji ulaze u turnir"
+                label="Integrami"
                 name="integram"
             />
             <va-tab
-                label="Nonogrami koji ulaze u turnir"
+                label="Nonogrami"
                 name="nonogram"
             />
             <va-tab
-                label="Brojevne križaljke koje ulaze u turnir"
+                label="Brojevne križaljke"
                 name="numberCrossword"
             />
             <va-tab
-                label="Kriptogrami koji ulaze u turnir"
+                label="Kriptogrami"
                 name="cryptogram"
             />
             <va-tab
-                label="Inicijalne osmosmjerke koje ulaze u turnir"
+                label='Zagonetke tipa "Isti broj - Isto slovo"'
+                name="numberLetter"
+            />
+            <va-tab
+                label="Inicijalne osmosmjerke"
                 name="initial"
+            />
+            <va-tab
+                label="Osmosmjerke"
+                name="eight"
             />
             </template>
         </va-tabs>
@@ -302,11 +327,23 @@
         <span v-if="value == 'cryptogram' && item.selectedCryptograms.length <= 0">
             <NoDataToDisplay customMessage="Na turniru nema kriptograma"></NoDataToDisplay> 
         </span>
+        <span v-if="value == 'numberLetter' && item.selectedNumberLetters.length > 0">
+            <NumberLetterTable selectMode="single" :puzzleList="item.selectedNumberLetters" :start_time="item.start_time" :end_time="item.end_time"></NumberLetterTable> 
+        </span>
+        <span v-if="value == 'numberLetter' && item.selectedNumberLetters.length <= 0">
+            <NoDataToDisplay customMessage='Na turniru nema zagonetki tipa "Isti broj - Isto slovo'></NoDataToDisplay> 
+        </span>
         <span v-if="value == 'initial' && item.selectedInitials.length > 0">
             <InitialTable selectMode="single" :puzzleList="item.selectedInitials" :start_time="item.start_time" :end_time="item.end_time"></InitialTable> 
         </span>
         <span v-if="value == 'initial' && item.selectedInitials.length <= 0">
             <NoDataToDisplay customMessage="Na turniru nema inicijalnih osmosmjerki"></NoDataToDisplay> 
+        </span>
+        <span v-if="value == 'eight' && item.selectedEights.length > 0">
+            <EightTable selectMode="single" :puzzleList="item.selectedEights" :start_time="item.start_time" :end_time="item.end_time"></EightTable> 
+        </span>
+        <span v-if="value == 'eight' && item.selectedEights.length <= 0">
+            <NoDataToDisplay customMessage="Na turniru nema osmosmjerki"></NoDataToDisplay> 
         </span>
     </div>
     </body>

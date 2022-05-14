@@ -19,6 +19,7 @@ export default {
               // User is signed out
               // ... 
           }
+          return true
           }); 
       } else {
           this.user = this.$props.friend
@@ -70,23 +71,23 @@ export default {
 </script>
 
 <template>
-  <va-tabs v-model="value" vertical>
+  <va-tabs v-model="value" style="width: 100%;">
       <template #tabs> 
-      <va-tab
-          label="Integrami kojima je korisnik autor"
-          name="author"
-      />
-      <va-tab
-          label="Integrami koje je korisnik zadnji ažurirao"
-          name="updater"
-      />
-      <va-tab
-          label="Integrami na kojima je korisnik suradnik"
-          name="collaborator"
-      />
-      <va-tab
-          label="Integrami koje je korisnik riješio"
-          name="record"
+        <va-tab  
+            label="Autor"
+            name="author"
+        />
+        <va-tab 
+            label="Zadnji ažurirao"
+            name="updater"
+        />
+        <va-tab 
+            label="Suradnik"
+            name="collaborator"
+        />
+        <va-tab 
+            label="Riješio"
+            name="record"
       />
       </template>
   </va-tabs>
@@ -97,7 +98,7 @@ export default {
   <IntegramTable :friend="user" v-if="value=='collaborator' && collaboratorIntegram.length > 0" selectMode="single" :puzzleList="collaboratorIntegram"></IntegramTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorIntegram.length <= 0" customMessage="Korisnik nije suradnik niti na jednom integramu"></NoDataToDisplay>  
   <IntegramTable :friend="user" v-if="value=='record' && recordIntegram.length > 0" selectMode="single" :puzzleList="recordIntegram"></IntegramTable>  
-  <NoDataToDisplay v-if="value=='record' && recordIntegram.length <= 0" customMessage="Korisnik nije riješili niti jedan integram"></NoDataToDisplay>   
+  <NoDataToDisplay v-if="value=='record' && recordIntegram.length <= 0" customMessage="Korisnik nije riješio niti jedan integram"></NoDataToDisplay>   
 </template>
 
 <style>

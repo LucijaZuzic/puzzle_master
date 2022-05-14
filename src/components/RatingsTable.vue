@@ -72,7 +72,7 @@ import { usersRef } from "../main.js"
                         let idPuzzle = childSnapshot.get('puzzleID')
                         let idUser = childSnapshot.get('user')
                         let idRating = childSnapshot.id
-                        if (me.$props.userId == idUser) {
+                        if (me.$props.userId && me.$props.userId == idUser && me.$props.puzzleId && idPuzzle == me.$props.puzzleId) {
                             me.already_rated = true
                             me.documentRated = idRating
                         }
@@ -110,7 +110,7 @@ import { usersRef } from "../main.js"
                         rating: this.value,
                         comment: this.comment,
                         time: datetime,
-                    }).then(() => {this.$refs.store_success.show();this.fetch_users()})
+                    }).then(() => {this.$vaToast.init("Nova ocjena je uspješno spremljena.");this.fetch_users()})
                 } else {
                     let datetime = new Date()
                     this.$props.dbRef.doc(this.documentRated).update({ 
@@ -119,7 +119,7 @@ import { usersRef } from "../main.js"
                         rating: this.value,
                         comment: this.comment,
                         time: datetime,
-                    }).then(() => {this.$refs.store_success.show();this.fetch_users()})
+                    }).then(() => {this.$vaToast.init("Ocjena je uspješno ažurirana.");this.fetch_users()})
                 }
             },
             sortByOptions () {
@@ -151,16 +151,16 @@ import { usersRef } from "../main.js"
     <span v-if="user_ratings.length > 0">
         <div class="myrow">
             <va-input
-            class="flex mb-2 md6" style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 25%" 
+            class="flex mb-2 md6" style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 25%" 
             placeholder="Unesite pojam za pretragu"
             v-model="filter"
             />  
-            <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" 
+            <va-checkbox style="display: inline-block;margin-left: 20px;margin-top: 20px" 
             class="flex mb-2 md6"
             label="Traži cijelu riječ"
             v-model="useCustomFilteringFn"
             /> 
-            <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+            <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
                 label="Trenutna stranica"
                 class="flex mb-2 md6"
                 v-model="currentPage"
@@ -168,7 +168,7 @@ import { usersRef } from "../main.js"
                 :max="Math.ceil(this.filtered.length / this.perPage)"
                 type="number"
             /> 
-            <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+            <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
                 label="Broj pojmova na stranici"
                 class="flex mb-2 md6"
                 v-model="perPage"
@@ -243,8 +243,6 @@ import { usersRef } from "../main.js"
     <div class="myrow" v-if="$props.userId">
         <va-button @click="submit()">Ocjenite</va-button> 
     </div>  
-    <va-modal ref="store_success" hide-default-actions message="Nova ocjena je uspješno spremljena." stateful /> 
-    <va-modal ref="update_success" hide-default-actions message="Ocjena je uspješno ažurirana." stateful />
 </template>
 
 <style>

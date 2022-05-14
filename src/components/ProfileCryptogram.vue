@@ -19,6 +19,7 @@ export default {
               // User is signed out
               // ... 
           }
+          return true
           }); 
       } else {
           this.user = this.$props.friend
@@ -70,23 +71,23 @@ export default {
 </script>
 
 <template>   
-  <va-tabs v-model="value" vertical>
+  <va-tabs v-model="value" style="width: 100%;">
       <template #tabs> 
-      <va-tab  
-          label="Kriptogrami kojima je korisnik autor"
-          name="author"
-      />
-      <va-tab 
-          label="Kriptogrami koje je korisnik zadnji ažurirao"
-          name="updater"
-      />
-      <va-tab 
-          label="Kriptogrami na kojima je korisnik suradnik"
-          name="collaborator"
-      />
-      <va-tab 
-          label="Kriptogrami koje je korisnik riješio"
-          name="record"
+        <va-tab  
+            label="Autor"
+            name="author"
+        />
+        <va-tab 
+            label="Zadnji ažurirao"
+            name="updater"
+        />
+        <va-tab 
+            label="Suradnik"
+            name="collaborator"
+        />
+        <va-tab 
+            label="Riješio"
+            name="record"
       />
       </template>
   </va-tabs>
@@ -97,7 +98,7 @@ export default {
   <CryptogramTable :friend="user" v-if="value=='collaborator' && collaboratorCryptogram.length > 0" selectMode="single" :puzzleList="collaboratorCryptogram"></CryptogramTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorCryptogram.length <= 0" customMessage="Korisnik nije suradnik niti na jednom kriptogramu"></NoDataToDisplay>  
   <CryptogramTable :friend="user" v-if="value=='record' && recordCryptogram.length > 0" selectMode="single" :puzzleList="recordCryptogram"></CryptogramTable>  
-  <NoDataToDisplay v-if="value=='record' && recordCryptogram.length <= 0" customMessage="Korisnik nije riješili niti jedan kriptogram"></NoDataToDisplay>  
+  <NoDataToDisplay v-if="value=='record' && recordCryptogram.length <= 0" customMessage="Korisnik nije riješio niti jedan kriptogram"></NoDataToDisplay>  
 </template>
 
 <style>

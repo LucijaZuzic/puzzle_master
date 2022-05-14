@@ -1,26 +1,17 @@
 <script>
-import { initialsRef } from "../main.js";
+import { eightsRef } from "../main.js";
 import { usersRef } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
-import LoadingBar from "./LoadingBar.vue";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  getMetadata,
-  deleteObject,
-} from "firebase/storage";
+import { ref, uploadBytes } from "firebase/storage";
 import { projectStorage } from "../main.js";
 
 export default {
   components: {
     Navbar,
-    LoadingBar,
   },
   data() {
     return {
-      fully_loaded: false,
       word_warning: "",
       word: "",
       image: null,
@@ -28,10 +19,6 @@ export default {
       user: null,
       title: "",
       is_public: false,
-      author: "",
-      authorUserRecord: { displayName: "", email: "" },
-      updater: "",
-      updaterUserRecord: { displayName: "", email: "" },
       permissions: [],
       permissionsUserRecords: [],
       collaborator: "",
@@ -43,8 +30,6 @@ export default {
       words_by_dir: [[], [], [], [], [], [], [], []],
       warning: true,
       source: "",
-      time_created: "",
-      last_updated: "",
       is_special: [],
       alphabet: [
         "A",
@@ -94,122 +79,6 @@ export default {
     },
     click_file() {
       document.getElementById("fileinput").click();
-    },
-    getPicture() {
-      if (this.image == null) {
-        this.imageURL = "";
-        this.fully_loaded = true;
-        return;
-      }
-      if (this.image && this.image.name == undefined) {
-        var reference = ref(projectStorage, this.image);
-        // Get the download URL
-        getDownloadURL(reference)
-          .then((url) => {
-            this.imageURL = url;
-            this.fully_loaded = true;
-          })
-          .catch((error) => {});
-      } else {
-        let comp_url = URL.createObjectURL(this.image);
-        this.imageURL = comp_url;
-        this.fully_loaded = true;
-      }
-    },
-    getAuthorUserRecord() {
-      let some_id = this.author;
-      let newRecord = {};
-      usersRef
-        .get(some_id)
-        .then(function (snapshot) {
-          snapshot.forEach(function (childSnapshot) {
-            let id = childSnapshot.id;
-            if (id == some_id) {
-              newRecord = {
-                displayName: childSnapshot.get("displayName"),
-                email: childSnapshot.get("email"),
-              };
-            }
-          });
-        })
-        .then(() => {
-          this.authorUserRecord = newRecord;
-        });
-    },
-    getUpdaterUserRecord() {
-      let some_id = this.updater;
-      let newRecord = {};
-      usersRef
-        .get(some_id)
-        .then(function (snapshot) {
-          snapshot.forEach(function (childSnapshot) {
-            let id = childSnapshot.id;
-            if (id == some_id) {
-              newRecord = {
-                displayName: childSnapshot.get("displayName"),
-                email: childSnapshot.get("email"),
-              };
-            }
-          });
-        })
-        .then(() => {
-          this.updaterUserRecord = newRecord;
-        });
-    },
-    getCollaboratorUserRecord() {
-      this.permissionsUserRecords = [];
-      for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i];
-        let newRecord = {};
-        usersRef
-          .get(some_id)
-          .then(function (snapshot) {
-            snapshot.forEach(function (childSnapshot) {
-              let id = childSnapshot.id;
-              if (id == some_id) {
-                newRecord = {
-                  displayName: childSnapshot.get("displayName"),
-                  email: childSnapshot.get("email"),
-                };
-              }
-            });
-          })
-          .then(() => {
-            this.permissionsUserRecords.push(newRecord);
-          });
-      }
-    },
-    checkIdentity() {
-      this.permission_to_edit_visibility = false;
-      if (this.author == this.user.uid) {
-        this.permission_to_edit_visibility = true;
-        return;
-      }
-      let is_collaborator = false;
-      for (let i = 0; i < this.permissions.length; i++) {
-        if (this.permissions[i] == this.user.uid) {
-          is_collaborator = true;
-          break;
-        }
-      }
-      if (is_collaborator == true) {
-        this.permission_to_edit_visibility = false;
-        return;
-      } else {
-        if (this.is_public == true) {
-          this.permission_to_edit_visibility = false;
-          return;
-        } else {
-          this.new_async(
-            this.$vaToast.init(
-              "Ne možete uređivati zagonetku jer niste autor niti suradnik."
-            ),
-            1000
-          ).then(() => {
-            this.$router.push("/search-eight");
-          });
-        }
-      }
     },
     checkIfUserExists() {
       let email = this.collaborator;
@@ -287,11 +156,11 @@ export default {
               special_row.push(oldisspecial[i][j]);
             } else {
               solution_row.push("");
-              special_row.push(0);
+              special_row.push(1);
             }
           } else {
             solution_row.push("");
-            special_row.push(0);
+            special_row.push(1);
           }
         }
         this.solution.push(solution_row);
@@ -307,7 +176,9 @@ export default {
       }
       for (let i = 0; i < this.solution.length; i++) {
         for (let j = 0; j < this.solution[i].length; j++) {
-          this.solution[i][j] = "";
+          if (this.is_special[i][j] == 0) {
+            this.solution[i][j] = "";
+          }
         }
       }
       let old_words = this.words_by_dir;
@@ -334,7 +205,7 @@ export default {
         let special_row = [];
         let solution_row = [];
         for (let j = 0; j < this.columns; j++) {
-          special_row.push(0);
+          special_row.push(1);
           solution_row.push("");
         }
         new_special.push(special_row);
@@ -353,116 +224,6 @@ export default {
           }
         }
       }
-    },
-    string_to_array(array_string) {
-      if (!array_string) {
-        return [];
-      }
-      if (array_string[1] == "[") {
-        let array = array_string
-          .substring(2, array_string.length - 2)
-          .split("],[");
-        for (let i = 0; i < array.length; i++) {
-          array[i] = array[i].split(",");
-          for (let j = 0; j < array[i].length; j++) {
-            if (!this.alphabet.includes(array[i][j][0])) {
-              array[i][j] = parseInt(array[i][j]);
-            }
-          }
-        }
-        return array;
-      } else {
-        let array = array_string
-          .substring(1, array_string.length - 1)
-          .split(",");
-        return array;
-      }
-    },
-    fetch_puzzle() {
-      let params_id = this.$route.params.id;
-      let string_solution = [];
-      let string_is_special = [];
-      let string_words_by_dir = [[], [], [], [], [], [], [], []];
-      let string_title = "";
-      let string_description = "";
-      let string_image = "";
-      let string_author = "";
-      let string_updater = "";
-      let string_is_public = false;
-      let string_permissions = [];
-      let string_source = "";
-      let string_time_created = "";
-      let string_last_updated = "";
-      let found = false;
-      let funct_ref = this.string_to_array;
-      initialsRef
-        .get(params_id)
-        .then(function (snapshot) {
-          snapshot.forEach(function (childSnapshot) {
-            let id = childSnapshot.id;
-            if (id == params_id) {
-              string_solution = funct_ref(childSnapshot.get("solution"));
-              string_is_special = funct_ref(childSnapshot.get("is_special"));
-              string_words_by_dir[0] = funct_ref(childSnapshot.get("dir1"));
-              string_words_by_dir[1] = funct_ref(childSnapshot.get("dir2"));
-              string_words_by_dir[2] = funct_ref(childSnapshot.get("dir3"));
-              string_words_by_dir[3] = funct_ref(childSnapshot.get("dir4"));
-              string_words_by_dir[4] = funct_ref(childSnapshot.get("dir5"));
-              string_words_by_dir[5] = funct_ref(childSnapshot.get("dir6"));
-              string_words_by_dir[6] = funct_ref(childSnapshot.get("dir7"));
-              string_words_by_dir[7] = funct_ref(childSnapshot.get("dir8"));
-              string_title = childSnapshot.get("title");
-              string_description = childSnapshot.get("description");
-              string_image = childSnapshot.get("image");
-              string_author = childSnapshot.get("author");
-              string_updater = childSnapshot.get("updater");
-              string_is_public = childSnapshot.get("is_public");
-              string_permissions = childSnapshot.get("permissions");
-              string_source = childSnapshot.get("source");
-              string_time_created = new Date(
-                childSnapshot.get("time_created").seconds * 1000
-              );
-              string_last_updated = new Date(
-                childSnapshot.get("last_updated").seconds * 1000
-              );
-              found = true;
-            }
-          });
-        })
-        .then(() => {
-          if (found) {
-            this.solution = string_solution;
-            this.is_special = string_is_special;
-            this.words_by_dir = string_words_by_dir;
-            this.title = string_title;
-            this.description = string_description;
-            this.image = string_image;
-            this.oldimage = this.image;
-            this.author = string_author;
-            this.getAuthorUserRecord();
-            this.updater = string_updater;
-            this.getUpdaterUserRecord();
-            this.is_public = string_is_public;
-            this.permissions = string_permissions;
-            this.getCollaboratorUserRecord();
-            this.checkIdentity();
-            this.source = string_source;
-            this.time_created = string_time_created;
-            this.last_updated = string_last_updated;
-            this.rows = this.solution.length;
-            this.columns = this.solution[0].length;
-            this.initialize();
-            this.getPicture();
-            this.$forceUpdate();
-          } else {
-            this.new_async(
-              this.$vaToast.init("Ne postoji zagonetka s tim brojem."),
-              1000
-            ).then(() => {
-              this.$router.push("/search-initial");
-            });
-          }
-        });
     },
     array_to_string(array) {
       let string = "[";
@@ -595,6 +356,7 @@ export default {
         let x_new = x + letter_number * dirx;
         let y_new = y + letter_number * diry;
         this.solution[y_new][x_new] = new_word[letter_number];
+        this.is_special[y_new][x_new] = 0;
       }
       this.words_by_dir[this.get_dir(dirx, diry)].push([x, y, new_word]);
       this.words_by_dir[this.get_dir(dirx, diry)].sort(this.sortFunction);
@@ -615,18 +377,22 @@ export default {
       }
     },
     place_word(x, y, new_word, dirx, diry, show_warning) {
-      if (dirx == -2 || diry == -2) {
-        if (this.check_start(x, y, false) == false) {
-          this.is_special[y][x] = (this.is_special[y][x] + 1) % 2;
-        } else {
-          this.$vaToast.init("Početno slovo riječi ne može biti dio rješenja.");
-        }
-        return;
-      }
       if (!new_word) {
         return;
       }
       if (new_word.length == 0) {
+        return;
+      }
+      if (dirx == -2 || diry == -2) {
+        if (this.is_special[y][x] == 0) {
+          return;
+        }
+        if (new_word.length > 1) {
+          this.$vaToast.init("Dio rješenja se dodaje samo slovo po slovo.");
+          return;
+        }
+        this.solution[y][x] = new_word[0];
+        this.$forceUpdate();
         return;
       }
       if (this.word_warning == "" || !show_warning) {
@@ -641,15 +407,14 @@ export default {
               number_of_dirs++;
             }
           }
-          this.page_length = Math.ceil(number_of_words / number_of_dirs);
           this.check_full();
         }
         //}
       }
       this.$forceUpdate();
     },
-    remove_word(i, j) {
-      this.words_by_dir[i].splice(j, 1);
+    remove_word(dir, index) {
+      this.words_by_dir[dir].splice(index, 1);
       let old_words = this.words_by_dir;
       this.reset();
       for (let i = 0; i < old_words.length; i++) {
@@ -678,7 +443,6 @@ export default {
       }
     },
     store() {
-      let params_id = this.$route.params.id;
       let datetime = new Date();
       let funct_ref = this.array_to_string;
       let newsolution = [];
@@ -691,159 +455,7 @@ export default {
           newspecial[i].push(this.is_special[i][j]);
         }
       }
-      initialsRef
-        .doc(params_id)
-        .update({
-          solution: funct_ref(newsolution),
-          is_special: funct_ref(newspecial),
-          dir1: funct_ref(this.words_by_dir[0]),
-          dir2: funct_ref(this.words_by_dir[1]),
-          dir3: funct_ref(this.words_by_dir[2]),
-          dir4: funct_ref(this.words_by_dir[3]),
-          dir5: funct_ref(this.words_by_dir[4]),
-          dir6: funct_ref(this.words_by_dir[5]),
-          dir7: funct_ref(this.words_by_dir[6]),
-          dir8: funct_ref(this.words_by_dir[7]),
-          title: this.title,
-          description: this.description,
-          image: "",
-          author: this.author,
-          updater: this.user.uid,
-          is_public: this.is_public,
-          permissions: this.permissions,
-          source: this.source,
-          time_created: this.time_created,
-          last_updated: datetime,
-        })
-        .then((docRef) => {
-          if (this.image && this.image.name == undefined) {
-            initialsRef
-              .doc(params_id)
-              .update({
-                solution: funct_ref(newsolution),
-                is_special: funct_ref(newspecial),
-                dir1: funct_ref(this.words_by_dir[0]),
-                dir2: funct_ref(this.words_by_dir[1]),
-                dir3: funct_ref(this.words_by_dir[2]),
-                dir4: funct_ref(this.words_by_dir[3]),
-                dir5: funct_ref(this.words_by_dir[4]),
-                dir6: funct_ref(this.words_by_dir[5]),
-                dir7: funct_ref(this.words_by_dir[6]),
-                dir8: funct_ref(this.words_by_dir[7]),
-                title: this.title,
-                description: this.description,
-                image: this.image,
-                author: this.author,
-                updater: this.user.uid,
-                is_public: this.is_public,
-                permissions: this.permissions,
-                source: this.source,
-                time_created: this.time_created,
-                last_updated: datetime,
-              })
-              .then(() => {
-                this.new_async(
-                  this.$vaToast.init(
-                    "Postojeća zagonetka je uspješno izmijenjena."
-                  ),
-                  1000
-                ).then(() => {
-                  this.$router.push("/search-initial");
-                });
-              });
-          } else {
-            if (this.oldimage) {
-              let oldRef = ref(projectStorage, this.oldimage);
-              // Delete the file
-              deleteObject(oldRef)
-                .then(() => {
-                  // File deleted successfully
-                })
-                .catch((error) => {
-                  // Uh-oh, an error occurred!
-                });
-            }
-            let exstension =
-              this.image.name.split(".")[this.image.name.split(".").length - 1];
-            const reference = "initial/" + params_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                initialsRef
-                  .doc(params_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    dir1: funct_ref(this.words_by_dir[0]),
-                    dir2: funct_ref(this.words_by_dir[1]),
-                    dir3: funct_ref(this.words_by_dir[2]),
-                    dir4: funct_ref(this.words_by_dir[3]),
-                    dir5: funct_ref(this.words_by_dir[4]),
-                    dir6: funct_ref(this.words_by_dir[5]),
-                    dir7: funct_ref(this.words_by_dir[6]),
-                    dir8: funct_ref(this.words_by_dir[7]),
-                    title: this.title,
-                    description: this.description,
-                    image: imageLocation,
-                    author: this.author,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: this.permissions,
-                    source: this.source,
-                    time_created: this.time_created,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Postojeća zagonetka je uspješno izmijenjena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-initial");
-                    });
-                  });
-              });
-          }
-        });
-    },
-    duplicate() {
-      let datetime = new Date();
-      let funct_ref = this.array_to_string;
-      let newsolution = [];
-      let newspecial = [];
-      for (let i = 0; i < this.rows; i++) {
-        newsolution.push([]);
-        newspecial.push([]);
-        for (let j = 0; j < this.columns; j++) {
-          newsolution[i].push(this.solution[i][j]);
-          newspecial[i].push(this.is_special[i][j]);
-        }
-      }
-      let newPermissions = [];
-      let authorAdded = false;
-      if (this.author == this.user.uid) {
-        authorAdded = true;
-      }
-      for (let i = 0; i < this.permissions; i++) {
-        if (this.permissions[i] != this.user.uid) {
-          newPermissions.push(this.permissions[i]);
-          if (this.permissions[i] == this.author) {
-            authorAdded = true;
-          }
-        }
-      }
-      if (authorAdded == false) {
-        newPermissions.push(this.author);
-      }
-      initialsRef
+      eightsRef
         .add({
           solution: funct_ref(newsolution),
           is_special: funct_ref(newspecial),
@@ -861,125 +473,65 @@ export default {
           author: this.user.uid,
           updater: this.user.uid,
           is_public: this.is_public,
-          permissions: newPermissions,
+          permissions: this.permissions,
           source: this.source,
           time_created: datetime,
           last_updated: datetime,
         })
         .then((docRef) => {
           let some_id = docRef.id;
-          if (this.image && this.image.name == undefined) {
-            var old_reference = ref(projectStorage, this.image);
-            let exstension = "";
-            // Get metadata properties
-            getMetadata(old_reference)
-              .then((metadata) => {
-                // Metadata now contains the metadata for 'images/forest.jpg'
-                exstension = metadata.contentType.split("/")[1];
-              })
-              .catch((error) => {
-                // Uh-oh, an error occurred!
-              });
-            const reference = "initial/" + some_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                initialsRef
-                  .doc(some_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    dir1: funct_ref(this.words_by_dir[0]),
-                    dir2: funct_ref(this.words_by_dir[1]),
-                    dir3: funct_ref(this.words_by_dir[2]),
-                    dir4: funct_ref(this.words_by_dir[3]),
-                    dir5: funct_ref(this.words_by_dir[4]),
-                    dir6: funct_ref(this.words_by_dir[5]),
-                    dir7: funct_ref(this.words_by_dir[6]),
-                    dir8: funct_ref(this.words_by_dir[7]),
-                    title: this.title,
-                    description: this.description,
-                    image: imageLocation,
-                    author: this.user.uid,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: newPermissions,
-                    source: this.source,
-                    time_created: datetime,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Nova zagonetka je uspješno spremljena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-initial");
-                    });
+          let exstension =
+            this.image.name.split(".")[this.image.name.split(".").length - 1];
+          const reference = "eight/" + some_id + "." + exstension;
+          const storageRef = ref(projectStorage, reference);
+          const metadata = {
+            contentType: "image/" + exstension,
+          };
+          // 'file' comes from the Blob or File API
+          uploadBytes(storageRef, this.image, metadata)
+            .then((snapshot) => {})
+            .catch((error) => {})
+            .then(() => {
+              let imageLocation = reference;
+              eightsRef
+                .doc(some_id)
+                .update({
+                  solution: funct_ref(newsolution),
+                  is_special: funct_ref(newspecial),
+                  dir1: funct_ref(this.words_by_dir[0]),
+                  dir2: funct_ref(this.words_by_dir[1]),
+                  dir3: funct_ref(this.words_by_dir[2]),
+                  dir4: funct_ref(this.words_by_dir[3]),
+                  dir5: funct_ref(this.words_by_dir[4]),
+                  dir6: funct_ref(this.words_by_dir[5]),
+                  dir7: funct_ref(this.words_by_dir[6]),
+                  dir8: funct_ref(this.words_by_dir[7]),
+                  title: this.title,
+                  description: this.description,
+                  image: imageLocation,
+                  author: this.user.uid,
+                  updater: this.user.uid,
+                  is_public: this.is_public,
+                  permissions: this.permissions,
+                  source: this.source,
+                  time_created: datetime,
+                  last_updated: datetime,
+                })
+                .then(() => {
+                  this.new_async(
+                    this.$vaToast.init(
+                      "Nova zagonetka je uspješno spremljena."
+                    ),
+                    1000
+                  ).then(() => {
+                    this.$router.push("/search-eight");
                   });
-              });
-          } else {
-            let exstension =
-              this.image.name.split(".")[this.image.name.split(".").length - 1];
-            const reference = "initial/" + some_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                initialsRef
-                  .doc(some_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    dir1: funct_ref(this.words_by_dir[0]),
-                    dir2: funct_ref(this.words_by_dir[1]),
-                    dir3: funct_ref(this.words_by_dir[2]),
-                    dir4: funct_ref(this.words_by_dir[3]),
-                    dir5: funct_ref(this.words_by_dir[4]),
-                    dir6: funct_ref(this.words_by_dir[5]),
-                    dir7: funct_ref(this.words_by_dir[6]),
-                    dir8: funct_ref(this.words_by_dir[7]),
-                    title: this.title,
-                    description: this.description,
-                    image: imageLocation,
-                    author: this.user.uid,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: newPermissions,
-                    source: this.source,
-                    time_created: datetime,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Nova zagonetka je uspješno spremljena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-initial");
-                    });
-                  });
-              });
-          }
+                });
+            });
         });
     },
-    remove_dir(i) {
-      this.words_by_dir[i] = [];
+    remove_dir(dir) {
+      this.words_by_dir[dir] = [];
       let old_words = this.words_by_dir;
       this.reset();
       for (let i = 0; i < old_words.length; i++) {
@@ -997,18 +549,12 @@ export default {
       this.check_full();
       this.$forceUpdate();
     },
-    delay(operation, delay) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(operation);
-        }, delay);
-      });
-    },
-    async new_async(operation, delay) {
-      await this.delay(operation, delay);
-    },
     modeChange(event) {
       /*switch (event.code) {
+            case "Enter":
+                this.mode_x = -2
+                this.mode_y = -2
+                break;
             case "ArrowUp":
                 this.mode_x = 0
                 this.mode_y = -1
@@ -1075,25 +621,28 @@ export default {
                 break;  
         }*/
     },
+    delay(operation, delay) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(operation);
+        }, delay);
+      });
+    },
+    async new_async(operation, delay) {
+      await this.delay(operation, delay);
+    },
   },
-  beforeMount() {
-    this.initialize();
-    this.fetch_puzzle();
-  },
-  beforeUpdate() {
-    this.initialize();
+  created() {
+    //window.addEventListener('keyup', this.modeChange);
   },
   beforeDestroy() {
     //window.removeEventListener('keyup', this.modeChange);
   },
-  created() {
-    //window.addEventListener('keyup', this.modeChange);
-    this.$watch(
-      () => this.$route.params,
-      (toParams, previousParams) => {
-        this.$router.go();
-      }
-    );
+  beforeMount() {
+    this.initialize();
+  },
+  beforeUpdate() {
+    this.initialize();
   },
   mounted() {
     const auth = getAuth();
@@ -1108,7 +657,7 @@ export default {
         // ...
         this.new_async(
           this.$vaToast.init(
-            "Ne možete uređivati zagonetku jer niste prijavljeni."
+            "Ne možete kreirati zagonetku jer niste prijavljeni."
           ),
           1000
         ).then(() => {
@@ -1124,10 +673,7 @@ export default {
 
 <template>
   <Navbar></Navbar>
-  <body class="mybody" v-if="!fully_loaded">
-    <LoadingBar></LoadingBar>
-  </body>
-  <body class="mybody" v-else>
+  <body class="mybody">
     <div class="myrow">
       <va-slider
         class="trackMe"
@@ -1264,13 +810,13 @@ export default {
     </div>
     <div class="myrow">
       <va-input
+        immediate-validation
+        :rules="[(value) => word_warning == '' || 'Nedozvoljena slova.']"
         style="display: inline-block; margin-left: 10px; margin-top: 10px"
         type="text"
         v-model="word"
         placeholder="Nova riječ"
         label="Dodaj riječ"
-        immediate-validation
-        :rules="[(value) => word_warning == '' || 'Nedozvoljena slova.']"
         @update:model-value="check_word()"
       />
     </div>
@@ -1292,10 +838,7 @@ export default {
                   current_x = i;
                   current_y = j;
                 "
-                :class="{
-                  help: check_start(j - 1, i - 1, false),
-                  special: is_special[i - 1][j - 1],
-                }"
+                :class="{ special: is_special[i - 1][j - 1] }"
               >
                 {{ solution[i - 1][j - 1] }}
               </td>
@@ -1312,8 +855,8 @@ export default {
         center
         class="mb-4"
       >
-        Morate unesti dovoljno riječi u osmosmjerku tako da sva polja budu
-        definirana barem pomoću jedne riječi.
+        Morate unesti dovoljno riječi i slova u osmosmjerku tako da sva polja
+        budu definirana.
       </va-alert>
     </div>
     <div class="myrow" v-if="count_special()">
@@ -1498,6 +1041,7 @@ export default {
     </div>
     <div class="myrow">
       <va-button
+        style="overflow-wrap: anywhere"
         :disabled="
           !(
             !warning &&
@@ -1509,24 +1053,8 @@ export default {
         "
         @click="store()"
       >
-        <va-icon name="mode_edit" />&nbsp;Izmijeni postojeću
-        zagonetku</va-button
-      >&nbsp;
-      <va-button
-        :disabled="
-          !(
-            !warning &&
-            image &&
-            title.length > 0 &&
-            description.length > 0 &&
-            source.length > 0
-          )
-        "
-        @click="duplicate()"
-      >
-        <va-icon name="control_point_duplicate" />&nbsp;Spremi izmjene kao novu
-        zagonetku</va-button
-      >
+        <va-icon name="add_circle" />&nbsp;Spremi zagonetku
+      </va-button>
     </div>
   </body>
 </template>
@@ -1550,9 +1078,6 @@ export default {
   text-align: center;
   vertical-align: middle;
   border-collapse: collapse;
-}
-.black {
-  background-color: black;
 }
 .special {
   background-color: salmon;

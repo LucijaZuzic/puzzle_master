@@ -19,6 +19,7 @@ export default {
               // User is signed out
               // ... 
           }
+          return true
           }); 
       } else {
           this.user = this.$props.friend
@@ -70,23 +71,23 @@ export default {
 </script>
 
 <template>  
-  <va-tabs v-model="value" vertical>
+  <va-tabs v-model="value" style="width: 100%;">
       <template #tabs> 
-      <va-tab
-          label="Inicijalne osmosmjerke kojima je korisnik autor"
-          name="author"
-      />
-      <va-tab
-          label="Inicijalne osmosmjerke koje je korisnik zadnji ažurirao"
-          name="updater"
-      />
-      <va-tab
-          label="Inicijalne osmosmjerke na kojima je korisnik suradnik"
-          name="collaborator"
-      />
-      <va-tab
-          label="Inicijalne osmosmjerke koje je korisnik riješio"
-          name="record"
+        <va-tab  
+            label="Autor"
+            name="author"
+        />
+        <va-tab 
+            label="Zadnji ažurirao"
+            name="updater"
+        />
+        <va-tab 
+            label="Suradnik"
+            name="collaborator"
+        />
+        <va-tab 
+            label="Riješio"
+            name="record"
       />
       </template>
   </va-tabs>
@@ -97,7 +98,7 @@ export default {
   <InitialTable :friend="user" v-if="value=='collaborator' && collaboratorInitial.length > 0" selectMode="single" :puzzleList="collaboratorInitial"></InitialTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorInitial.length <= 0" customMessage="Korisnik nije suradnik niti na jednoj inicijalnoj osmosmjerci"></NoDataToDisplay>  
   <InitialTable :friend="user" v-if="value=='record' && recordInitial.length > 0" selectMode="single" :puzzleList="recordInitial"></InitialTable>  
-  <NoDataToDisplay v-if="value=='record' && recordInitial.length <= 0" customMessage="Korisnik nije riješili niti jednu inicijalnu osmosmjerku"></NoDataToDisplay>  
+  <NoDataToDisplay v-if="value=='record' && recordInitial.length <= 0" customMessage="Korisnik nije riješio niti jednu inicijalnu osmosmjerku"></NoDataToDisplay>  
 </template>
 
 <style>

@@ -7,13 +7,16 @@ import { ref, getDownloadURL } from "firebase/storage"
 import { projectStorage } from "../main.js"
 
 import Navbar from './Navbar.vue' 
+import LoadingBar from './LoadingBar.vue'
 
 export default {
   components: {
-    Navbar
+    Navbar, 
+    LoadingBar
   }, 
   data() {
-    return {   
+    return {  
+        fully_loaded: false, 
         image: null,
         imageURL: "",
         user: null,
@@ -41,7 +44,9 @@ export default {
         last_updated: '',
         number_orientation: true,
         warning: '',
-        show_error:  false
+        show_error:  false,
+        current_x: null,
+        current_y: null
     }
   },
   methods: {
@@ -205,7 +210,6 @@ export default {
                     num_lens++
                 }
             } 
-            this.page_length = Math.ceil(number_of_numbers / num_lens)
         },
         remove_number() {
             if (this.number_positions[this.selected_number_x][this.selected_number_y][0] == -1) {
@@ -263,13 +267,14 @@ export default {
             }
             if (this.values[x][y] == -1) {
                 if (!reset) {
-                    this.$refs.barrier.show()
+                    this.$vaToast.init("Broj ne može započeti na barijeri.")
                 }
                 return
             }
             if (!reset && this.number_positions[this.selected_number_x][this.selected_number_y][0] != -1) {
                 if (!reset) {
-                    this.$refs.set.show()
+                    this.remove_number()
+                    //this.$vaToast.init("Broj je već postavljen.")
                 }
                 return
             }
@@ -294,17 +299,17 @@ export default {
                     } else {
                         if (!number_match) {
                             if (!reset) {
-                                this.$refs.vertical_match.show()
+                                this.$vaToast.init("Broj nije postavljen okomito jer se već upisane znamenke ne podudaraju.")
                             }
                         } else {
                             if (!reset) {
-                                this.$refs.vertical_length.show()
+                                this.$vaToast.init("Broj nije postavljen okomito jer nema dovoljno slobodnih mjesta.")
                             }
                         }
                     }
                 } else {
                     if (!reset) {
-                        this.$refs.vertical_begin.show()
+                        this.$vaToast.init("Broj nije postavljen okomito jer prethodni element stupca nije barijera niti početak stupca.")
                     }
                 }
             } else {
@@ -328,17 +333,17 @@ export default {
                     } else {
                         if (!number_match) {
                             if (!reset) {
-                                this.$refs.horizontal_match.show()
+                                this.$vaToast.init("Broj nije postavljen vodoravno jer se već upisane znamenke ne podudaraju.")
                             }
                         } else {
                             if (!reset) {
-                                this.$refs.horizontal_length.show()
+                                this.$vaToast.init("Broj nije postavljen vodoravno jer nema dovoljno slobodnih mjesta.")
                             }
                         }
                     }
                 } else {
                     if (!reset) {
-                        this.$refs.horizontal_begin.show()
+                        this.$vaToast.init("Broj nije postavljen vodoravno jer prethodni element reda nije barijera niti početak reda.")
                     }
                 }
             }
@@ -368,16 +373,16 @@ export default {
                 this.selected_number = -1
                 this.selected_number_x = -1
                 this.selected_number_y = -1
-                this.new_async(this.$refs.solved.show(), 1000).then(() => {
+                this.new_async(this.$vaToast.init("Uspješno ste riješili zagonetku."), 1000).then(() => {
                     if (this.user && !this.cheat) {
                         this.new_async(this.store(), 1000).then(() => {
-                            this.$router.push("/searchnumbercrossword")
+                            this.$router.push("/search-number-crossword")
                         })
                     } else {
                         if (!this.user) {
-                            this.new_async(this.$refs.no_user.show(), 1000).then(() => {
+                            this.new_async(this.$vaToast.init("Ne može se spremiti vaš rezultat jer niste prijavljeni."), 1000).then(() => {
                                 if (this.cheat) {
-                                    this.new_async(this.$refs.no_cheat.show(), 1000).then(() => {
+                                    this.new_async(this.$vaToast.init("Ne može se spremiti vaš rezultat jer ste odabrali da se otkrije rješenje."), 1000).then(() => {
                                         this.$router.push("/login")
                                     })
                                 } else {
@@ -386,11 +391,11 @@ export default {
                             }) 
                         } else {
                             if (this.cheat) {
-                                this.new_async(this.$refs.no_cheat.show(), 1000).then(() => {
-                                    this.$router.push("/searchnumbercrossword")
+                                this.new_async(this.$vaToast.init("Ne može se spremiti vaš rezultat jer ste odabrali da se otkrije rješenje."), 1000).then(() => {
+                                    this.$router.push("/search-number-crossword")
                                 })
                             } else {
-                                this.$router.push("/searchnumbercrossword")
+                                this.$router.push("/search-number-crossword")
                             }
                         }
                     }
@@ -435,6 +440,12 @@ export default {
               }
           }
         },
+        remove_dir(i) {
+            for (let j = 0; j < this.numbers_by_len[i].length; j++) {
+                this.select_number(i, j)
+                this.remove_number()
+            }
+        },
         select_number(i,j) {
             if (this.victory) {
                 return;
@@ -464,6 +475,7 @@ export default {
       getPicture() {
         if (this.image == null) {
             this.imageURL = ""
+            this.fully_loaded = true
             return
         }    
         var reference = ref(projectStorage, this.image)
@@ -471,10 +483,11 @@ export default {
         getDownloadURL(reference)
         .then((url) => {
             this.imageURL = url
+            this.fully_loaded = true
         })
         .catch((error) => { 
         });  
-    },  
+    },
         fetch_puzzle() {
             let params_id= this.$route.params.id
             let string_solution = []
@@ -533,8 +546,8 @@ export default {
                     this.getPicture()
                     this.$forceUpdate()
                 } else {
-                    this.$refs.no_puzzle.show()
-                    this.$router.push("/searchnumbercrossword");
+                    this.$vaToast.init("Ne postoji zagonetka s tim brojem.")
+                    this.$router.push("/search-number-crossword");
                 }
             })
       }
@@ -564,6 +577,7 @@ export default {
                 // ...
                 this.$refs.no_user_dialog.show()
             }
+            return true
         });
         this.$refs.show_error.show()
         this.startTimer()
@@ -572,31 +586,47 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
-  <body class="mybody">
+  <Navbar></Navbar>    
+  <body class="mybody" v-if="!fully_loaded"> 
+    <LoadingBar></LoadingBar>
+  </body>
+  <body class="mybody" v-else>
     <div class="myrow">
-        <va-switch style="float: left" v-model="number_orientation" true-inner-label="Okomito" false-inner-label="Vodoravno" class="mr-4" />  
-        <va-checkbox class="flex mb-2 md6" style="float: left" label="Prikaži greške" v-model="show_error" />
-        <va-chip style="float: right" outline>{{format(time_elapsed)}}</va-chip>
+        <span style="float: left; overflow-wrap:anywhere">
+            <va-button @click="number_orientation=!number_orientation" style="margin-left: 10px;margin-top: 10px">
+                <span v-if="number_orientation==false"><va-icon name="arrow_forward"/>&nbsp;Vodoravno</span><span v-else><va-icon name="arrow_downward"/>&nbsp;Okomito</span>
+            </va-button> 
+            &nbsp; 
+            <va-button @click="show_error=!show_error" style="margin-left: 10px;margin-top: 10px">
+                <span v-if="show_error==false"><va-icon name="report_off"/>&nbsp;Ne prikazuj greške</span><span v-else><va-icon name="report"/>&nbsp;Prikaži greške</span>
+            </va-button>  
+        </span>
+        <va-chip style="float: right; overflow-wrap:anywhere; margin-left: 10px;margin-top: 10px" outline>{{format(time_elapsed)}}</va-chip>
     </div>
-    <div class="myrow">
-        <table class="numbers_table">
-            <tr v-for="i in (rows)" v-bind:key="i">
-                <td v-for="j in (columns)" v-bind:key="j" @click="place_number(false,i-1,j-1);check_victory();$forceUpdate()" 
-                :class="{wrong: values[i - 1][j - 1] != solution[i - 1][j - 1] && values[i-1][j-1] != 10 && show_error, numbers: true, black: values[i - 1][j - 1] == -1,
-                help: is_revealed[i - 1][j - 1], special: is_special[i - 1][j - 1]}">
-                    <span v-if="values[i - 1][j - 1] == 10 || values[i - 1][j - 1] == -1">&nbsp;</span>
-                    <span v-else>{{values[i - 1][j - 1]}}</span>
-                </td>
-            </tr>
-        </table>
+    <div class="myrow"> 
+        <span v-if="current_x != null && current_y != null">({{current_x}}, {{current_y}})</span>
+    </div> 
+    <div class="myrow" style="max-height: 400px"> 
+        <va-infinite-scroll disabled :load="()=> {}">
+            <div> 
+                <table class="numbers_table">
+                    <tr v-for="i in (rows)" v-bind:key="i">
+                        <td v-for="j in (columns)" v-bind:key="j" @click="place_number(false,i-1,j-1);check_victory();$forceUpdate()" @mouseover="current_x = i; current_y = j" 
+                        :class="{wrong: values[i - 1][j - 1] != solution[i - 1][j - 1] && values[i-1][j-1] != 10 && show_error, numbers: true, black: values[i - 1][j - 1] == -1,
+                        help: is_revealed[i - 1][j - 1], special: is_special[i - 1][j - 1]}">
+                            <span v-if="values[i - 1][j - 1] == 10 || values[i - 1][j - 1] == -1">&nbsp;</span>
+                            <span v-else>{{values[i - 1][j - 1]}}</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </va-infinite-scroll>  
     </div>   
-    <br> 
     <div class="myrow" v-if="count_special()"> 
             Rješenje:
             <span v-for="i in (rows)" v-bind:key="i">
                 <span v-for="j in (columns)" v-bind:key="j">
-                    <va-chip outline square style="margin-left:5px" v-if="is_special[i - 1][j - 1]">
+                    <va-chip outline square style="margin-left:5px; margin-top:5px" v-if="is_special[i - 1][j - 1]">
                         <span v-if="values[i - 1][j - 1] != 10">
                             {{values[i - 1][j - 1]}}
                         </span>
@@ -605,77 +635,76 @@ export default {
                 </span>
             </span> 
     </div>   
-    <div class="myrow">
-        <span v-for="(numbers_of_length, i) in numbers_by_len" v-bind:key="i">
-            <va-chip outline v-if="numbers_of_length.length > 0 && i > 0" style="margin-left: 2%;margin-top: 2%">
-                <va-chip>{{i + 1}}</va-chip>
-                <va-list fit v-for="page_number in Math.ceil(numbers_of_length.length / page_length)" v-bind:key="page_number">
-                    <va-list-item v-for="j in Math.min(numbers_of_length.length, page_number * page_length) - ((page_number - 1) * page_length)" v-bind:key="j">
-                        <span oncontextmenu="return false;" :class="{used: number_positions[i][(page_number - 1) * page_length + j - 1][0] != -1,
-                        selected: selected_number_x == i && selected_number_y == (page_number - 1) * page_length + j - 1 &&
-                        selected_number == numbers_of_length[(page_number - 1) * page_length + j - 1]}"
-                        @click.left="select_number(i,(page_number - 1) * page_length + j - 1);$forceUpdate()" 
-                        @click.right="select_number(i,(page_number - 1) * page_length + j - 1);remove_number();$forceUpdate()"> 
-                        {{numbers_of_length[(page_number - 1) * page_length + j - 1]}}
+    <div class="myrow" v-else>
+        <va-infinite-scroll disabled :load="()=> {}">
+            <div style="max-height: 320px">
+                <span v-for="(numbers_of_length, i) in numbers_by_len" v-bind:key="i">
+                    <va-chip outline v-if="numbers_of_length.length > 0 && i > 0" style="padding: 20px; margin-left: 20px; margin-top: 20px">
+                        <span>
+                            <va-chip>{{i + 1}}</va-chip> 
+                            &nbsp;
+                            <va-icon @click="remove_dir(i)" name="delete"/>
+                            <br>
+                            <br>
+                            <div style="max-height: 200px">
+                                <va-infinite-scroll disabled :load="()=> {}">
+                                        <div v-for="(number, j) in numbers_of_length" v-bind:key="j"> 
+                                            <span @click="select_number(i, j);$forceUpdate()"
+                                            :class="{used: number_positions[i][j][0] != -1,
+                                            selected: selected_number_x == i && selected_number_y == j &&
+                                            selected_number == numbers_of_length[j]}">
+                                                {{number}}
+                                            </span>
+                                            &nbsp;
+                                            <va-icon @click="select_number(i, j);remove_number();$forceUpdate()" name="delete"/>
+                                        </div> 
+                                </va-infinite-scroll>
+                            </div>
                         </span>
-                    </va-list-item> 
-                </va-list> 
-            </va-chip>
-        </span>
-        <br> 
-    </div> 
+                    </va-chip>
+                </span>
+            </div>   
+        </va-infinite-scroll> 
+    </div>   
     <div class="myrow" v-if="image">
-        <img id='img' :src="imageURL"  alt="No image" style="width:50%">
+        <img id='img' :src="imageURL"  alt="Nema slike" style="width:50%">
     </div>    
     <div class="myrow" v-if="!image">
-        <va-alert style="white-space: pre-wrap;" color="warning" title="Prazna slika" center class="mb-4">
+        <va-alert style="white-space: pre-wrap;" color="danger" title="Prazna slika" center class="mb-4">
             Niste dodali sliku uz zagonetku.
         </va-alert> 
     </div>   
     <div class="myrow">
-        <va-card>
+        <va-card style="overflow-wrap:anywhere">
             <va-card-title>Naslov zagonetke</va-card-title>
             <va-card-content>{{title}}</va-card-content>
         </va-card>
     </div>
     <div class="myrow">
-        <va-card>
+        <va-card style="overflow-wrap:anywhere">
             <va-card-title>Opis zagonetke</va-card-title>
             <va-card-content>{{description}}</va-card-content>
         </va-card>
     </div>
     <div class="myrow">
-        <va-card>
+        <va-card style="overflow-wrap:anywhere">
             <va-card-title>Izvor zagonetke</va-card-title>
             <va-card-content>{{source}}</va-card-content>
         </va-card>
     </div>
     <div class="myrow"> 
-        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{authorUserRecord.displayName}} ({{authorUserRecord.email}})</va-chip>  
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
+        <va-chip style="margin-left: 10px;margin-top: 10px;overflow-wrap:anywhere">Autor zagonetke: {{authorUserRecord.displayName}} ({{authorUserRecord.email}})</va-chip>  
+        <va-chip style="margin-left: 10px;margin-top: 10px;overflow-wrap:anywhere">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
         <br>
-        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updaterUserRecord.displayName}} ({{updaterUserRecord.email}})</va-chip>  
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
+        <va-chip style="margin-left: 10px;margin-top: 10px;overflow-wrap:anywhere">Zadnji ažurirao: {{updaterUserRecord.displayName}} ({{updaterUserRecord.email}})</va-chip>  
+        <va-chip style="margin-left: 10px;margin-top: 10px;overflow-wrap:anywhere">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
     </div> 
     <div class="myrow">
-        <va-button @click="show_solution()">Otkrij sva polja</va-button>
+        <va-button @click="show_solution()" style="overflow-wrap:anywhere"><va-icon name="help"/>&nbsp;Otkrij sva polja</va-button>
     </div>   
-    
-    <va-modal ref="show_error" message="Želite li da greške budu uznačene?" @ok="show_error=true" stateful ok-text="Da" cancel-text="Ne" />
-    <va-modal ref="barrier" hide-default-actions message="Broj ne može započeti na barijeri." stateful />
-    <va-modal ref="set" hide-default-actions message="Broj je već postavljen." stateful />
-    <va-modal ref="vertical_match" hide-default-actions message="Broj nije postavljen okomito jer se već upisane znamenke ne podudaraju." stateful />
-    <va-modal ref="vertical_length" hide-default-actions message="Broj nije postavljen okomito jer nema dovoljno slobodnih mjesta." stateful />
-    <va-modal ref="vertical_begin" hide-default-actions message="Broj nije postavljen okomito jer prethodni element stupca nije barijera niti početak stupca." stateful />
-    <va-modal ref="horizontal_match" hide-default-actions message="Broj nije postavljen vodoravno jer se već upisane znamenke ne podudaraju." stateful />
-    <va-modal ref="horizontal_length" hide-default-actions message="Broj nije postavljen vodoravno jer nema dovoljno slobodnih mjesta." stateful />
-    <va-modal ref="horizontal_begin" hide-default-actions message="Broj nije postavljen vodoravno jer prethodni element reda nije barijera niti početak reda." stateful />
-    <va-modal ref="solved" hide-default-actions message="Uspješno ste riješili zagonetku." stateful />
-    <va-modal ref="no_user" hide-default-actions message="Ne može se spremiti vaš rezultat jer niste prijavljeni." stateful />
-    <va-modal ref="no_user_dialog" @cancel="$router.push('/login')" ok-text="Da" cancel-text="Ne" message="Ne može se spremiti vaš rezultat jer niste prijavljeni. Želite li svejedno nastaviti?" stateful />
-    <va-modal ref="no_cheat" hide-default-actions message="Ne može se spremiti vaš rezultat jer ste odabrali da se otkrije rješenje." stateful />
-    <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
     </body>
+    <va-modal ref="show_error" message="Želite li da greške budu uznačene?" @ok="show_error=true" stateful ok-text="Da" cancel-text="Ne" />
+<va-modal ref="no_user_dialog" @cancel="$router.push('/login')" ok-text="Da" cancel-text="Ne" message="Ne može se spremiti vaš rezultat jer niste prijavljeni. Želite li svejedno nastaviti?" stateful />
 </template>
 
 <style scoped>
@@ -692,6 +721,8 @@ export default {
     border: 1px solid black;
     width: 24px;
     height: 24px;
+    min-width: 24px;
+    min-height: 24px;
     text-align: center;
     vertical-align: middle;
     border-collapse: collapse
@@ -713,10 +744,10 @@ export default {
     text-decoration: line-through;
 }
 .selected {
-    color: green;
+    color: #40e583;
 }
 .wrong {
-    color: red;
+    color: #de1041;
 }
 
 </style>

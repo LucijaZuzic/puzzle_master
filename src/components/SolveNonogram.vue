@@ -1,719 +1,925 @@
-<script> 
-
-import { nonogramsRef } from "../main.js"
-import { nonogramsRecordsRef } from "../main.js"
-import { usersRef } from "../main.js"
+<script>
+import { nonogramsRef } from "../main.js";
+import { nonogramsRecordsRef } from "../main.js";
+import { usersRef } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-import Navbar from './Navbar.vue'
+import Navbar from "./Navbar.vue";
+import LoadingBar from "./LoadingBar.vue";
+
 export default {
   components: {
-    Navbar
-  },  
+    Navbar,
+    LoadingBar,
+  },
   data() {
     return {
-        title: "",
-        user: null,
-        cheat: false,
-        warning: "",
-        author: "",   
-        authorUserRecord: {displayName: "", email: ""}, 
-        updater: "",
-        updaterUserRecord: {displayName: "", email: ""},
-        time_created: '',
-        last_updated: '',
-        is_public: false,
-        permissions: [],
-        collaborator: "",
-        description: '',
-        solution: [],
-        blocked: false,
-        source: '',
-        colnum: 20,
-        rownum: 20,
-        maxcol: 0,
-        victory: false,
-        maxrow: 0,
-        row_colors: [],
-        col_colors: [],
-        mode: 0,
-        time_elapsed: 0,
-        drag: false,
-        prev_x: -1,
-        prev_y: -1,
-        num_colors: 2,
-        show_error:  false,
-        wrong_colors: [false, false],
-        colors: ["#FFFFFF", "#000000"]
-    }
+      fully_loaded: false,
+      title: "",
+      user: null,
+      cheat: false,
+      warning: "",
+      author: "",
+      authorUserRecord: { displayName: "", email: "" },
+      updater: "",
+      updaterUserRecord: { displayName: "", email: "" },
+      time_created: "",
+      last_updated: "",
+      is_public: false,
+      permissions: [],
+      collaborator: "",
+      description: "",
+      solution: [],
+      blocked: false,
+      source: "",
+      colnum: 20,
+      rownum: 20,
+      maxcol: 0,
+      victory: false,
+      maxrow: 0,
+      row_colors: [],
+      col_colors: [],
+      mode: 0,
+      time_elapsed: 0,
+      drag: false,
+      prev_x: -1,
+      prev_y: -1,
+      num_colors: 2,
+      show_error: false,
+      colors: ["#FFFFFF", "#000000"],
+      current_x: null,
+      current_y: null,
+    };
   },
   methods: {
-      getAuthorUserRecord() { 
-        let some_id = this.author
-        let newRecord = {}
-        usersRef.get(some_id).then(function(snapshot) {
-            snapshot.forEach(function(childSnapshot) {
-                let id = childSnapshot.id; 
-                if (id == some_id) {
-                    newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
-                }
-            });
-        }).then(() => { 
-            this.authorUserRecord = newRecord
-        }) 
-    },
-      getUpdaterUserRecord() { 
-        let some_id = this.updater
-        let newRecord = {}
-        usersRef.get(some_id).then(function(snapshot) {
-            snapshot.forEach(function(childSnapshot) {
-                let id = childSnapshot.id; 
-                if (id == some_id) {
-                    newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
-                }
-            });
-        }).then(() => { 
-            this.updaterUserRecord = newRecord
-        }) 
-      },
-      getCollaboratorUserRecord() { 
-          this.permissionsUserRecords = []
-          for (let i = 0; i < this.permissions; i++) {
-            let some_id = this.permissions[i]
-            let newRecord = {}
-            usersRef.get(some_id).then(function(snapshot) {
-                snapshot.forEach(function(childSnapshot) {
-                    let id = childSnapshot.id; 
-                    if (id == some_id) {
-                        newRecord = {displayName: childSnapshot.get('displayName'), email: childSnapshot.get('email')}
-                    }
-                });
-            }).then(() => { 
-                this.permissionsUserRecords.push(newRecord)
-            }) 
-          }  
-      }, 
-    reset() {
-        this.values = new Array()
-        for (let i = 0; i < this.rownum; i++) {
-            let one_arr = new Array()
-            for (let j = 0; j < this.colnum; j++) {
-                one_arr.push(0)
+    getAuthorUserRecord() {
+      let some_id = this.author;
+      let newRecord = {};
+      usersRef
+        .get(some_id)
+        .then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let id = childSnapshot.id;
+            if (id == some_id) {
+              newRecord = {
+                displayName: childSnapshot.get("displayName"),
+                email: childSnapshot.get("email"),
+              };
             }
-            this.values.push(one_arr)
-        }  
-        this.$forceUpdate()
-    },
-    parse_sequence() {
-        this.getrow()
-        this.getcol()
-        this.getmaxrow()
-        this.getmaxcol()
-        this.colorcol()
-        this.colorrow()
-    },
-    initialize() { 
-        this.columns = new Array()
-        this.rows = new Array()
-        this.col_colors = new Array()
-        this.row_colors = new Array()
-        for (let i = 0; i < this.colnum; i++) {
-            this.col_colors.push([])
-            this.columns.push([])
-        }
-        for (let i = 0; i < this.rownum; i++) {
-            this.row_colors.push([])
-            this.rows.push([])
-        }
-        this.values = new Array()
-        for (let i = 0; i < this.rownum; i++) {
-            let one_arr = new Array()
-            for (let j = 0; j < this.colnum; j++) {
-                one_arr.push(0)
-            }
-            this.values.push(one_arr)
-        } 
-        this.parse_sequence()
-    },
-    increment(x, y, ismouseover) {
-        if (this.victory) {
-            return
-        }
-        if (this.blocked == true) {
-            return
-        }
-        if (ismouseover && !this.drag) {
-            return;
-        }
-        this.values[x][y] = this.mode
-        document.getElementById("cell" + x + ":" + y).style.backgroundColor = this.mode
-        this.values = [... this.values]
-        this.check_victory()  
-        this.parse_sequence()
-        this.$forceUpdate()
-    },
-    update_colors() {
-        for (let i = 0; i < this.rownum; i++) {
-            for (let j = 0; j < this.colnum; j++) {
-                if (document.getElementById("cell" + i + ":" + j)) {
-                    document.getElementById("cell" + i + ":" + j).style.backgroundColor = this.colors[this.values[i][j]]
-                }
-            }   
-        }
-    },
-    getcol() {
-        let color_val = new Array()
-        let val = new Array()
-        for (let i = 0; i < this.colnum; i++) {
-            let color = -1
-            let prev_color = -1
-            let color_array = new Array()
-            let one_arr = new Array()
-            let current = 0
-            for (let j = 0; j < this.rownum; j++) {
-                color = this.solution[j][i]
-                if (color == prev_color) {
-                    if (color != 0) {
-                        current += 1
-                    }
-                } else {
-                    if (current != 0 && prev_color != 0) {
-                        color_array.push(prev_color)
-                        one_arr.push(current)
-                    }
-                    current = 1
-                }
-                prev_color = color
-            }
-            if (current != 0 && prev_color != 0) {
-                color_array.push(prev_color)
-                one_arr.push(current)
-            }
-            color_val.push(color_array)
-            val.push(one_arr) 
-        }
-        this.col_colors = color_val
-        this.columns = val
-    },
-    colorcol() {
-        for (let i = 0; i < this.col_colors.length; i++) {
-            for (let j = 0; j < this.col_colors[i].length; j++) {
-                if (document.getElementById('column' + i + ':' + j)) {
-                    document.getElementById('column' + i + ':' + j).style.color = this.colors[this.col_colors[i][j]]
-                }
-            }
-        }
-    },
-    show_solution() {
-        this.cheat = true;
-        for (let i = 0; i < this.rownum; i++) {
-            for (let j = 0; j < this.colnum; j++) {
-                this.values[i][j] = this.solution[i][j]
-            }
-        }
-        this.check_victory()  
-        this.update_colors()
-        this.$forceUpdate()
-    },
-    getrow() {
-        let color_val = new Array()
-        let val = new Array()
-        for (let i = 0; i < this.rownum; i++) {
-            let color = -1
-            let prev_color = -1
-            let color_array = new Array()
-            let one_arr = new Array()
-            let current = 0
-            for (let j = 0; j < this.colnum; j++) {
-                color = this.solution[i][j]
-                if (color == prev_color) {
-                    if (color != 0) {
-                        current += 1
-                    }
-                } else {
-                    if (current != 0 && prev_color != 0) {
-                        color_array.push(prev_color)
-                        one_arr.push(current)
-                    }
-                    current = 1
-                }
-                prev_color = color
-            }
-            if (current != 0 && prev_color != 0) {
-                color_array.push(prev_color)
-                one_arr.push(current)
-            }
-            color_val.push(color_array)
-            val.push(one_arr) 
-        }
-        this.row_colors = color_val
-        this.rows = val
-    },
-    colorrow() {
-        for (let i = 0; i < this.row_colors.length; i++) {
-            for (let j = 0; j < this.row_colors[i].length; j++) {
-                if (document.getElementById('row' + i + ':' + j)) {
-                    document.getElementById('row' + i + ':' + j).style.color = this.colors[this.row_colors[i][j]]
-                }
-            }
-        }
-    },
-    getmaxrow() {
-        let val = 0
-        for (let i = 0; i < this.colnum; i++) {
-            if (this.columns[i].length > val) {
-                val = this.columns[i].length
-            }
-        }
-        this.maxrow = val
-
-    },
-    getmaxcol() { 
-        let val = 0
-        for (let i = 0; i < this.rownum; i++) {
-            if (this.rows[i].length > val) {
-                val = this.rows[i].length
-            }
-        }
-        this.maxcol = val
-    }, 
-    after_click(i) {
-        this.mode = i 
-    },
-    string_to_array(array_string) {
-        if (!array_string) {
-            return []
-        }
-        if (array_string[1] == '[') {
-            let array = array_string.substring(2, array_string.length - 2).split("],[")
-            for (let i = 0; i < array.length; i++) {
-                array[i] = array[i].split(",")
-                for(let j = 0; j < array[i].length; j++) {
-                    array[i][j] = parseInt(array[i][j])
-                }
-            }
-            return array
-        } else {
-            let array = array_string.substring(1, array_string.length - 1).split(",")
-            return array
-        }
-    },
-    delay(operation, delay) {
-        return new Promise(resolve => {
-            setTimeout(() => {
-            resolve(operation);
-            }, delay);
+          });
+        })
+        .then(() => {
+          this.authorUserRecord = newRecord;
         });
     },
+    getUpdaterUserRecord() {
+      let some_id = this.updater;
+      let newRecord = {};
+      usersRef
+        .get(some_id)
+        .then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let id = childSnapshot.id;
+            if (id == some_id) {
+              newRecord = {
+                displayName: childSnapshot.get("displayName"),
+                email: childSnapshot.get("email"),
+              };
+            }
+          });
+        })
+        .then(() => {
+          this.updaterUserRecord = newRecord;
+        });
+    },
+    getCollaboratorUserRecord() {
+      this.permissionsUserRecords = [];
+      for (let i = 0; i < this.permissions; i++) {
+        let some_id = this.permissions[i];
+        let newRecord = {};
+        usersRef
+          .get(some_id)
+          .then(function (snapshot) {
+            snapshot.forEach(function (childSnapshot) {
+              let id = childSnapshot.id;
+              if (id == some_id) {
+                newRecord = {
+                  displayName: childSnapshot.get("displayName"),
+                  email: childSnapshot.get("email"),
+                };
+              }
+            });
+          })
+          .then(() => {
+            this.permissionsUserRecords.push(newRecord);
+          });
+      }
+    },
+    reset() {
+      this.values = new Array();
+      for (let i = 0; i < this.rownum; i++) {
+        let one_arr = new Array();
+        for (let j = 0; j < this.colnum; j++) {
+          one_arr.push(0);
+        }
+        this.values.push(one_arr);
+      }
+      this.$forceUpdate();
+    },
+    parse_sequence() {
+      this.getrow();
+      this.getcol();
+      this.getmaxrow();
+      this.getmaxcol();
+      this.colorcol();
+      this.colorrow();
+    },
+    initialize() {
+      this.columns = new Array();
+      this.rows = new Array();
+      this.col_colors = new Array();
+      this.row_colors = new Array();
+      for (let i = 0; i < this.colnum; i++) {
+        this.col_colors.push([]);
+        this.columns.push([]);
+      }
+      for (let i = 0; i < this.rownum; i++) {
+        this.row_colors.push([]);
+        this.rows.push([]);
+      }
+      this.values = new Array();
+      for (let i = 0; i < this.rownum; i++) {
+        let one_arr = new Array();
+        for (let j = 0; j < this.colnum; j++) {
+          one_arr.push(0);
+        }
+        this.values.push(one_arr);
+      }
+      this.parse_sequence();
+    },
+    increment(x, y, ismouseover) {
+      if (this.victory) {
+        return;
+      }
+      if (this.blocked == true) {
+        return;
+      }
+      if (ismouseover && !this.drag) {
+        return;
+      }
+      this.values[x][y] = this.mode;
+      document.getElementById("cell" + x + ":" + y).style.backgroundColor =
+        this.mode;
+      this.values = [...this.values];
+      this.check_victory();
+      this.parse_sequence();
+      this.$forceUpdate();
+    },
+    update_colors() {
+      for (let i = 0; i < this.rownum; i++) {
+        for (let j = 0; j < this.colnum; j++) {
+          if (document.getElementById("cell" + i + ":" + j)) {
+            document.getElementById(
+              "cell" + i + ":" + j
+            ).style.backgroundColor = this.colors[this.values[i][j]];
+          }
+        }
+      }
+    },
+    getcol() {
+      let color_val = new Array();
+      let val = new Array();
+      for (let i = 0; i < this.colnum; i++) {
+        let color = -1;
+        let prev_color = -1;
+        let color_array = new Array();
+        let one_arr = new Array();
+        let current = 0;
+        for (let j = 0; j < this.rownum; j++) {
+          color = this.solution[j][i];
+          if (color == prev_color) {
+            if (color != 0) {
+              current += 1;
+            }
+          } else {
+            if (current != 0 && prev_color != 0) {
+              color_array.push(prev_color);
+              one_arr.push(current);
+            }
+            current = 1;
+          }
+          prev_color = color;
+        }
+        if (current != 0 && prev_color != 0) {
+          color_array.push(prev_color);
+          one_arr.push(current);
+        }
+        color_val.push(color_array);
+        val.push(one_arr);
+      }
+      this.col_colors = color_val;
+      this.columns = val;
+    },
+    colorcol() {
+      for (let i = 0; i < this.col_colors.length; i++) {
+        for (let j = 0; j < this.col_colors[i].length; j++) {
+          if (document.getElementById("column" + i + ":" + j)) {
+            document.getElementById("column" + i + ":" + j).style.color =
+              this.colors[this.col_colors[i][j]];
+          }
+        }
+      }
+    },
+    show_solution() {
+      this.cheat = true;
+      for (let i = 0; i < this.rownum; i++) {
+        for (let j = 0; j < this.colnum; j++) {
+          this.values[i][j] = this.solution[i][j];
+        }
+      }
+      this.check_victory();
+      this.update_colors();
+      this.$forceUpdate();
+    },
+    getrow() {
+      let color_val = new Array();
+      let val = new Array();
+      for (let i = 0; i < this.rownum; i++) {
+        let color = -1;
+        let prev_color = -1;
+        let color_array = new Array();
+        let one_arr = new Array();
+        let current = 0;
+        for (let j = 0; j < this.colnum; j++) {
+          color = this.solution[i][j];
+          if (color == prev_color) {
+            if (color != 0) {
+              current += 1;
+            }
+          } else {
+            if (current != 0 && prev_color != 0) {
+              color_array.push(prev_color);
+              one_arr.push(current);
+            }
+            current = 1;
+          }
+          prev_color = color;
+        }
+        if (current != 0 && prev_color != 0) {
+          color_array.push(prev_color);
+          one_arr.push(current);
+        }
+        color_val.push(color_array);
+        val.push(one_arr);
+      }
+      this.row_colors = color_val;
+      this.rows = val;
+    },
+    colorrow() {
+      for (let i = 0; i < this.row_colors.length; i++) {
+        for (let j = 0; j < this.row_colors[i].length; j++) {
+          if (document.getElementById("row" + i + ":" + j)) {
+            document.getElementById("row" + i + ":" + j).style.color =
+              this.colors[this.row_colors[i][j]];
+          }
+        }
+      }
+    },
+    getmaxrow() {
+      let val = 0;
+      for (let i = 0; i < this.colnum; i++) {
+        if (this.columns[i].length > val) {
+          val = this.columns[i].length;
+        }
+      }
+      this.maxrow = val;
+    },
+    getmaxcol() {
+      let val = 0;
+      for (let i = 0; i < this.rownum; i++) {
+        if (this.rows[i].length > val) {
+          val = this.rows[i].length;
+        }
+      }
+      this.maxcol = val;
+    },
+    after_click(i) {
+      this.mode = i;
+    },
+    string_to_array(array_string) {
+      if (!array_string) {
+        return [];
+      }
+      if (array_string[1] == "[") {
+        let array = array_string
+          .substring(2, array_string.length - 2)
+          .split("],[");
+        for (let i = 0; i < array.length; i++) {
+          array[i] = array[i].split(",");
+          for (let j = 0; j < array[i].length; j++) {
+            array[i][j] = parseInt(array[i][j]);
+          }
+        }
+        return array;
+      } else {
+        let array = array_string
+          .substring(1, array_string.length - 1)
+          .split(",");
+        return array;
+      }
+    },
+    delay(operation, delay) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(operation);
+        }, delay);
+      });
+    },
     async new_async(operation, delay) {
-        await this.delay(operation, delay);
+      await this.delay(operation, delay);
     },
     check_victory() {
-        this.victory = true
-        for (let i = 0; i < this.values.length; i++) {
-            for (let j = 0; j < this.values[i].length; j++) {
-                if (this.values[i][j] != this.solution[i][j]) { 
-                    this.victory = false
-                    return
-                }
-            }
-        } 
-        if (this.victory) { 
-            clearInterval(this.interval) 
-            this.new_async(this.$refs.solved.show(), 1000).then(() => {
-                if (this.user && !this.cheat) {
-                    this.new_async(this.store(), 1000).then(() => {
-                        this.$router.push("/searchnonogram")
-                    })
-                } else {
-                    if (!this.user) {
-                        this.new_async(this.$refs.no_user.show(), 1000).then(() => {
-                            if (this.cheat) {
-                                this.new_async(this.$refs.no_cheat.show(), 1000).then(() => {
-                                    this.$router.push("/login")
-                                })
-                            } else {
-                                this.$router.push("/login")
-                            }
-                        }) 
-                    } else {
-                        if (this.cheat) {
-                            this.new_async(this.$refs.no_cheat.show(), 1000).then(() => {
-                                this.$router.push("/searchnonogram")
-                            })
-                        } else {
-                            this.$router.push("/searchnonogram")
-                        }
-                    }
-                }
-            }) 
+      this.victory = true;
+      for (let i = 0; i < this.values.length; i++) {
+        for (let j = 0; j < this.values[i].length; j++) {
+          if (this.values[i][j] != this.solution[i][j]) {
+            this.victory = false;
+            return;
+          }
         }
-    }, 
-    store() {  
-        let datetime = new Date()  
-        nonogramsRecordsRef.add({
-            puzzleID: this.$route.params.id,
-            user: this.user.uid, 
-            score: this.time_elapsed,
-            time: datetime, 
-        })
+      }
+      if (this.victory) {
+        clearInterval(this.interval);
+        this.new_async(
+          this.$vaToast.init("Uspješno ste riješili zagonetku."),
+          1000
+        ).then(() => {
+          if (this.user && !this.cheat) {
+            this.new_async(this.store(), 1000).then(() => {
+              this.$router.push("/search-nonogram");
+            });
+          } else {
+            if (!this.user) {
+              this.new_async(
+                this.$vaToast.init(
+                  "Ne može se spremiti vaš rezultat jer niste prijavljeni."
+                ),
+                1000
+              ).then(() => {
+                if (this.cheat) {
+                  this.new_async(
+                    this.$vaToast.init(
+                      "Ne može se spremiti vaš rezultat jer ste odabrali da se otkrije rješenje."
+                    ),
+                    1000
+                  ).then(() => {
+                    this.$router.push("/login");
+                  });
+                } else {
+                  this.$router.push("/login");
+                }
+              });
+            } else {
+              if (this.cheat) {
+                this.new_async(
+                  this.$vaToast.init(
+                    "Ne može se spremiti vaš rezultat jer ste odabrali da se otkrije rješenje."
+                  ),
+                  1000
+                ).then(() => {
+                  this.$router.push("/search-nonogram");
+                });
+              } else {
+                this.$router.push("/search-nonogram");
+              }
+            }
+          }
+        });
+      }
+    },
+    store() {
+      let datetime = new Date();
+      nonogramsRecordsRef.add({
+        puzzleID: this.$route.params.id,
+        user: this.user.uid,
+        score: this.time_elapsed,
+        time: datetime,
+      });
     },
     fetch_puzzle() {
-        let params_id= this.$route.params.id
-        let string_solution = []
-        let string_colors = []
-        let string_title = ""
-        let string_description = ""
-        let string_author = ""
-        let string_updater = ""
-        let string_is_public = false
-        let string_permissions = []
-        let string_source = ""
-        let string_time_created = ""
-        let string_last_updated = ""
-        let found = false
-        let funct_ref = this.string_to_array
-        nonogramsRef.get(params_id).then(function(snapshot) {
-            snapshot.forEach(function(childSnapshot) {
-                let id = childSnapshot.id;
-                if (id == params_id) {
-                    string_solution = funct_ref(childSnapshot.get('solution'))
-                    string_colors = childSnapshot.get('colors') 
-                    string_title = childSnapshot.get('title')
-                    string_description = childSnapshot.get('description')
-                    string_author = childSnapshot.get('author')
-                    string_updater= childSnapshot.get('updater')
-                    string_is_public = childSnapshot.get('is_public')
-                    string_permissions = childSnapshot.get('permissions')
-                    string_source = childSnapshot.get('source')
-                    string_time_created = new Date(childSnapshot.get('time_created').seconds * 1000)
-                    string_last_updated = new Date(childSnapshot.get('last_updated').seconds * 1000)
-                    found = true
-                }
-            });
-        }).then(() => {
-            if (found) {
-                this.solution = string_solution
-                this.colors = string_colors
-                this.num_colors = this.colors.length
-                this.title = string_title
-                this.description = string_description
-                this.author = string_author
-                this.getAuthorUserRecord()
-                this.updater = string_updater
-                this.getUpdaterUserRecord()
-                this.is_public = string_is_public
-                this.permissions = string_permissions
-                this.source = string_source
-                this.time_created = string_time_created
-                this.last_updated = string_last_updated
-                this.num_colors = this.colors.length
-                this.rownum = this.solution.length
-                this.colnum = this.solution[0].length
-                this.initialize()
-                this.$forceUpdate()
-            } else {
-                this.$refs.no_puzzle.show()
-                this.$router.push("/searchnonogram");
+      let params_id = this.$route.params.id;
+      let string_solution = [];
+      let string_colors = [];
+      let string_title = "";
+      let string_description = "";
+      let string_author = "";
+      let string_updater = "";
+      let string_is_public = false;
+      let string_permissions = [];
+      let string_source = "";
+      let string_time_created = "";
+      let string_last_updated = "";
+      let found = false;
+      let funct_ref = this.string_to_array;
+      nonogramsRef
+        .get(params_id)
+        .then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let id = childSnapshot.id;
+            if (id == params_id) {
+              string_solution = funct_ref(childSnapshot.get("solution"));
+              string_colors = childSnapshot.get("colors");
+              string_title = childSnapshot.get("title");
+              string_description = childSnapshot.get("description");
+              string_author = childSnapshot.get("author");
+              string_updater = childSnapshot.get("updater");
+              string_is_public = childSnapshot.get("is_public");
+              string_permissions = childSnapshot.get("permissions");
+              string_source = childSnapshot.get("source");
+              string_time_created = new Date(
+                childSnapshot.get("time_created").seconds * 1000
+              );
+              string_last_updated = new Date(
+                childSnapshot.get("last_updated").seconds * 1000
+              );
+              found = true;
             }
+          });
         })
+        .then(() => {
+          if (found) {
+            this.solution = string_solution;
+            this.colors = string_colors;
+            this.num_colors = this.colors.length;
+            this.title = string_title;
+            this.description = string_description;
+            this.author = string_author;
+            this.getAuthorUserRecord();
+            this.updater = string_updater;
+            this.getUpdaterUserRecord();
+            this.is_public = string_is_public;
+            this.permissions = string_permissions;
+            this.source = string_source;
+            this.time_created = string_time_created;
+            this.last_updated = string_last_updated;
+            this.num_colors = this.colors.length;
+            this.rownum = this.solution.length;
+            this.colnum = this.solution[0].length;
+            this.initialize();
+            this.fully_loaded = true;
+            this.$forceUpdate();
+          } else {
+            this.$vaToast.init("Ne postoji zagonetka s tim brojem.");
+            this.$router.push("/search-nonogram");
+          }
+        });
     },
     startTimer() {
-        this.time_elapsed = 0
-        clearInterval(this.interval)
-        this.interval = setInterval(() => (this.time_elapsed += 1), 1000);
-    }, 
+      this.time_elapsed = 0;
+      clearInterval(this.interval);
+      this.interval = setInterval(() => (this.time_elapsed += 1), 1000);
+    },
     format(time) {
-        var hours = Math.floor(time / 3600);
-        var minutes = Math.floor((time - hours * 3600) / 60);
-        var seconds = time - hours * 3600 - minutes * 60;
-        if (seconds < 10) {
-            seconds = "0" + seconds;
-        }
-        if (minutes < 10) {
-            minutes = "0" + minutes;
-        }
-        if (hours < 10) {
-            hours = "0" + hours;
-        }
-        return hours + ":" + minutes + ":" + seconds;
+      var hours = Math.floor(time / 3600);
+      var minutes = Math.floor((time - hours * 3600) / 60);
+      var seconds = time - hours * 3600 - minutes * 60;
+      if (seconds < 10) {
+        seconds = "0" + seconds;
+      }
+      if (minutes < 10) {
+        minutes = "0" + minutes;
+      }
+      if (hours < 10) {
+        hours = "0" + hours;
+      }
+      return hours + ":" + minutes + ":" + seconds;
     },
-  }, 
-    modeChange(event) {
-        switch (event.code) {
-            case "ArrowUp":
-                this.mode++
-                if (this.mode >= this.num_colors) {
-                    this.mode = 0
-                }
-                break;
-            case "ArrowDown": 
-                this.mode--
-                if (this.mode < 0) {
-                    this.mode = this.num_colors - 1
-                }
-                break;
-            case "ArrowRight":
-                this.mode++
-                if (this.mode >= this.num_colors) {
-                    this.mode = 0
-                }
-                break;
-            case "ArrowLeft": 
-                this.mode--
-                if (this.mode < 0) {
-                    this.mode = this.num_colors - 1
-                }
-                break;
-            case "KeyW":
-                this.mode++
-                if (this.mode >= this.num_colors) {
-                    this.mode = 0
-                }
-                break;
-            case "KeyS": 
-                this.mode--
-                if (this.mode < 0) {
-                    this.mode = this.num_colors - 1
-                }
-                break;
-            case "KeyD":
-                this.mode++
-                if (this.mode >= this.num_colors) {
-                    this.mode = 0
-                }
-                break;
-            case "KeyA": 
-                this.mode--
-                if (this.mode < 0) {
-                    this.mode = this.num_colors - 1
-                }
-                break;
-            case "Digit0": 
-                this.mode = 0
-                break; 
-            case "Digit1": 
-                if (this.num_colors > 1) {
-                    this.mode = 1
-                }
-                break; 
-            case "Digit2": 
-                if (this.num_colors > 2) {
-                    this.mode = 2
-                }
-                break; 
-            case "Digit3": 
-                if (this.num_colors > 3) {
-                    this.mode = 3
-                }
-                break; 
-            case "Digit4": 
-                if (this.num_colors > 4) {
-                    this.mode = 4
-                }
-                break; 
-            case "Digit5": 
-                if (this.num_colors > 5) {
-                    this.mode = 5
-                }
-                break; 
-            case "Digit6": 
-                if (this.num_colors > 6) {
-                    this.mode = 6
-                }
-                break; 
-            case "Digit7": 
-                if (this.num_colors > 7) {
-                    this.mode = 7
-                }
-                break; 
-            case "Digit8": 
-                if (this.num_colors > 8) {
-                    this.mode = 8
-                }
-                break; 
-            case "Digit9": 
-                if (this.num_colors > 9) {
-                    this.mode = 9
-                }
-                break; 
-        }
-    }, 
-    created() { 
-      window.addEventListener('keyup', this.modeChange);
-    },
-    beforeDestroy() {
-      window.removeEventListener('keyup', this.modeChange);
-    },
-  beforeMount() { 
-    this.fetch_puzzle() 
   },
-  created() { 
+  modeChange(event) {
+    switch (event.code) {
+      case "ArrowUp":
+        this.mode++;
+        if (this.mode >= this.num_colors) {
+          this.mode = 0;
+        }
+        break;
+      case "ArrowDown":
+        this.mode--;
+        if (this.mode < 0) {
+          this.mode = this.num_colors - 1;
+        }
+        break;
+      case "ArrowRight":
+        this.mode++;
+        if (this.mode >= this.num_colors) {
+          this.mode = 0;
+        }
+        break;
+      case "ArrowLeft":
+        this.mode--;
+        if (this.mode < 0) {
+          this.mode = this.num_colors - 1;
+        }
+        break;
+      case "KeyW":
+        this.mode++;
+        if (this.mode >= this.num_colors) {
+          this.mode = 0;
+        }
+        break;
+      case "KeyS":
+        this.mode--;
+        if (this.mode < 0) {
+          this.mode = this.num_colors - 1;
+        }
+        break;
+      case "KeyD":
+        this.mode++;
+        if (this.mode >= this.num_colors) {
+          this.mode = 0;
+        }
+        break;
+      case "KeyA":
+        this.mode--;
+        if (this.mode < 0) {
+          this.mode = this.num_colors - 1;
+        }
+        break;
+      case "Digit0":
+        this.mode = 0;
+        break;
+      case "Digit1":
+        if (this.num_colors > 1) {
+          this.mode = 1;
+        }
+        break;
+      case "Digit2":
+        if (this.num_colors > 2) {
+          this.mode = 2;
+        }
+        break;
+      case "Digit3":
+        if (this.num_colors > 3) {
+          this.mode = 3;
+        }
+        break;
+      case "Digit4":
+        if (this.num_colors > 4) {
+          this.mode = 4;
+        }
+        break;
+      case "Digit5":
+        if (this.num_colors > 5) {
+          this.mode = 5;
+        }
+        break;
+      case "Digit6":
+        if (this.num_colors > 6) {
+          this.mode = 6;
+        }
+        break;
+      case "Digit7":
+        if (this.num_colors > 7) {
+          this.mode = 7;
+        }
+        break;
+      case "Digit8":
+        if (this.num_colors > 8) {
+          this.mode = 8;
+        }
+        break;
+      case "Digit9":
+        if (this.num_colors > 9) {
+          this.mode = 9;
+        }
+        break;
+    }
+  },
+  created() {
+    //window.addEventListener('keyup', this.modeChange);
+  },
+  beforeDestroy() {
+    //window.removeEventListener('keyup', this.modeChange);
+  },
+  beforeMount() {
+    this.fetch_puzzle();
+  },
+  created() {
     this.$watch(
       () => this.$route.params,
       (toParams, previousParams) => {
-        this.$router.go()
+        this.$router.go();
       }
-    )
+    );
   },
   beforeUpdate() {
-    this.update_colors()
-    this.parse_sequence()
+    this.update_colors();
+    this.parse_sequence();
   },
   mounted() {
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
-        if (user) {
-            // User is signed in, see docs for a list of available properties
-            // https://firebase.google.com/docs/reference/js/firebase.User 
-            this.user = user;
-            // ...
-        } else {
-            // User is signed out
-            // ...
-            this.$refs.no_user_dialog.show()
-        }
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User
+        this.user = user;
+        // ...
+      } else {
+        // User is signed out
+        // ...
+        this.$refs.no_user_dialog.show();
+      }
+      return true;
     });
     for (let i = 0; i < this.num_colors; i++) {
-        document.getElementById("colorbutton" + (i)).style.backgroundColor = this.colors[i]
-    } 
-    this.$refs.show_error.show()
-    this.startTimer()
+      if (document.getElementById("colorbutton" + i)) {
+        document.getElementById("colorbutton" + i).style.backgroundColor =
+          this.colors[i];
+      }
+    }
+    this.$refs.show_error.show();
+    this.startTimer();
   },
   updated() {
-    this.update_colors()
+    this.update_colors();
     for (let i = 0; i < this.num_colors; i++) {
-        document.getElementById("colorbutton" + (i)).style.backgroundColor = this.colors[i]
-    } 
-    this.colorcol()
-    this.colorrow()
-  }
-}
+      document.getElementById("colorbutton" + i).style.backgroundColor =
+        this.colors[i];
+    }
+    this.colorcol();
+    this.colorrow();
+  },
+};
 </script>
 
-<template> 
+<template>
   <Navbar></Navbar>
-  <body class="mybody">
+  <body class="mybody" v-if="!fully_loaded">
+    <LoadingBar></LoadingBar>
+  </body>
+  <body class="mybody" v-else>
     <div class="myrow">
-        <va-checkbox class="flex mb-2 md6" style="float: left" label="Prikaži greške" v-model="show_error" />
-        <va-chip style="float: right" outline>{{format(time_elapsed)}}</va-chip>
+      <span style="float: left; overflow-wrap: anywhere">
+        <va-button
+          @click="show_error = !show_error"
+          style="margin-left: 10px; margin-top: 10px"
+        >
+          <span v-if="show_error == false"
+            ><va-icon name="report_off" />&nbsp;Ne prikazuj greške</span
+          ><span v-else><va-icon name="report" />&nbsp;Prikaži greške</span>
+        </va-button>
+      </span>
+      <va-chip style="float: right" outline>{{ format(time_elapsed) }}</va-chip>
     </div>
     <div class="myrow">
-        <table border='2'>
-            <tr v-for="column_number in maxrow" 
-                v-bind:key="column_number"> 
-                <td v-if="column_number==1" :colspan="maxcol" :rowspan="maxrow"></td> 
-                <td v-for="column_index in colnum"
-                v-bind:key=column_index>
-                    <span class="numbers" :id="'column' + (column_index-1) + ':' + (column_number-1-maxrow+columns[column_index-1].length)">
-                        {{columns[column_index-1][column_number-1-maxrow+columns[column_index-1].length]}}
-                    </span>
-                </td>
+      <span v-if="current_x != null && current_y != null"
+        >({{ current_x }}, {{ current_y }})</span
+      >
+    </div>
+    <div class="myrow" style="max-height: 500px">
+      <va-infinite-scroll disabled :load="() => {}">
+        <div>
+          <table border="2">
+            <tr v-for="column_number in maxrow" v-bind:key="column_number">
+              <td
+                v-if="column_number == 1"
+                :colspan="maxcol"
+                :rowspan="maxrow"
+                style="background-color: #2c82e0"
+              ></td>
+              <td v-for="column_index in colnum" v-bind:key="column_index">
+                <span
+                  class="numbers"
+                  :id="
+                    'column' +
+                    (column_index - 1) +
+                    ':' +
+                    (column_number -
+                      1 -
+                      maxrow +
+                      columns[column_index - 1].length)
+                  "
+                >
+                  {{
+                    columns[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]
+                  }}
+                </span>
+              </td>
             </tr>
-            <tr v-if="maxrow==0">
-                <td></td>
-                <td v-for="column_index in colnum"
-                v-bind:key="column_index">
-                    &nbsp; 
-                </td></tr>
-            <tr v-for="row_index in rownum" 
-            v-bind:key="row_index">
-                <td v-for="row_number in maxcol" 
-                v-bind:key="row_number">
-                    <span class="numbers" :id="'row' + (row_index-1) + ':' + (row_number-1-maxcol+rows[row_index - 1].length)">
-                        {{rows[row_index - 1][row_number-1-maxcol+rows[row_index - 1].length]}}
-                    </span>
-                </td> 
-                <td v-if="maxcol==0"></td>
-                <td v-for="column_index in colnum" v-bind:key="column_index"   @mouseover="increment(row_index - 1, column_index - 1,true)"
-                @click="increment(row_index - 1, column_index - 1,false)" :id="'cell' + (row_index - 1) + ':' + (column_index - 1)">
-                <va-icon  
-                v-if="show_error && solution[row_index - 1][column_index - 1] != values[row_index - 1][column_index - 1] && values[row_index - 1][column_index - 1] != 0" name="error" >
-                </va-icon>
-                <span v-else>&nbsp;</span></td>
+            <tr v-if="maxrow == 0">
+              <td></td>
+              <td v-for="column_index in colnum" v-bind:key="column_index">
+                &nbsp;
+              </td>
             </tr>
-        </table>
-    </div> 
-    <br> 
-    <div class="myrow">
-        <va-button @click="reset()">Resetiraj</va-button>
-    </div> 
-    <br> 
-    
-    <div class="myrow">
-        <va-icon v-if="wrong_colors[0]==true" name="error" color="danger"></va-icon>
-        <button class="mr-2" style="width:28px;height:28px;display:inline-block;background-color: white;border-radius: 50%" :id="'colorbutton' + 0" @click="mode=0"></button>
-        <div style="display:inline-block" v-for=" i in num_colors - 1" v-bind:key="i">
-            <va-icon style="position:relative;left:10px" v-if="wrong_colors[i]==true" name="error" color="danger"></va-icon>
-            <button class="mr-2"  style="width:28px;height:28px;display:inline-block;background-color: black; border: 1px solid black;border-radius: 50%"  
-            @click="after_click(i)" :id="'colorbutton' + (i)"></button>
+            <tr v-for="row_index in rownum" v-bind:key="row_index">
+              <td v-for="row_number in maxcol" v-bind:key="row_number">
+                <span
+                  class="numbers"
+                  :id="
+                    'row' +
+                    (row_index - 1) +
+                    ':' +
+                    (row_number - 1 - maxcol + rows[row_index - 1].length)
+                  "
+                >
+                  {{
+                    rows[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]
+                  }}
+                </span>
+              </td>
+              <td v-if="maxcol == 0"></td>
+              <td
+                v-for="column_index in colnum"
+                v-bind:key="column_index"
+                @mouseover="
+                  current_x = row_index;
+                  current_y = column_index;
+                  increment(row_index - 1, column_index - 1, true);
+                "
+                @click="increment(row_index - 1, column_index - 1, false)"
+                :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
+              >
+                <span
+                  style="color: white"
+                  v-if="
+                    show_error &&
+                    solution[row_index - 1][column_index - 1] !=
+                      values[row_index - 1][column_index - 1] &&
+                    values[row_index - 1][column_index - 1] != 0
+                  "
+                  >!</span
+                >
+                <span
+                  style="color: black"
+                  v-if="
+                    show_error &&
+                    solution[row_index - 1][column_index - 1] !=
+                      values[row_index - 1][column_index - 1] &&
+                    values[row_index - 1][column_index - 1] == 0
+                  "
+                  ><!--!-->&nbsp;</span
+                >
+                <span
+                  v-if="
+                    !show_error ||
+                    solution[row_index - 1][column_index - 1] ==
+                      values[row_index - 1][column_index - 1]
+                  "
+                  >&nbsp;</span
+                >
+              </td>
+            </tr>
+          </table>
         </div>
-    </div> 
-    <br> 
-    <div class="myrow">
-        <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" class="flex mb-2 md6" v-model="drag" /> Bojanje prelaskom miša 
-    </div> 
-    <br> 
-    <div class="myrow">
-        <va-card>
-            <va-card-title>Naslov zagonetke</va-card-title>
-            <va-card-content>{{title}}</va-card-content>
-        </va-card>
+      </va-infinite-scroll>
     </div>
     <div class="myrow">
-        <va-card>
-            <va-card-title>Opis zagonetke</va-card-title>
-            <va-card-content>{{description}}</va-card-content>
-        </va-card>
+      <va-button style="overflow-wrap: anywhere" @click="reset()"
+        ><va-icon name="delete" />&nbsp;Izbriši</va-button
+      >
     </div>
     <div class="myrow">
-        <va-card>
-            <va-card-title>Izvor zagonetke</va-card-title>
-            <va-card-content>{{source}}</va-card-content>
-        </va-card>
+      <button
+        class="mr-2"
+        style="
+          width: 28px;
+          height: 28px;
+          display: inline-block;
+          background-color: white;
+          border-radius: 50%;
+        "
+        :id="'colorbutton' + 0"
+        @click="mode = 0"
+      ></button>
+      <div
+        style="display: inline-block"
+        v-for="i in num_colors - 1"
+        v-bind:key="i"
+      >
+        <button
+          class="mr-2"
+          style="
+            width: 28px;
+            height: 28px;
+            display: inline-block;
+            background-color: black;
+            border-radius: 50%;
+          "
+          @click="after_click(i)"
+          :id="'colorbutton' + i"
+        ></button>
+      </div>
     </div>
-    <div class="myrow"> 
-        <va-chip style="margin-left: 1%;margin-top: 1%">Autor zagonetke: {{authorUserRecord.displayName}} ({{authorUserRecord.email}})</va-chip>  
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme kreiranja: {{time_created.toLocaleString()}}</va-chip>  
-        <br>
-        <va-chip style="margin-left: 1%;margin-top: 1%">Zadnji ažurirao: {{updaterUserRecord.displayName}} ({{updaterUserRecord.email}})</va-chip>  
-        <va-chip style="margin-left: 1%;margin-top: 1%">Vrijeme zadnje izmjene: {{last_updated.toLocaleString()}}</va-chip>
-    </div> 
     <div class="myrow">
-        <va-button @click="show_solution()">Otkrij sva polja</va-button>
-    </div>    
-    <va-modal ref="show_error" message="Želite li da greške budu uznačene?" @ok="show_error=true" stateful ok-text="Da" cancel-text="Ne" />
-    <va-modal ref="no_puzzle" hide-default-actions message="Ne postoji zagonetka s tim brojem." stateful />
-    <va-modal ref="solved" hide-default-actions message="Uspješno ste riješili zagonetku." stateful />
-    <va-modal ref="no_user" hide-default-actions message="Ne može se spremiti vaš rezultat jer niste prijavljeni." stateful />
-    <va-modal ref="no_user_dialog" @cancel="$router.push('/login')" ok-text="Da" cancel-text="Ne" message="Ne može se spremiti vaš rezultat jer niste prijavljeni. Želite li svejedno nastaviti?" stateful />
-    <va-modal ref="no_cheat" hide-default-actions message="Ne može se spremiti vaš rezultat jer ste odabrali da se otkrije rješenje." stateful />
-    </body>
+      <va-button
+        @click="drag = !drag"
+        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+      >
+        <span v-if="drag == false"
+          ><va-icon name="grid_view" />&nbsp;Bojanje jedan po jedan</span
+        ><span v-else
+          ><va-icon name="gesture" />&nbsp;Bojanje prelaskom miša</span
+        >
+      </va-button>
+    </div>
+    <div class="myrow">
+      <va-card style="overflow-wrap: anywhere">
+        <va-card-title>Naslov zagonetke</va-card-title>
+        <va-card-content>{{ title }}</va-card-content>
+      </va-card>
+    </div>
+    <div class="myrow">
+      <va-card style="overflow-wrap: anywhere">
+        <va-card-title>Opis zagonetke</va-card-title>
+        <va-card-content>{{ description }}</va-card-content>
+      </va-card>
+    </div>
+    <div class="myrow">
+      <va-card style="overflow-wrap: anywhere">
+        <va-card-title>Izvor zagonetke</va-card-title>
+        <va-card-content>{{ source }}</va-card-content>
+      </va-card>
+    </div>
+    <div class="myrow">
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
+          authorUserRecord.email
+        }})</va-chip
+      >
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
+      >
+      <br />
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
+          updaterUserRecord.email
+        }})</va-chip
+      >
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
+      >
+    </div>
+    <div class="myrow">
+      <va-button @click="show_solution()" style="overflow-wrap: anywhere"
+        ><va-icon name="help" />&nbsp;Otkrij sva polja</va-button
+      >
+    </div>
+  </body>
+  <va-modal
+    ref="show_error"
+    message="Želite li da greške budu uznačene?"
+    @ok="show_error = true"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
+  <va-modal
+    ref="no_user_dialog"
+    @cancel="$router.push('/login')"
+    ok-text="Da"
+    cancel-text="Ne"
+    message="Ne može se spremiti vaš rezultat jer niste prijavljeni. Želite li svejedno nastaviti?"
+    stateful
+  />
 </template>
 
 <style scoped>
 table {
-    display: inline-table;
-    border: 1px solid black;
-    border-collapse: collapse
+  display: inline-table;
+  border: 1px solid black;
+  border-collapse: collapse;
 }
 tr {
-    border: 1px solid black;
-    border-collapse: collapse
+  border: 1px solid black;
+  border-collapse: collapse;
 }
 td {
-    border: 1px solid black;
-    width: 28px;
-    height: 28px;
-    text-align: center;
-    vertical-align: middle;
-    border-collapse: collapse
+  border: 1px solid black;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  text-align: center;
+  vertical-align: middle;
+  border-collapse: collapse;
 }
 .numbers {
-    font-weight: bold;
-    display: block;
-    position: relative;
-    width: 25px;
-    text-align: center
-} 
+  font-weight: bold;
+  display: block;
+  position: relative;
+  width: 24px;
+  text-align: center;
+}
 </style>

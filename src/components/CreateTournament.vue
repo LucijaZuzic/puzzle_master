@@ -6,8 +6,10 @@
     import NonogramTable from "./NonogramTable.vue" 
     import CryptogramTable from './CryptogramTable.vue'
     import NumberCrosswordTable from "./NumberCrosswordTable.vue" 
+    import EightTable from './EightTable.vue'
+    import NumberLetterTable from "./NumberLetterTable.vue" 
     import InitialTable from './InitialTable.vue' 
-    import { getAuth, onAuthStateChanged } from "firebase/auth"
+    import { getAuth, onAuthStateChanged } from "firebase/auth" 
 
     export default {
         data() { 
@@ -26,7 +28,9 @@
                 selectedNonograms: [],
                 selectedNumberCrosswords: [],
                 selectedCryptograms: [],
-                selectedInitials: []
+                selectedNumberLetters: [],
+                selectedInitials: [],
+                selectedEights: []
             }
         },
         methods: {
@@ -72,10 +76,22 @@
                     this.selectedCryptograms.push(cryptograms[i].id)
                 } 
             },
+            selectNumberLetters(numberLetters) {
+                this.selectedNumberLetters = []
+                for (let i = 0; i < numberLetters.length; i++) {
+                    this.selectedNumberLetters.push(numberLetters[i].id)
+                } 
+            },
             selectInitials(initials) {
                 this.selectedInitials = []
                 for (let i = 0; i < initials.length; i++) {
                     this.selectedInitials.push(initials[i].id)
+                }
+            },
+            selectEights(eights) {
+                this.selectedEights = []
+                for (let i = 0; i < eights.length; i++) {
+                    this.selectedEights.push(eights[i].id)
                 }
             },
             delay(operation, delay) {
@@ -97,8 +113,10 @@
                     selectedNonograms: this.selectedNonograms, 
                     selectedNumberCrosswords: this.selectedNumberCrosswords,
                     selectedCryptograms: this.selectedCryptograms,
-                    selectedInitials: this.selectedInitials
-                }).then(() => {this.new_async(this.$refs.store_success.show(), 1000).then(() => {this.$router.push("/searchtournament")}) })
+                    selectedNumberLetters: this.selectedNumberLetters,
+                    selectedInitials: this.selectedInitials,
+                    selectedEights: this.selectedEights
+                }).then(() => {this.new_async(this.$vaToast.init("Novi turnir je uspješno spremljen."), 1000).then(() => {this.$router.push("/search-tournament")}) })
             }, 
             writeTimeToStart() {
                 this.start.setHours(this.start_time.getHours());
@@ -136,8 +154,9 @@
             } else {
                 // User is signed out
                 // ... 
-                this.new_async(this.$refs.no_user.show(), 1000).then(() => {this.$router.push("/login")})  
+                this.new_async(this.$vaToast.init("Ne možete kreirati turnir jer niste prijavljeni."), 1000).then(() => {this.$router.push("/login")})  
             }
+            return true
             });
             this.checkTime()
         },
@@ -147,48 +166,57 @@
     NonogramTable,
     NumberCrosswordTable,
     CryptogramTable,
-    InitialTable
+    InitialTable,
+    EightTable,
+    NumberLetterTable
 },
     }
 </script>
 
 <template> 
-  <Navbar></Navbar>  
-  <button></button>
+  <Navbar></Navbar>   
   <body class="mybody"> 
     <va-time-input v-model="start_time" @update:model-value="writeTimeToStart()"/>
     <va-date-input v-model="start_date" @update:model-value="writeDateToStart()"/>
     <va-time-input v-model="end_time" @update:model-value="writeTimeToEnd()"/>
     <va-date-input v-model="end_date" @update:model-value="writeDateToEnd()"/>
     <div class="myrow" v-if="!is_correct_time">
-        <va-alert style="white-space: pre-wrap;" color="warning" title="Nije odabrano ispravno vrijeme" center class="mb-4">
+        <va-alert style="white-space: pre-wrap;" color="danger" title="Nije odabrano ispravno vrijeme" center class="mb-4">
             {{time_alert}}
         </va-alert> 
     </div> 
     <br>
     <br>
-    <va-tabs v-model="value" vertical>
+    <va-tabs v-model="value"  style="width: 100%;">
         <template #tabs> 
-        <va-tab
-            label="Integrami"
-            name="integram"
-        />
-        <va-tab
-            label="Nonogrami"
-            name="nonogram"
-        />
-        <va-tab
-            label="Brojevne križaljke"
-            name="numberCrossword"
-        />
-        <va-tab
-            label="Kriptogrami"
-            name="cryptogram"
-        />
-        <va-tab
-            label="Inicijalne osmosmjerke"
-            name="initial"
-        />
+            <va-tab
+                label="Integrami"
+                name="integram"
+            />
+            <va-tab
+                label="Nonogrami"
+                name="nonogram"
+            />
+            <va-tab
+                label="Brojevne križaljke"
+                name="numberCrossword"
+            />
+            <va-tab
+                label="Kriptogrami"
+                name="cryptogram"
+            />
+            <va-tab
+                label="Isti broj - Isto slovo"
+                name="numberLetter"
+            />
+            <va-tab
+                label="Inicijalne osmosmjerke"
+                name="initial"
+            />
+            <va-tab
+                label="Osmosmjerke"
+                name="eight"
+            />
         </template>
     </va-tabs>
     <IntegramTable v-if="value=='integram'" @selected-integrams="selectIntegrams" selectMode="multiple"></IntegramTable> 
@@ -197,18 +225,20 @@
 
     <NumberCrosswordTable v-if="value=='numberCrossword'" @selected-number-crosswords="selectNumberCrosswords"  selectMode="multiple"></NumberCrosswordTable> 
 
-    <CryptogramTable v-if="value=='cryptogram'" @selected-cryptograms="selectCryptograms"  selectMode="multiple"></CryptogramTable>  
+    <CryptogramTable v-if="value=='cryptogram'" @selected-cryptograms="selectCryptograms"  selectMode="multiple"></CryptogramTable> 
+
+    <NumberLetterTable v-if="value=='numberLetter'" @selected-number-letters="selectNumberLetters"  selectMode="multiple"></NumberLetterTable>  
 
     <InitialTable v-if="value=='initial'" @selected-initials="selectInitials"  selectMode="multiple"></InitialTable>  
+
+    <EightTable v-if="value=='eight'" @selected-eights="selectEights"  selectMode="multiple"></EightTable>  
     
     <div class="myrow" v-if="!(selectedIntegrams.length > 0 || selectedNonograms.length > 0 || selectedNumberCrosswords.length > 0 || selectedCryptograms.length > 0 || selectedInitials.length > 0)">
-        <va-alert style="white-space: pre-wrap;" color="warning" title="Nije odabrana niti jedna zagonetka" center class="mb-4">
+        <va-alert style="white-space: pre-wrap;" color="danger" title="Nije odabrana niti jedna zagonetka" center class="mb-4">
             Odaberite barem jednu zagoentku da biste organizirali turnir.
         </va-alert> 
     </div> 
     <va-button v-if="user && is_correct_time && (selectedIntegrams.length > 0 || selectedNonograms.length > 0 || selectedNumberCrosswords.length > 0 || selectedCryptograms.length > 0 || selectedInitials.length > 0)" @click="store()">Spremi turnir</va-button>
-    <va-modal ref="no_user" hide-default-actions message="Ne možete urganizirati turnir jer niste prijavljeni." stateful /> 
-    <va-modal ref="store_success" hide-default-actions message="Novi turnir je uspješno spremljen." stateful />
   </body>
 </template>
 

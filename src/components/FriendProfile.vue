@@ -6,6 +6,8 @@ import ProfileNonogram from './ProfileNonogram.vue'
 import { usersRef } from "../main.js"
 import ProfileInitial from './ProfileInitial.vue'
 import ProfileIntegram from './ProfileIntegram.vue'
+import ProfileNumberLetter from './ProfileNumberLetter.vue'
+import ProfileEight from './ProfileEight.vue'
 import ProfileNumberCrossword from './ProfileNumberCrossword.vue'
 import ProfileCryptogram from './ProfileCryptogram.vue'
 export default {  
@@ -22,6 +24,7 @@ export default {
               // User is signed out
               // ... 
           }
+          return true
           }); 
           let requestedEmail = this.$route.params.email
           let someUser = {email: '', displayName: '', uid: ''}
@@ -44,7 +47,7 @@ export default {
               displayName: this.friend.displayName,
               email: this.friend.email,
               visible: this.friend.visible
-      }, { merge: true }).then(()=>{this.$refs.changed.show()})
+      }, { merge: true }).then(()=>{this.$vaToast.init("Uspješno ste izmjenili vidljivost profila.")})
     }
   },
   created() { 
@@ -71,7 +74,9 @@ export default {
     ProfileInitial,
     ProfileIntegram,
     ProfileNumberCrossword,
+    ProfileNumberLetter,
     ProfileCryptogram,
+    ProfileEight,
     NoDataToDisplay 
   } 
 }
@@ -92,7 +97,7 @@ export default {
           </div>
         </span>
         <span v-if="user.email == friend.email || friend.visible">
-          <va-tabs v-model="value" vertical>
+          <va-tabs v-model="value" style="width: 100%;">
               <template #tabs> 
               <va-tab
                   label="Integrami"
@@ -111,8 +116,16 @@ export default {
                   name="cryptogram"
               />
               <va-tab
+                  label="Isti broj - Isto slovo"
+                  name="numberLetter"
+              />
+              <va-tab
                   label="Inicijalne osmosmjerke"
                   name="initial"
+              />
+              <va-tab
+                  label="Osmosmjerke"
+                  name="eight"
               />
               </template>
           </va-tabs>
@@ -120,7 +133,9 @@ export default {
           <ProfileNonogram :friend="friend" v-if="value=='nonogram'"></ProfileNonogram>
           <ProfileNumberCrossword :friend="friend" v-if="value=='numberCrossword'"></ProfileNumberCrossword>
           <ProfileCryptogram :friend="friend" v-if="value=='cryptogram'"></ProfileCryptogram>
+          <ProfileNumberLetter :friend="friend" v-if="value=='numberLetter'"></ProfileNumberLetter>
           <ProfileInitial :friend="friend" v-if="value=='initial'"></ProfileInitial>
+          <ProfileEight :friend="friend" v-if="value=='eight'"></ProfileEight>
         </span>
         <span v-else>
           <NoDataToDisplay customMessage="Profil korisnika je postavljen kao privatan"></NoDataToDisplay> 
@@ -130,7 +145,6 @@ export default {
         <NoDataToDisplay customMessage="Ne postoji korisnik s navedenom email adresom"></NoDataToDisplay> 
       </span>
   </body>
-  <va-modal ref="changed" hide-default-actions message="Uspješno ste izmjenili vidljivost profila." stateful />
 </template>
 
 <style>

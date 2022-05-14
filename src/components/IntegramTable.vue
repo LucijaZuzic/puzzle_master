@@ -6,6 +6,9 @@
     import RecordsTable from "./RecordsTable.vue" 
     import RatingsTable from "./RatingsTable.vue" 
     import { usersRef } from "../main.js"
+    import { projectStorage } from "../main.js"
+    import { ref, listAll, deleteObject } from "firebase/storage";
+
     export default {
         emits: ["selectedIntegrams"], 
         props: ["friend", "puzzleList", "selectMode", "start_time", "end_time"], 
@@ -26,6 +29,7 @@
                     // User is signed out
                     // ... 
                 }
+                return true
                 }); 
             } else {
                 this.user = this.$props.friend
@@ -186,7 +190,57 @@
                 integramsRef.doc(id).delete().then(() => {
                     this.fetch_puzzles() 
                     this.$forceUpdate()
-                })
+                }).then(() => {
+                        integramsRatingsRef.get().then(function(snapshotRating) {
+                            snapshotRating.forEach(function(childSnapshotRating) {  
+                                let idPuzzle = childSnapshotRating.get('puzzleID')  
+                                let idRating= childSnapshotRating.id
+                                if (idPuzzle == id) {  
+                                    integramsRatingsRef.doc(idRating).delete().then(() => {
+                                        //console.log("Document successfully deleted!");
+                                    }).catch((error) => {
+                                        //console.error("Error removing document: ", error);
+                                    });  
+                                }
+                        });
+                    }).then(() => {
+                        integramsRecordsRef.get().then(function(snapshotRecord) {
+                            snapshotRecord.forEach(function(childSnapshotRecord) {  
+                                let idPuzzle = childSnapshotRecord.get('puzzleID')  
+                                let idRecord= childSnapshotRecord.id
+                                if (idPuzzle == id) {  
+                                    integramsRecordsRef.doc(idRecord).delete().then(() => {
+                                        //console.log("Document successfully deleted!");
+                                    }).catch((error) => {
+                                        //console.error("Error removing document: ", error);
+                                    });  
+                                }
+                            });
+                        })
+                    })
+                }).then(() => {
+                    // Create a reference under which you want to list
+                    const listRef = ref(projectStorage, 'integram/' + id + "/")
+                    // Find all the prefixes and items.
+                    listAll(listRef)
+                    .then((res) => {
+                        res.prefixes.forEach((folderRef) => {
+                        // All the prefixes under listRef.
+                        // You may call listAll() recursively on them.
+                        });
+                        res.items.forEach((itemRef) => {      
+                            deleteObject(itemRef).then(() => {
+                            // File deleted successfully
+                            }).catch((error) => {
+                            // Uh-oh, an error occurred!
+                            });  
+                        });
+                    }).catch((error) => {
+                        // Uh-oh, an error occurred!
+                    });
+                }).catch((error) => {
+                    // Uh-oh, an error occurred!
+                });
             }
         },
         created() {
@@ -208,16 +262,16 @@
 <template> 
     <div class="myrow">
         <va-input
-        class="flex mb-2 md6" style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 25%" 
+        class="flex mb-2 md6" style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 25%" 
         placeholder="Unesite pojam za pretragu"
         v-model="filter"
         />  
-        <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" 
+        <va-checkbox style="display: inline-block;margin-left: 20px;margin-top: 20px" 
         class="flex mb-2 md6"
         label="Traži cijelu riječ"
         v-model="useCustomFilteringFn"
         /> 
-        <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+        <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
             label="Trenutna stranica"
             class="flex mb-2 md6"
             v-model="currentPage"
@@ -225,7 +279,7 @@
             :max="Math.ceil(this.filtered.length / this.perPage)"
             type="number"
         /> 
-        <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+        <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
             label="Broj pojmova na stranici"
             class="flex mb-2 md6"
             v-model="perPage"
@@ -296,14 +350,14 @@
         <template #cell(is_public)="{ source: is_public }"><span v-if="is_public">Svi</span><span v-else>Samo suradnici</span></template>
         <template #bodyAppend>
             <tr>
-                <td colspan="12" style="text-align: left">
-                    <router-link to="/createintegram"> 
+                <td colspan="16" style="text-align: left">
+                    <router-link to="/create-integram"> 
                         <va-icon color="primary" class="mr-4" name="add_circle"/> Nova zagonetka
                     </router-link>
                 </td>
             </tr>
             <tr>
-                <td colspan="12" class="table-example--pagination">
+                <td colspan="16" class="table-example--pagination">
                     <va-pagination
                     v-model="currentPage"
                     input
@@ -314,18 +368,18 @@
         </template>
     </va-data-table> 
     <div class="myrow" v-if="!start_time && !end_time && selectMode == 'single'"> 
-        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value"  style="width: 100%;">
             <template #tabs> 
             <va-tab
-                label="Svi rekordi za odabrani integram"
+                label="Svi rekordi"
                 name="all"
             />
             <va-tab
-                label="Rekordi korisnika za odabrani integram"
+                label="Rekordi korisnika"
                 name="mine"
             />
             <va-tab
-                label="Ocjena za integram"
+                label="Ocjena"
                 name="rate"
             />
             </template>
@@ -336,18 +390,18 @@
             <RecordsTable v-if="user && value=='mine'" :dbRef="integramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RecordsTable>
         </span></div> 
     <div class="myrow" v-if="start_time && end_time && selectMode == 'single'"> 
-        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value"  style="width: 100%;">
             <template #tabs> 
             <va-tab
-                label="Svi rekordi za odabrani integram unutar vremena turnira"
+                label="Svi rekordi"
                 name="all"
             />
             <va-tab
-                label="Rekordi korisnika za odabrani integram unutar vremena turnira"
+                label="Rekordi korisnika"
                 name="mine"
             />
             <va-tab
-                label="Ocjena za integram"
+                label="Ocjena"
                 name="rate"
             />
             </template>

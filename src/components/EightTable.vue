@@ -1,16 +1,16 @@
  
-<script>
+<script> 
     import { getAuth, onAuthStateChanged } from "firebase/auth"
-    import { nonogramsRef } from "../main.js"
-    import { nonogramsRecordsRef, nonogramsRatingsRef } from "../main.js"
+    import { eightsRef } from "../main.js"
+    import { eightsRecordsRef, eightsRatingsRef } from "../main.js"
     import RecordsTable from "./RecordsTable.vue" 
     import RatingsTable from "./RatingsTable.vue" 
     import { usersRef } from "../main.js"
     import { projectStorage } from "../main.js"
     import { ref, listAll, deleteObject, getMetadata } from "firebase/storage";
-
-    export default {
-        emits: ["selectedNonograms"],  
+    
+    export default { 
+        emits: ["selectedEights"],
         props: ["friend", "puzzleList", "selectMode", "start_time", "end_time"], 
         components: {
             RecordsTable,
@@ -36,12 +36,12 @@
             }
         },
         data() {
-            return {
-                value: "all",
+            return { 
+                value: 'all',
                 user: null,
-                nonogramsRecordsRef: nonogramsRecordsRef,
-                nonogramsRatingsRef: nonogramsRatingsRef,
-                puzzles: [],
+                eightsRecordsRef: eightsRecordsRef,
+                eightsRatingsRef: eightsRatingsRef,
+                puzzles: [], 
                 selectedItemsEmitted: [],
                 new_item: "",
                 new_item_tag: "",
@@ -59,7 +59,6 @@
                 columns: [
                     {key: 'rows', sortable: true},
                     {key: 'columns', sortable: true},
-                    {key: 'colors', sortable: true},
                     {key: 'rating', sortable: true}, 
                     {key: 'title', sortable: true},
                     {key: 'description', sortable: true},
@@ -110,7 +109,7 @@
                 this.puzzles = []
                 let me = this
                 let funct_ref = this.string_to_array 
-                nonogramsRef.get().then(function(snapshot) {
+                eightsRef.get().then(function(snapshot) {
                     snapshot.forEach(function(childSnapshot) { 
                         let inList = true
                         if (me.$props.puzzleList) {
@@ -125,7 +124,7 @@
                         if (inList == true) {
                             let sum_ratings = 0
                             let num_ratings = 0
-                            nonogramsRatingsRef.get().then(function(snapshotRating) {
+                            eightsRatingsRef.get().then(function(snapshotRating) {
                                 snapshotRating.forEach(function(childSnapshotRating) {  
                                     let idPuzzle = childSnapshotRating.get('puzzleID') 
                                     let match = true
@@ -141,36 +140,35 @@
                                 if (num_ratings == 0) {
                                     num_ratings = 1
                                 }
-                                let solution = funct_ref(childSnapshot.get('solution')) 
-                                usersRef.get(childSnapshot.get('author')).then(function(snapshotAuthor) {
-                                    snapshotAuthor.forEach(function(childSnapshotAuthor) {
-                                        let idAuthor = childSnapshotAuthor.id; 
-                                        if (idAuthor == childSnapshot.get('author')) { 
-                                            usersRef.get(childSnapshot.get('updater')).then(function(snapshotUpdater) {
-                                            snapshotUpdater.forEach(function(childSnapshotUpdater) {
-                                                    let idUpdater = childSnapshotUpdater.id; 
-                                                    if (idUpdater == childSnapshot.get('updater')) {  
-                                                        let newDeletePermission = {granted: false, id: childSnapshot.id}
-                                                        if (me.user) {
-                                                            newDeletePermission = {granted: childSnapshotAuthor.id == me.user.uid, id: childSnapshot.id}
-                                                        }
-                                                        me.puzzles.push({
-                                                            rows: solution.length,
-                                                            columns: solution[0].length,
-                                                            colors: childSnapshot.get('colors').length,
-                                                            rating: sum_ratings / num_ratings,
-                                                            title: childSnapshot.get('title'), 
-                                                            description: childSnapshot.get('description'), 
-                                                            source: childSnapshot.get('source'), 
-                                                            is_public: childSnapshot.get('is_public'), 
-                                                            author_display_name: childSnapshotAuthor.get('displayName'), 
-                                                            author_email: childSnapshotAuthor.get('email'), 
-                                                            time_created: new Date(childSnapshot.get('time_created').seconds * 1000), 
-                                                            updater_display_name: childSnapshotUpdater.get('displayName'), 
-                                                            updater_email: childSnapshotUpdater.get('email'), 
-                                                            last_updated: new Date(childSnapshot.get('last_updated').seconds * 1000), 
-                                                            id: childSnapshot.id, 
-                                                            deletePermission: newDeletePermission
+                            let solution = funct_ref(childSnapshot.get('solution')) 
+                            usersRef.get(childSnapshot.get('author')).then(function(snapshotAuthor) {
+                                snapshotAuthor.forEach(function(childSnapshotAuthor) {
+                                    let idAuthor = childSnapshotAuthor.id; 
+                                    if (idAuthor == childSnapshot.get('author')) { 
+                                        usersRef.get(childSnapshot.get('updater')).then(function(snapshotUpdater) {
+                                        snapshotUpdater.forEach(function(childSnapshotUpdater) {
+                                                let idUpdater = childSnapshotUpdater.id; 
+                                                if (idUpdater == childSnapshot.get('updater')) {   
+                                                    let newDeletePermission = {granted: false, id: childSnapshot.id}
+                                                    if (me.user) {
+                                                        newDeletePermission = {granted: childSnapshotAuthor.id == me.user.uid, id: childSnapshot.id}
+                                                    }
+                                                    me.puzzles.push({
+                                                        rows: solution.length,
+                                                        columns: solution[0].length,
+                                                        rating: sum_ratings / num_ratings,
+                                                        title: childSnapshot.get('title'), 
+                                                        description: childSnapshot.get('description'), 
+                                                        source: childSnapshot.get('source'), 
+                                                        is_public: childSnapshot.get('is_public'), 
+                                                        author_display_name: childSnapshotAuthor.get('displayName'), 
+                                                        author_email: childSnapshotAuthor.get('email'), 
+                                                        time_created: new Date(childSnapshot.get('time_created').seconds * 1000), 
+                                                        updater_display_name: childSnapshotUpdater.get('displayName'), 
+                                                        updater_email: childSnapshotUpdater.get('email'), 
+                                                        last_updated: new Date(childSnapshot.get('last_updated').seconds * 1000), 
+                                                        id: childSnapshot.id, 
+                                                        deletePermission: newDeletePermission
                                                             })
                                                         }
                                                     });
@@ -187,16 +185,16 @@
                 return this.columns.map(({ key }) => key)
             },
             deletePuzzle(id) {
-                nonogramsRef.doc(id).delete().then(() => {
+                eightsRef.doc(id).delete().then(() => {
                     this.fetch_puzzles() 
                     this.$forceUpdate()
                 }).then(() => {
-                    nonogramsRatingsRef.get().then(function(snapshotRating) {
+                        eightsRatingsRef.get().then(function(snapshotRating) {
                             snapshotRating.forEach(function(childSnapshotRating) {  
                                 let idPuzzle = childSnapshotRating.get('puzzleID')  
                                 let idRating= childSnapshotRating.id
                                 if (idPuzzle == id) {  
-                                    nonogramsRatingsRef.doc(idRating).delete().then(() => {
+                                    eightsRatingsRef.doc(idRating).delete().then(() => {
                                         //console.log("Document successfully deleted!");
                                     }).catch((error) => {
                                         //console.error("Error removing document: ", error);
@@ -204,12 +202,12 @@
                                 }
                         });
                     }).then(() => {
-                        nonogramsRecordsRef.get().then(function(snapshotRecord) {
+                        eightsRecordsRef.get().then(function(snapshotRecord) {
                             snapshotRecord.forEach(function(childSnapshotRecord) {  
                                 let idPuzzle = childSnapshotRecord.get('puzzleID')  
                                 let idRecord= childSnapshotRecord.id
                                 if (idPuzzle == id) {  
-                                    nonogramsRecordsRef.doc(idRecord).delete().then(() => {
+                                    eightsRecordsRef.doc(idRecord).delete().then(() => {
                                         //console.log("Document successfully deleted!");
                                     }).catch((error) => {
                                         //console.error("Error removing document: ", error);
@@ -220,7 +218,7 @@
                     })
                 }).then(() => {
                     // Create a reference under which you want to list
-                    const listRef = ref(projectStorage, 'nonogram/')
+                    const listRef = ref(projectStorage, 'eight/')
                     // Find all the prefixes and items.
                     listAll(listRef)
                     .then((res) => {
@@ -270,7 +268,7 @@
     }
 </script>
 
-<template>  
+<template>   
     <div class="myrow">
         <va-input
         class="flex mb-2 md6" style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 25%" 
@@ -304,10 +302,10 @@
         :filter="filter"
         :columns="columns"
         :hoverable="true" 
-        :per-page="perPage"
+        :per-page="perPage"    
         selectable="selectable"
         :select-mode="selectMode"
-        @selectionChange="selectedItemsEmitted = $event.currentSelectedItems;$emit('selectedNonograms', selectedItemsEmitted)"
+        @selectionChange="selectedItemsEmitted = $event.currentSelectedItems;$emit('selectedEights', selectedItemsEmitted)"
         :current-page="currentPage"
         v-model:sort-by="sortBy"
         v-model:sorting-order="sortingOrder"
@@ -318,7 +316,6 @@
         <template #header(id)>Akcije</template>
         <template #header(rows)>Broj redaka</template>
         <template #header(columns)>Broj stupaca</template>
-        <template #header(colors)>Broj boja</template>
         <template #header(rating)>Ocjena</template>
         <template #header(title)>Naslov zagonetke</template>
         <template #header(description)>Opis zagonetke</template>
@@ -348,12 +345,12 @@
             </router-link> 
         </template>
         <template #cell(id)="{ source: id }">
-            <router-link v-bind:to="{ name: 'edit_nonogram', params: { id: id }}">
+            <router-link v-bind:to="{ name: 'edit_eight', params: { id: id }}">
                 <va-icon name="mode_edit"/>
             </router-link>
-            <router-link v-bind:to="{ name: 'solve_nonogram', params: { id: id }}">
+            <router-link v-bind:to="{ name: 'solve_eight', params: { id: id }}">
                 <va-icon name="play_arrow"/>
-            </router-link>
+            </router-link> 
         </template>
         <template #cell(deletePermission)="{ source: deletePermission }"> 
             <va-icon v-if="deletePermission.granted == true" @click="deletePuzzle(deletePermission.id)" name="delete"/>
@@ -361,14 +358,14 @@
         <template #cell(is_public)="{ source: is_public }"><span v-if="is_public">Svi</span><span v-else>Samo suradnici</span></template>
         <template #bodyAppend>
             <tr>
-                <td colspan="16" style="text-align: left">
-                    <router-link to="/create-nonogram"> 
+                <td :colspan="columns.length" style="text-align: left">
+                    <router-link to="/create-eight"> 
                         <va-icon color="primary" class="mr-4" name="add_circle"/> Nova zagonetka
                     </router-link>
                 </td>
             </tr>
             <tr>
-                <td colspan="16" class="table-example--pagination">
+                <td :colspan="columns.length" class="table-example--pagination">
                     <va-pagination
                     v-model="currentPage"
                     input
@@ -377,9 +374,9 @@
                 </td>
             </tr>
         </template>
-    </va-data-table> 
+    </va-data-table>
     <div class="myrow" v-if="!start_time && !end_time && selectMode == 'single'"> 
-        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value"  style="width: 100%;">
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" style="width: 100%;">
             <template #tabs> 
             <va-tab
                 label="Svi rekordi"
@@ -396,9 +393,9 @@
             </template>
         </va-tabs>
         <span v-for="item in selectedItemsEmitted" :key="item.id">  
-            <RatingsTable v-if="value=='rate'" :dbRef="nonogramsRatingsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RatingsTable>
-            <RecordsTable v-if="value=='all'" :dbRef="nonogramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id"></RecordsTable> 
-            <RecordsTable v-if="user && value=='mine'" :dbRef="nonogramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RecordsTable>
+            <RatingsTable v-if="value=='rate'" :dbRef="eightsRatingsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RatingsTable>
+            <RecordsTable v-if="value=='all'" :dbRef="eightsRecordsRef" :puzzleId="selectedItemsEmitted[0].id"></RecordsTable> 
+            <RecordsTable v-if="user && value=='mine'" :dbRef="eightsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RecordsTable>
         </span>
     </div> 
     <div class="myrow" v-if="start_time && end_time && selectMode == 'single'"> 
@@ -419,11 +416,11 @@
             </template>
         </va-tabs>
         <span v-for="item in selectedItemsEmitted" :key="item.id">  
-            <RatingsTable v-if="value=='rate'" :dbRef="nonogramsRatingsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RatingsTable>
-            <RecordsTable v-if="value=='all'" :dbRef="nonogramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :start_time="start_time" :end_time="end_time"></RecordsTable> 
-            <RecordsTable v-if="user && value=='mine'" :dbRef="nonogramsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid" :start_time="start_time" :end_time="end_time"></RecordsTable>
+            <RatingsTable v-if="value=='rate'" :dbRef="eightsRatingsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid"></RatingsTable>
+            <RecordsTable v-if="value=='all'" :dbRef="eightsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :start_time="start_time" :end_time="end_time"></RecordsTable> 
+            <RecordsTable v-if="user && value=='mine'" :dbRef="eightsRecordsRef" :puzzleId="selectedItemsEmitted[0].id" :userId="user.uid" :start_time="start_time" :end_time="end_time"></RecordsTable>
         </span>
-    </div>  
+    </div>   
 </template>
 
 <style>

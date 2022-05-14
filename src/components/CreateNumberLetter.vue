@@ -4,7 +4,7 @@ import { projectStorage } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
 import { usersRef } from "../main.js";
-import { cryptogramsRef } from "../main.js";
+import { numberLettersRef } from "../main.js";
 
 export default {
   components: {
@@ -23,9 +23,7 @@ export default {
       title: "",
       is_public: false,
       solution: [[]],
-      option: [[]],
       is_special: [[]],
-      unnumbered: [[]],
       border_top: [[]],
       border_bottom: [[]],
       border_left: [[]],
@@ -33,11 +31,13 @@ export default {
       num_letters: 1,
       rows: 1,
       columns: 1,
-      use_option: false,
-      use_mode: true,
       mode: -2,
-      option_number: -1,
       letter_alert: "",
+      value_to_randomize: "letters",
+      randomize_all: false,
+      keep_black: true,
+      current_x: null,
+      current_y: null,
       alphabet: [
         "A",
         "B",
@@ -74,15 +74,7 @@ export default {
         "Z",
         "Ž",
       ],
-      letters: [["", "", ""]],
-      letters_revealed: [[0, 0, 0]],
-      value_to_randomize: "letters",
-      randomize_all: false,
-      keep_black: true,
-      randomize_labels: ["Slova", "Brojevi", "Opcije"],
-      randomize_options: ["letters", "numbers", "options"],
-      current_x: null,
-      current_y: null,
+      letters: [],
     };
   },
   methods: {
@@ -137,8 +129,6 @@ export default {
       this.columns = parseInt(this.columns);
       let oldsolution = [];
       let oldisspecial = [];
-      let oldunnumbered = [];
-      let oldoption = [];
       let oldtop = [];
       let oldbottom = [];
       let oldleft = [];
@@ -148,8 +138,6 @@ export default {
       if (this.solution) {
         oldsolution = this.solution;
         oldisspecial = this.is_special;
-        oldunnumbered = this.unnumbered;
-        oldoption = this.option;
         oldtop = this.border_top;
         oldbottom = this.border_bottom;
         oldleft = this.border_left;
@@ -163,8 +151,6 @@ export default {
       }
       this.solution = [];
       this.is_special = [];
-      this.unnumbered = [];
-      this.option = [];
       this.border_top = [];
       this.border_bottom = [];
       this.border_left = [];
@@ -172,8 +158,6 @@ export default {
       for (let i = 0; i < maxrow; i++) {
         let solution_row = [];
         let special_row = [];
-        this.unnumbered.push([]);
-        this.option.push([]);
         this.border_top.push([]);
         this.border_bottom.push([]);
         this.border_left.push([]);
@@ -183,8 +167,6 @@ export default {
             if (oldsolution[i].length > j) {
               solution_row.push(oldsolution[i][j]);
               special_row.push(oldisspecial[i][j]);
-              this.unnumbered[i].push(oldunnumbered[i][j]);
-              this.option[i].push(oldoption[i][j]);
               this.border_top[i].push(oldtop[i][j]);
               this.border_bottom[i].push(oldbottom[i][j]);
               this.border_left[i].push(oldleft[i][j]);
@@ -192,8 +174,6 @@ export default {
             } else {
               solution_row.push(-2);
               special_row.push(0);
-              this.unnumbered[i].push(0);
-              this.option[i].push(-1);
               this.border_top[i].push(0);
               this.border_bottom[i].push(0);
               this.border_left[i].push(0);
@@ -202,8 +182,6 @@ export default {
           } else {
             solution_row.push(-2);
             special_row.push(0);
-            this.unnumbered[i].push(0);
-            this.option[i].push(-1);
             this.border_top[i].push(0);
             this.border_bottom[i].push(0);
             this.border_left[i].push(0);
@@ -222,24 +200,19 @@ export default {
         }
       }
       let oldletters = [];
-      let oldlettersrevealed = [];
       let maxletters = this.num_letters;
       if (this.letters) {
         oldletters = this.letters;
-        oldlettersrevealed = this.letters_revealed;
         if (oldletters.length > maxletters) {
           maxletters = oldletters.length;
         }
       }
       this.letters = [];
-      this.letters_revealed = [];
       for (let i = 0; i < maxletters; i++) {
         if (oldletters.length > i) {
           this.letters.push(oldletters[i]);
-          this.letters_revealed.push(oldlettersrevealed[i]);
         } else {
-          this.letters.push(["", "", ""]);
-          this.letters_revealed.push([0, 0, 0]);
+          this.letters.push("");
         }
       }
     },
@@ -253,54 +226,12 @@ export default {
     async new_async(operation, delay) {
       await this.delay(operation, delay);
     },
-    normalize_option() {
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.columns; j++) {
-          if (this.solution[i][j] == -1 || this.solution[i][j] == -2) {
-            this.option[i][j] = -1;
-            this.unnumbered[i][j] = 0;
-          }
-        }
-      }
-    },
-    randomize_option() {
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.columns; j++) {
-          if (this.solution[i][j] == -1 || this.solution[i][j] == -2) {
-            this.option[i][j] = -1;
-          } else {
-            this.option[i][j] = Math.floor(Math.random() * 3);
-          }
-        }
-      }
-    },
-    randomize_option_if_not_set() {
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.columns; j++) {
-          if (this.solution[i][j] == -1 || this.solution[i][j] == -2) {
-            this.option[i][j] = -1;
-            continue;
-          }
-          if (this.option[i][j] != -1) {
-            continue;
-          }
-          this.option[i][j] = Math.floor(Math.random() * 3);
-        }
-      }
-    },
-    resetOptions() {
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.columns; j++) {
-          this.option[i][j] = -1;
-        }
-      }
-    },
     randomize() {
       this.solution = [];
       for (let i = 0; i < this.rows; i++) {
         let solution_row = [];
         for (let j = 0; j < this.columns; j++) {
-          if (this.is_special[i][j] == 1 || this.unnumbered[i][j] == 1) {
+          if (this.is_special[i][j] == 1) {
             solution_row.push(Math.floor(Math.random() * this.num_letters));
           } else {
             solution_row.push(
@@ -310,7 +241,6 @@ export default {
         }
         this.solution.push(solution_row);
       }
-      this.normalize_option();
     },
     randomize_keep_black() {
       let new_values = [];
@@ -326,7 +256,6 @@ export default {
         new_values.push(solution_row);
       }
       this.solution = new_values;
-      this.normalize_option();
     },
     fill_empty() {
       let new_values = [];
@@ -334,7 +263,7 @@ export default {
         let solution_row = [];
         for (let j = 0; j < this.columns; j++) {
           if (this.solution[i][j] == -2) {
-            if (this.is_special[i][j] == 1 || this.unnumbered[i][j] == 1) {
+            if (this.is_special[i][j] == 1) {
               solution_row.push(Math.floor(Math.random() * this.num_letters));
             } else {
               solution_row.push(
@@ -348,7 +277,6 @@ export default {
         new_values.push(solution_row);
       }
       this.solution = new_values;
-      this.normalize_option();
     },
     fill_empty_keep_black() {
       let new_values = [];
@@ -364,7 +292,6 @@ export default {
         new_values.push(solution_row);
       }
       this.solution = new_values;
-      this.normalize_option();
     },
     resetNumbers() {
       let new_values = [];
@@ -376,162 +303,70 @@ export default {
         new_values.push(solution_row);
       }
       this.solution = new_values;
-      this.resetOptions();
     },
     resetLetters() {
       this.letters = [];
       for (let i = 0; i < this.num_letters; i++) {
-        this.letters.push(["", "", ""]);
+        this.letters.push("");
       }
-    },
-    check_leters_exists(letter_new) {
-      for (let i = 0; i < this.num_letters; i++) {
-        for (let j = 0; j < 3; j++) {
-          if (
-            this.letters[i] &&
-            this.letters[i][j] &&
-            this.letters[i][j] == letter_new
-          ) {
-            return true;
-          }
-        }
-      }
-      return false;
     },
     randomize_letters() {
       this.letters = [];
       for (let i = 0; i < this.num_letters; i++) {
-        this.letters.push([]);
-        for (let j = 0; j < 3; j++) {
-          let random_index = Math.floor(Math.random() * this.alphabet.length);
-          while (this.check_leters_exists(this.alphabet[random_index])) {
-            random_index = Math.floor(Math.random() * this.alphabet.length);
-          }
-          this.letters[i].push(this.alphabet[random_index]);
+        let random_index = Math.floor(Math.random() * this.alphabet.length);
+        while (this.letters.includes(this.alphabet[random_index])) {
+          random_index = Math.floor(Math.random() * this.alphabet.length);
         }
+        this.letters.push(this.alphabet[random_index]);
       }
       this.$forceUpdate();
     },
     fill_empty_letters() {
       for (let i = 0; i < this.num_letters; i++) {
-        for (let j = 0; j < 3; j++) {
-          if (this.alphabet.includes(this.letters[i][j])) {
-            continue;
-          }
-          let random_index = Math.floor(Math.random() * this.alphabet.length);
-          while (this.check_leters_exists(this.alphabet[random_index])) {
-            random_index = Math.floor(Math.random() * this.alphabet.length);
-          }
-          this.letters[i][j] = this.alphabet[random_index];
+        if (this.alphabet.includes(this.letters[i])) {
+          continue;
         }
-      }
-    },
-    remove_max_letter() {
-      for (let i = 0; i < this.solution.length; i++) {
-        for (let j = 0; j < this.solution[i].length; j++) {
-          if (this.solution[i][j] >= this.num_letters) {
-            this.solution[i][j] = -2;
-            this.option[i][j] = -1;
-            this.is_special[i][j] = 0;
-            this.unnumbered[i][j] = 0;
-          }
+        let random_index = Math.floor(Math.random() * this.alphabet.length);
+        while (this.letters.includes(this.alphabet[random_index])) {
+          random_index = Math.floor(Math.random() * this.alphabet.length);
         }
+        this.letters[i] = this.alphabet[random_index];
       }
+      this.$forceUpdate();
     },
     check_letter() {
       this.letter_alert = "";
       for (let i = 0; i < this.num_letters; i++) {
-        for (let j = 0; j < 3; j++) {
-          this.letters[i][j] = this.letters[i][j].toUpperCase();
-          if (!this.alphabet.includes(this.letters[i][j])) {
+        this.letters[i] = this.letters[i].toUpperCase();
+        if (!this.alphabet.includes(this.letters[i])) {
+          if (this.letter_alert != "") {
+            this.letter_alert += " ";
+          }
+          this.letter_alert +=
+            i + ". slovo (" + this.letters[i] + ") nije u zadanoj abecedi.";
+        }
+      }
+      for (let i = 0; i < this.num_letters; i++) {
+        for (let j = i + 1; j < this.num_letters; j++) {
+          if (this.letters[i] == this.letters[j]) {
             if (this.letter_alert != "") {
               this.letter_alert += " ";
             }
             this.letter_alert +=
-              j +
-              1 +
-              ". opcija za " +
               i +
               ". slovo (" +
-              this.letters[i][j] +
-              ") nije u zadanoj abecedi.";
-          }
-        }
-      }
-      for (let i = 0; i < this.num_letters; i++) {
-        for (let j = 0; j < this.num_letters; j++) {
-          for (let k = 0; k < 3; k++) {
-            for (let l = 0; l < 3; l++) {
-              if (i > j || (i == j && k >= l)) {
-                continue;
-              }
-              if (this.letters[i][k] == this.letters[j][l]) {
-                if (this.letter_alert != "") {
-                  this.letter_alert += " ";
-                }
-                this.letter_alert +=
-                  k +
-                  1 +
-                  ". opcija za " +
-                  i +
-                  ". slovo (" +
-                  this.letters[i][k] +
-                  ") i " +
-                  (l + 1) +
-                  ". opcija za " +
-                  j +
-                  ". slovo (" +
-                  this.letters[j][l] +
-                  ") su jednake.";
-              }
-            }
+              this.letters[i] +
+              ") i " +
+              j +
+              ". slovo (" +
+              this.letters[j] +
+              ") je jednako.";
           }
         }
       }
       this.$forceUpdate();
     },
-    check_duplicated(x, y) {
-      for (let i = 0; i < this.letters.length; i++) {
-        for (let j = 0; j < 3; j++) {
-          if (x == i && y == j) {
-            continue;
-          }
-          if (this.letters[i][j] == this.letters[x][y]) {
-            return true;
-          }
-        }
-      }
-      return false;
-    },
-    add_unnumbered(x, y) {
-      if (
-        this.solution[x][y] != -1 &&
-        this.solution[x][y] != -2 &&
-        this.unnumbered[x][y] != -1
-      ) {
-        this.unnumbered[x][y] = (this.unnumbered[x][y] + 1) % 2;
-        return;
-      }
-      if (this.solution[x][y] == -1) {
-        this.$vaToast.init("Ne možete sakriti broj na barijeri.");
-      }
-      if (this.solution[x][y] == -2) {
-        this.$vaToast.init("Ne možete sakriti broj na polju bez broja.");
-      }
-      if (this.solution[x][y] == -2) {
-        this.$vaToast.init("Ne možete sakriti broj na polju bez opcije.");
-      }
-    },
     change_number(x, y) {
-      if (this.use_option == true) {
-        this.option[x][y] = this.option_number;
-        if (this.solution[x][y] == -1 || this.solution[x][y] == -2) {
-          this.option[x][y] = -1;
-        }
-      }
-      if (this.use_mode == false) {
-        return;
-      }
       if (this.mode <= -4) {
         if (this.solution[x][y] == -1) {
           return;
@@ -559,9 +394,6 @@ export default {
         ) {
           this.border_right[x][y] = (this.border_right[x][y] + 1) % 2;
           this.border_left[x][y + 1] = (this.border_left[x][y + 1] + 1) % 2;
-        }
-        if (this.mode == -8) {
-          this.add_unnumbered(x, y);
         }
         this.$forceUpdate();
         return;
@@ -600,9 +432,6 @@ export default {
         } else {
           this.solution[x][y] = this.mode;
         }
-        if (this.solution[x][y] == -1 || this.solution[x][y] == -2) {
-          this.option[x][y] = -1;
-        }
       }
     },
     hasEmpty() {
@@ -614,16 +443,6 @@ export default {
               this.solution[i][j] < this.num_letters
             )
           ) {
-            return true;
-          }
-        }
-      }
-      return false;
-    },
-    hasEmptyOption() {
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.columns; j++) {
-          if (this.solution[i][j] > -1 && this.option[i][j] == -1) {
             return true;
           }
         }
@@ -659,8 +478,6 @@ export default {
       let funct_ref = this.array_to_string;
       let newsolution = [];
       let newspecial = [];
-      let newunnnumbered = [];
-      let newoption = [];
       let newtop = [];
       let newbottom = [];
       let newleft = [];
@@ -668,8 +485,6 @@ export default {
       for (let i = 0; i < this.rows; i++) {
         newsolution.push([]);
         newspecial.push([]);
-        newunnnumbered.push([]);
-        newoption.push([]);
         newtop.push([]);
         newbottom.push([]);
         newleft.push([]);
@@ -677,8 +492,6 @@ export default {
         for (let j = 0; j < this.columns; j++) {
           newsolution[i].push(this.solution[i][j]);
           newspecial[i].push(this.is_special[i][j]);
-          newunnnumbered[i].push(this.unnumbered[i][j]);
-          newoption[i].push(this.option[i][j]);
           newtop[i].push(this.border_top[i][j]);
           newbottom[i].push(this.border_bottom[i][j]);
           newleft[i].push(this.border_left[i][j]);
@@ -686,24 +499,19 @@ export default {
         }
       }
       let newletters = [];
-      let newlettersrevealed = [];
       for (let i = 0; i < this.num_letters; i++) {
         newletters.push(this.letters[i]);
-        newlettersrevealed.push(this.letters_revealed[i]);
       }
-      cryptogramsRef
+      numberLettersRef
         .add({
           solution: funct_ref(newsolution),
           is_special: funct_ref(newspecial),
-          unnumbered: funct_ref(newunnnumbered),
-          option: funct_ref(newoption),
           border_top: funct_ref(newtop),
           border_bottom: funct_ref(newbottom),
           border_left: funct_ref(newleft),
           border_right: funct_ref(newright),
           title: this.title,
-          letters: funct_ref(newletters),
-          letters_revealed: funct_ref(newlettersrevealed),
+          letters: newletters,
           description: this.description,
           author: this.user.uid,
           image: "",
@@ -718,7 +526,7 @@ export default {
           let some_id = docRef.id;
           let exstension =
             this.image.name.split(".")[this.image.name.split(".").length - 1];
-          const reference = "cryptogram/" + some_id + "." + exstension;
+          const reference = "numberLetter/" + some_id + "." + exstension;
           const storageRef = ref(projectStorage, reference);
           const metadata = {
             contentType: "image/" + exstension,
@@ -729,20 +537,17 @@ export default {
             .catch((error) => {})
             .then(() => {
               let imageLocation = reference;
-              cryptogramsRef
+              numberLettersRef
                 .doc(some_id)
                 .update({
                   solution: funct_ref(newsolution),
                   is_special: funct_ref(newspecial),
-                  unnumbered: funct_ref(newunnnumbered),
-                  option: funct_ref(newoption),
                   border_top: funct_ref(newtop),
                   border_bottom: funct_ref(newbottom),
                   border_left: funct_ref(newleft),
                   border_right: funct_ref(newright),
                   title: this.title,
-                  letters: funct_ref(newletters),
-                  letters_revealed: funct_ref(newlettersrevealed),
+                  letters: newletters,
                   description: this.description,
                   author: this.user.uid,
                   image: imageLocation,
@@ -760,125 +565,122 @@ export default {
                     ),
                     1000
                   ).then(() => {
-                    this.$router.push("/search-cryptogram");
+                    this.$router.push("/search-number-letter");
                   });
                 });
             });
         });
     },
     modeChange(event) {
-      /*this.use_mode = false
-        this.use_option = false
-        switch (event.code) {
-            case "Enter":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                this.use_option = true;break;
-            case "Backspace":
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                this.use_option = true;break;
-            case "ArrowUp":
-                this.mode++
-                if (this.mode >= this.num_letters) {
-                    this.mode = -7
-                }
-                this.use_mode = true;break;
-            case "ArrowDown": 
-                this.mode--
-                if (this.mode < -7) {
-                    this.mode = this.num_letters - 1
-                }
-                this.use_mode = true;break;
-            case "ArrowRight":
-                this.mode++
-                if (this.mode >= this.num_letters) {
-                    this.mode = -7
-                }
-                this.use_mode = true;break;
-            case "ArrowLeft": 
-                this.mode--
-                if (this.mode < -7) {
-                    this.mode = this.num_letters - 1
-                }
-                this.use_mode = true;break;
-            case "KeyW":
-                this.mode++
-                if (this.mode >= this.num_letters) {
-                    this.mode = -7
-                }
-                this.use_mode = true;break;
-            case "KeyS": 
-                this.mode--
-                if (this.mode < -7) {
-                    this.mode = this.num_letters - 1
-                }
-                this.use_mode = true;break;
-            case "KeyD":
-                this.mode++
-                if (this.mode >= this.num_letters) {
-                    this.mode = -7
-                }
-                this.use_mode = true;break;
-            case "KeyA": 
-                this.mode--
-                if (this.mode < -7) {
-                    this.mode = this.num_letters - 1
-                }
-                this.use_mode = true;break;
-            case "Digit0": 
-                this.mode = 0
-                this.use_mode = true;break; 
-            case "Digit1": 
-                if (this.num_letters > 1) {
-                    this.mode = 1
-                }
-                this.use_mode = true;break; 
-            case "Digit2": 
-                if (this.num_letters > 2) {
-                    this.mode = 2
-                }
-                this.use_mode = true;break; 
-            case "Digit3": 
-                if (this.num_letters > 3) {
-                    this.mode = 3
-                }
-                this.use_mode = true;break; 
-            case "Digit4": 
-                if (this.num_letters > 4) {
-                    this.mode = 4
-                }
-                this.use_mode = true;break; 
-            case "Digit5": 
-                if (this.num_letters > 5) {
-                    this.mode = 5
-                }
-                this.use_mode = true;break; 
-            case "Digit6": 
-                if (this.num_letters > 6) {
-                    this.mode = 6
-                }
-                this.use_mode = true;break; 
-            case "Digit7": 
-                if (this.num_letters > 7) {
-                    this.mode = 7
-                }
-                this.use_mode = true;break; 
-            case "Digit8": 
-                if (this.num_letters > 8) {
-                    this.mode = 8
-                }
-                this.use_mode = true;break; 
-            case "Digit9": 
-                if (this.num_letters > 9) {
-                    this.mode = 9
-                }
-                this.use_mode = true;break; 
-        }*/
+      switch (event.code) {
+        case "ArrowUp":
+          this.mode++;
+          if (this.mode >= this.num_letters) {
+            this.mode = -7;
+          }
+          break;
+        case "ArrowDown":
+          this.mode--;
+          if (this.mode < -7) {
+            this.mode = this.num_letters - 1;
+          }
+          break;
+        case "ArrowRight":
+          this.mode++;
+          if (this.mode >= this.num_letters) {
+            this.mode = -7;
+          }
+          break;
+        case "ArrowLeft":
+          this.mode--;
+          if (this.mode < -7) {
+            this.mode = this.num_letters - 1;
+          }
+          break;
+        case "KeyW":
+          this.mode++;
+          if (this.mode >= this.num_letters) {
+            this.mode = -7;
+          }
+          break;
+        case "KeyS":
+          this.mode--;
+          if (this.mode < -7) {
+            this.mode = this.num_letters - 1;
+          }
+          break;
+        case "KeyD":
+          this.mode++;
+          if (this.mode >= this.num_letters) {
+            this.mode = -7;
+          }
+          break;
+        case "KeyA":
+          this.mode--;
+          if (this.mode < -7) {
+            this.mode = this.num_letters - 1;
+          }
+          break;
+        case "Digit0":
+          this.mode = 0;
+          break;
+        case "Digit1":
+          if (this.num_letters > 1) {
+            this.mode = 1;
+          }
+          break;
+        case "Digit2":
+          if (this.num_letters > 2) {
+            this.mode = 2;
+          }
+          break;
+        case "Digit3":
+          if (this.num_letters > 3) {
+            this.mode = 3;
+          }
+          break;
+        case "Digit4":
+          if (this.num_letters > 4) {
+            this.mode = 4;
+          }
+          break;
+        case "Digit5":
+          if (this.num_letters > 5) {
+            this.mode = 5;
+          }
+          break;
+        case "Digit6":
+          if (this.num_letters > 6) {
+            this.mode = 6;
+          }
+          break;
+        case "Digit7":
+          if (this.num_letters > 7) {
+            this.mode = 7;
+          }
+          break;
+        case "Digit8":
+          if (this.num_letters > 8) {
+            this.mode = 8;
+          }
+          break;
+        case "Digit9":
+          if (this.num_letters > 9) {
+            this.mode = 9;
+          }
+          break;
+      }
+    },
+    check_duplicated(x) {
+      for (let i = 0; i < this.letters.length; i++) {
+        if (x == i) {
+          continue;
+        }
+        if (this.letters[i] == this.letters[x]) {
+          return true;
+        }
+      }
+      return false;
     },
     choose_reset_type() {
       if (this.value_to_randomize == "numbers") {
@@ -886,9 +688,6 @@ export default {
       }
       if (this.value_to_randomize == "letters") {
         this.resetLetters();
-      }
-      if (this.value_to_randomize == "values") {
-        this.resetOptions();
       }
     },
     choose_random_type() {
@@ -914,11 +713,14 @@ export default {
           this.fill_empty_letters();
         }
       }
-      if (this.value_to_randomize == "values") {
-        if (this.randomize_all == true) {
-          this.randomize_option();
-        } else {
-          this.randomize_option_if_not_set();
+    },
+    remove_max_letter() {
+      for (let i = 0; i < this.solution.length; i++) {
+        for (let j = 0; j < this.solution[i].length; j++) {
+          if (this.solution[i][j] >= this.num_letters) {
+            this.solution[i][j] = -2;
+            this.is_special[i][j] = 0;
+          }
         }
       }
     },
@@ -932,7 +734,6 @@ export default {
   beforeMount() {
     this.initialize();
     this.remove_max_letter();
-    this.check_letter();
     if (this.$refs.lettersform) {
       for (let i = 0; i < this.$refs.lettersform.length; i++) {
         if (this.$refs.lettersform[i]) {
@@ -993,9 +794,9 @@ export default {
         <template #label>
           <span>Broj redaka</span>
         </template>
-        <!--<template #append>
+        <template #append>
           <va-input type="number" v-model="rows" :min="1" :max="50" />
-        </template>-->
+        </template>
       </va-slider>
     </div>
     <div class="myrow">
@@ -1009,32 +810,31 @@ export default {
         <template #label>
           <span>Broj stupaca</span>
         </template>
-        <!--<template #append>
+        <template #append>
           <va-input type="number" v-model="columns" :min="1" :max="50" />
-        </template>-->
+        </template>
       </va-slider>
     </div>
     <div class="myrow">
       <va-slider
         class="trackMe"
         v-model="num_letters"
-        @update:model-value="$forceUpdate()"
+        @update:model-value="update_order = false"
         :min="1"
-        :max="Math.floor(alphabet.length / 3)"
+        :max="alphabet.length"
         track-label-visible
       >
         <template #label>
           <span>Broj slova</span>
         </template>
-        <!--<template #append>
+        <template #append>
           <va-input
-            type="number"
-            @update:model-value="$forceUpdate()"
+            type="num_letters"
             v-model="num_letters"
             :min="1"
-            :max="Math.floor(alphabet.length / 3)"
+            :max="alphabet.length"
           />
-        </template>-->
+        </template>
       </va-slider>
     </div>
     <div class="myrow">
@@ -1103,57 +903,6 @@ export default {
           >
             <va-icon name="border_right" />&nbsp;Iscrtkano desno
           </va-tab>
-          <va-tab
-            :name="-8"
-            @click="
-              use_mode = true;
-              use_option = false;
-            "
-          >
-            <span style="color: orange">Sakrij broj</span>
-          </va-tab>
-        </template>
-      </va-tabs>
-    </div>
-    <div class="myrow">
-      <va-tabs v-model="option_number">
-        <template #tabs>
-          <va-tab
-            name="-1"
-            @click="
-              use_mode = false;
-              use_option = true;
-            "
-          >
-            Bez opcije
-          </va-tab>
-          <va-tab
-            name="0"
-            @click="
-              use_mode = false;
-              use_option = true;
-            "
-          >
-            1. opcija
-          </va-tab>
-          <va-tab
-            name="1"
-            @click="
-              use_mode = false;
-              use_option = true;
-            "
-          >
-            2. opcija
-          </va-tab>
-          <va-tab
-            name="2"
-            @click="
-              use_mode = false;
-              use_option = true;
-            "
-          >
-            3. opcija
-          </va-tab>
         </template>
       </va-tabs>
     </div>
@@ -1162,52 +911,25 @@ export default {
         <div>
           <table style="display: inline-table">
             <tr>
-              <td><va-chip
-                  style="
-                      width: 140px;
-                      min-width: 140px;
-                      max-width: 140px;
-                      margin-left: 10px;
-                  ">Broj slova</va-chip></td>
-              <td v-for="i in num_letters" v-bind:key="i">
-                <va-chip
-                  style="
-                      width: 140px;
-                      min-width: 140px;
-                      max-width: 140px;
-                      margin-left: 10px;
-                  ">{{ i - 1 }}. slovo</va-chip>
-                  <br>
-                  <br>
-              </td>
-            </tr>
-            <tr v-for="j in 3" v-bind:key="j">
-              <td><va-chip
-                  style="
-                      width: 140px;
-                      min-width: 140px;
-                      max-width: 140px;
-                      margin-left: 10px;
-                  ">{{j}}. opcija</va-chip></td>
               <td v-for="i in num_letters" v-bind:key="i">
                 <va-form ref="lettersform">
                   <va-input
                     class="mb-4"
                     @click="mode = i - 1"
-                    @update:model-value="check_letter()"
-                    v-model="letters[i - 1][j - 1]"
-                  style="
-                      width: 140px;
-                      min-width: 140px;
-                      max-width: 140px;
+                  @update:model-value="check_letter()"
+                    v-model="letters[i - 1]"
+                    style="
+                      width: 80px;
+                      min-width: 80px;
+                      max-width: 80px;
                       margin-left: 10px;
-                  "
+                    "
                     type="text"
-                    :label="'' + (i - 1) + ' (' + (j) + ')'"
+                    :label="'' + (i - 1) + ''"
                     immediate-validation
                     :rules="[
                       (value) => {
-                        if (check_duplicated(i - 1, j - 1) == 1) {
+                        if (check_duplicated(i - 1) == 1) {
                           if (alphabet.includes(value)) {
                             return 'Slovo je udvostručeno.';
                           } else {
@@ -1222,24 +944,7 @@ export default {
                         }
                       },
                     ]"
-                  >
-                    <template #append>
-                      &nbsp;&nbsp;
-                      <va-icon
-                        style="margin-left: 10px; display: inline-block"
-                        name="visibility_off"
-                        v-if="letters_revealed[i - 1][j - 1] == 0"
-                        @click="letters_revealed[i - 1][j - 1] = 1"
-                      />
-                      <va-icon
-                        style="margin-left: 10px; display: inline-block"
-                        name="visibility"
-                        v-if="letters_revealed[i - 1][j - 1] == 1"
-                        @click="letters_revealed[i - 1][j - 1] = 0"
-                      />
-                      &nbsp;&nbsp;
-                    </template>
-                  </va-input>
+                  />
                 </va-form>
               </td>
             </tr>
@@ -1252,7 +957,6 @@ export default {
         <template #tabs>
           <va-tab name="letters"> Slova </va-tab>
           <va-tab name="numbers"> Brojevi </va-tab>
-          <va-tab name="values"> Opcije </va-tab>
         </template>
       </va-tabs>
     </div>
@@ -1281,9 +985,10 @@ export default {
         >({{ current_x }}, {{ current_y }})</span
       >
     </div>
+
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
-        <div class="myrow">
+        <div>
           <table class="numbers_table">
             <tr v-for="i in rows" v-bind:key="i">
               <td
@@ -1295,7 +1000,6 @@ export default {
                   current_y = j;
                 "
                 :class="{
-                  unnumbered: unnumbered[i - 1][j - 1] == 1,
                   black: solution[i - 1][j - 1] == -1,
                   special: is_special[i - 1][j - 1] == 1,
                   bordertop: border_top[i - 1][j - 1] == 1,
@@ -1305,21 +1009,15 @@ export default {
                 }"
               >
                 <div>
-                  <sup
+                  <span
                     v-if="
-                      solution[i - 1][j - 1] != -2 &&
-                      solution[i - 1][j - 1] != -1
+                      solution[i - 1][j - 1] == -2 ||
+                      solution[i - 1][j - 1] == -1
                     "
-                    >{{ solution[i - 1][j - 1] }}</sup
-                  >&nbsp;<span
-                    v-if="
-                      solution[i - 1][j - 1] != -2 &&
-                      solution[i - 1][j - 1] != -1 &&
-                      option[i - 1][j - 1] != -1
-                    "
-                    >{{
-                      letters[solution[i - 1][j - 1]][option[i - 1][j - 1]]
-                    }}</span
+                  ></span>
+                  <span v-else
+                    ><sup>{{ solution[i - 1][j - 1] }}</sup
+                    >&nbsp;{{ letters[solution[i - 1][j - 1]] }}</span
                   >
                 </div>
               </td>
@@ -1337,17 +1035,6 @@ export default {
         class="mb-4"
       >
         Neke ćelije nemaju dodijeljen broj slova.
-      </va-alert>
-    </div>
-    <div class="myrow" v-if="hasEmptyOption()">
-      <va-alert
-        style="white-space: pre-wrap"
-        color="danger"
-        title="Slova bez opcije"
-        center
-        class="mb-4"
-      >
-        Neka slova u ćelijama nemaju dodijeljen broj opcije.
       </va-alert>
     </div>
     <div class="myrow">
@@ -1468,7 +1155,6 @@ export default {
           !(
             !letter_alert &&
             !hasEmpty() &&
-            !hasEmptyOption() &&
             image &&
             title.length > 0 &&
             description.length > 0 &&
@@ -1508,9 +1194,6 @@ export default {
 }
 .special {
   background-color: salmon;
-}
-.unnumbered {
-  background-color: orange !important;
 }
 .bordertop {
   border-top: dashed !important;

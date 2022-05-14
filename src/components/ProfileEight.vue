@@ -1,6 +1,6 @@
 <script> 
-import { nonogramsRef, nonogramsRecordsRef } from '../main' 
-import NonogramTable from './NonogramTable.vue'
+import { eightsRef, eightsRecordsRef } from '../main' 
+import EightTable from './EightTable.vue'
 import NoDataToDisplay from './NoDataToDisplay.vue'
 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -28,40 +28,40 @@ export default {
   data() {
     return {
       value: 'author',
-      authorNonogram: [],
-      updaterNonogram: [],
-      collaboratorNonogram: [],
-      recordNonogram: [],
+      authorEight: [],
+      updaterEight: [],
+      collaboratorEight: [],
+      recordEight: [],
     }
   },
   components: {
-    NonogramTable,
+    EightTable,
     NoDataToDisplay
   },
   created() {
-    this.fetch_nonograms()
+    this.fetch_eights()
   },
   methods: {
-        fetch_nonograms() {
+        fetch_eights() {
             this.puzzles = []
             let me = this 
-            nonogramsRef.get().then(function(snapshot) {
+            eightsRef.get().then(function(snapshot) {
                 snapshot.forEach(function(childSnapshot) {  
                     if (me.user && childSnapshot.get('author') == me.user.uid) {
-                        me.authorNonogram.push(childSnapshot.id)
+                        me.authorEight.push(childSnapshot.id)
                     }
                     if (me.user && childSnapshot.get('updater') == me.user.uid) {
-                        me.updaterNonogram.push(childSnapshot.id)
+                        me.updaterEight.push(childSnapshot.id)
                     }
                     if (me.user && childSnapshot.get('permissions').includes(me.user.email)) {
-                        me.collaboratorNonogram.push(childSnapshot.id)
+                        me.collaboratorEight.push(childSnapshot.id)
                     } 
                 });
             }) 
-            nonogramsRecordsRef.get().then(function(snapshot) {
+            eightsRecordsRef.get().then(function(snapshot) {
                 snapshot.forEach(function(childSnapshot) { 
                     if (me.user && childSnapshot.get('user') == me.user.uid) {
-                        me.recordNonogram.push(childSnapshot.get('puzzleID'))
+                        me.recordEight.push(childSnapshot.get('puzzleID'))
                     }
                 });
             }) 
@@ -70,7 +70,7 @@ export default {
 }
 </script>
 
-<template>
+<template>  
   <va-tabs v-model="value" style="width: 100%;">
       <template #tabs> 
         <va-tab  
@@ -91,14 +91,14 @@ export default {
       />
       </template>
   </va-tabs>
-  <NonogramTable :friend="user" v-if="value=='author' && authorNonogram.length > 0" selectMode="single" :puzzleList="authorNonogram"></NonogramTable> 
-  <NoDataToDisplay v-if="value=='author' && authorNonogram.length <= 0" customMessage="Korisnik nije autor niti jednog nonograma"></NoDataToDisplay> 
-  <NonogramTable :friend="user" v-if="value=='updater' && updaterNonogram.length > 0" selectMode="single" :puzzleList="updaterNonogram"></NonogramTable>
-  <NoDataToDisplay v-if="value=='updater' && updaterNonogram.length <= 0" customMessage="Korisnik nije zadnji ažurirali niti jedan nonogram"></NoDataToDisplay>  
-  <NonogramTable :friend="user" v-if="value=='collaborator' && collaboratorNonogram.length > 0" selectMode="single" :puzzleList="collaboratorNonogram"></NonogramTable> 
-  <NoDataToDisplay v-if="value=='collaborator' && collaboratorNonogram.length <= 0" customMessage="Korisnik nije suradnik niti na jednom nonogramu"></NoDataToDisplay>  
-  <NonogramTable :friend="user" v-if="value=='record' && recordNonogram.length > 0" selectMode="single" :puzzleList="recordNonogram"></NonogramTable>  
-  <NoDataToDisplay v-if="value=='record' && recordNonogram.length <= 0" customMessage="Korisnik nije riješio niti jedan nonogram"></NoDataToDisplay> 
+  <EightTable :friend="user" v-if="value=='author' && authorEight.length > 0" selectMode="single" :puzzleList="authorEight"></EightTable> 
+  <NoDataToDisplay v-if="value=='author' && authorEight.length <= 0" customMessage="Korisnik nije autor niti jedne osmosmjerke"></NoDataToDisplay> 
+  <EightTable :friend="user" v-if="value=='updater' && updaterEight.length > 0" selectMode="single" :puzzleList="updaterEight"></EightTable>
+  <NoDataToDisplay v-if="value=='updater' && updaterEight.length <= 0" customMessage="Korisnik nije zadnji ažurirali niti jednu osmosmjerku"></NoDataToDisplay>  
+  <EightTable :friend="user" v-if="value=='collaborator' && collaboratorEight.length > 0" selectMode="single" :puzzleList="collaboratorEight"></EightTable> 
+  <NoDataToDisplay v-if="value=='collaborator' && collaboratorEight.length <= 0" customMessage="Korisnik nije suradnik niti na jednoj osmosmjerci"></NoDataToDisplay>  
+  <EightTable :friend="user" v-if="value=='record' && recordEight.length > 0" selectMode="single" :puzzleList="recordEight"></EightTable>  
+  <NoDataToDisplay v-if="value=='record' && recordEight.length <= 0" customMessage="Korisnik nije riješio niti jednu osmosmjerku"></NoDataToDisplay>  
 </template>
 
 <style>

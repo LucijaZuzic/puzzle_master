@@ -6,6 +6,9 @@
     import RecordsTable from "./RecordsTable.vue" 
     import RatingsTable from "./RatingsTable.vue" 
     import { usersRef } from "../main.js"
+    import { projectStorage } from "../main.js"
+    import { ref, listAll, deleteObject, getMetadata } from "firebase/storage";
+
     export default {
         emits: ["selectedCryptograms"],  
         props: ["friend", "puzzleList", "selectMode", "start_time", "end_time"], 
@@ -26,6 +29,7 @@
                     // User is signed out
                     // ... 
                 }
+                return true
                 }); 
             } else {
                 this.user = this.$props.friend
@@ -138,6 +142,7 @@
                                     num_ratings = 1
                                 }
                             let solution = funct_ref(childSnapshot.get('solution')) 
+                            let real_letters = funct_ref(childSnapshot.get('letters')) 
                             usersRef.get(childSnapshot.get('author')).then(function(snapshotAuthor) {
                                 snapshotAuthor.forEach(function(childSnapshotAuthor) {
                                     let idAuthor = childSnapshotAuthor.id; 
@@ -153,7 +158,7 @@
                                                     me.puzzles.push({
                                                         rows: solution.length,
                                                         columns: solution[0].length,
-                                                        letters: childSnapshot.get('letters').length,
+                                                        letters: real_letters.length * real_letters[0].length, 
                                                         rating: sum_ratings / num_ratings,
                                                         title: childSnapshot.get('title'), 
                                                         description: childSnapshot.get('description'), 
@@ -183,11 +188,73 @@
                 return this.columns.map(({ key }) => key)
             },
             deletePuzzle(id) {
-                cryptogramsRef.doc(id).delete()
-                this.fetch_puzzles()
-                this.$forceUpdate()
-            }
-        },
+                cryptogramsRef.doc(id).delete().then(() => {
+                    this.fetch_puzzles() 
+                    this.$forceUpdate()
+                }).then(() => {
+                        cryptogramsRatingsRef.get().then(function(snapshotRating) {
+                            snapshotRating.forEach(function(childSnapshotRating) {  
+                                let idPuzzle = childSnapshotRating.get('puzzleID')  
+                                let idRating= childSnapshotRating.id
+                                if (idPuzzle == id) {  
+                                    cryptogramsRatingsRef.doc(idRating).delete().then(() => {
+                                        //console.log("Document successfully deleted!");
+                                    }).catch((error) => {
+                                        //console.error("Error removing document: ", error);
+                                    });  
+                                }
+                        });
+                    }).then(() => {
+                        cryptogramsRecordsRef.get().then(function(snapshotRecord) {
+                            snapshotRecord.forEach(function(childSnapshotRecord) {  
+                                let idPuzzle = childSnapshotRecord.get('puzzleID')  
+                                let idRecord= childSnapshotRecord.id
+                                if (idPuzzle == id) {  
+                                    cryptogramsRecordsRef.doc(idRecord).delete().then(() => {
+                                        //console.log("Document successfully deleted!");
+                                    }).catch((error) => {
+                                        //console.error("Error removing document: ", error);
+                                    });  
+                                }
+                            });
+                        })
+                    })
+                }).then(() => {
+                    // Create a reference under which you want to list
+                    const listRef = ref(projectStorage, 'cryptogram/')
+                    // Find all the prefixes and items.
+                    listAll(listRef)
+                    .then((res) => {
+                        res.prefixes.forEach((folderRef) => {
+                        // All the prefixes under listRef.
+                        // You may call listAll() recursively on them.
+                        });
+                        res.items.forEach((itemRef) => {
+                            // All the items under listRef.
+                            // Get metadata properties
+                            getMetadata(itemRef)
+                            .then((metadata) => {
+                                // Metadata now contains the metadata for 'images/forest.jpg'
+                                if (metadata.name.toString().includes(id)) {
+                                    deleteObject(itemRef).then(() => {
+                                    // File deleted successfully
+                                    }).catch((error) => {
+                                    // Uh-oh, an error occurred!
+                                    });
+                                }
+                            })
+                            .catch((error) => {
+                                // Uh-oh, an error occurred!
+                            });
+                        });
+                    }).catch((error) => {
+                        // Uh-oh, an error occurred!
+                    });
+                }).catch((error) => {
+                    // Uh-oh, an error occurred!
+                })
+            } 
+        }, 
         created() {
             this.fetch_puzzles()
         },
@@ -207,16 +274,16 @@
 <template>  
     <div class="myrow">
         <va-input
-        class="flex mb-2 md6" style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 25%" 
+        class="flex mb-2 md6" style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 25%" 
         placeholder="Unesite pojam za pretragu"
         v-model="filter"
         />  
-        <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" 
+        <va-checkbox style="display: inline-block;margin-left: 20px;margin-top: 20px" 
         class="flex mb-2 md6"
         label="Traži cijelu riječ"
         v-model="useCustomFilteringFn"
         /> 
-        <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+        <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
             label="Trenutna stranica"
             class="flex mb-2 md6"
             v-model="currentPage"
@@ -224,7 +291,7 @@
             :max="Math.ceil(this.filtered.length / this.perPage)"
             type="number"
         /> 
-        <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+        <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
             label="Broj pojmova na stranici"
             class="flex mb-2 md6"
             v-model="perPage"
@@ -295,14 +362,14 @@
         <template #cell(is_public)="{ source: is_public }"><span v-if="is_public">Svi</span><span v-else>Samo suradnici</span></template>
         <template #bodyAppend>
             <tr>
-                <td colspan="12" style="text-align: left">
-                    <router-link to="/createcryptogram"> 
+                <td colspan="16" style="text-align: left">
+                    <router-link to="/create-cryptogram"> 
                         <va-icon color="primary" class="mr-4" name="add_circle"/> Nova zagonetka
                     </router-link>
                 </td>
             </tr>
             <tr>
-                <td colspan="12" class="table-example--pagination">
+                <td colspan="16" class="table-example--pagination">
                     <va-pagination
                     v-model="currentPage"
                     input
@@ -313,18 +380,18 @@
         </template>
     </va-data-table> 
     <div class="myrow" v-if="!start_time && !end_time && selectMode == 'single'"> 
-        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" style="width: 100%;">
             <template #tabs> 
             <va-tab
-                label="Svi rekordi za odabrani kriptogram"
+                label="Svi rekordi"
                 name="all"
             />
             <va-tab
-                label="Rekordi korisnika za odabrani kriptogram"
+                label="Rekordi korisnika"
                 name="mine"
             />
             <va-tab
-                label="Ocjena za kriptogram"
+                label="Ocjena"
                 name="rate"
             />
             </template>
@@ -336,18 +403,18 @@
         </span>
     </div> 
     <div class="myrow" v-if="start_time && end_time && selectMode == 'single'"> 
-        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value" vertical>
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value"  style="width: 100%;">
             <template #tabs> 
             <va-tab
-                label="Svi rekordi za odabrani kriptogram unutar vremena turnira"
+                label="Svi rekordi"
                 name="all"
             />
             <va-tab
-                label="Rekordi korisnika za odabrani kriptogram unutar vremena turnira"
+                label="Rekordi korisnika"
                 name="mine"
             />
             <va-tab
-                label="Ocjena za kriptogram"
+                label="Ocjena"
                 name="rate"
             />
             </template>

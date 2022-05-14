@@ -1,20 +1,20 @@
  
 <script>
     import Navbar from './Navbar.vue'
-    import IntegramTable from "./IntegramTable.vue"
+    import EightTable from "./EightTable.vue"
     export default {
         components: {
             Navbar,
-            IntegramTable
+            EightTable
         },
     }
 </script>
 
 <template> 
-  <Navbar></Navbar>
+  <Navbar></Navbar>    
   <body class="mybody"> 
-      <h1 class="display-1">Integrami</h1>
-      <IntegramTable selectMode="single"></IntegramTable> 
+      <h1 class="display-1">Osmosmjerke</h1>
+      <EightTable  selectMode="single"></EightTable> 
   </body>
 </template>
 

@@ -120,16 +120,16 @@
     <span v-if="user_records.length > 0">
         <div class="myrow">
             <va-input
-            class="flex mb-2 md6" style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 25%" 
+            class="flex mb-2 md6" style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 25%" 
             placeholder="Unesite pojam za pretragu"
             v-model="filter"
             />  
-            <va-checkbox style="display: inline-block;margin-left: 2%;margin-top: 2%" 
+            <va-checkbox style="display: inline-block;margin-left: 20px;margin-top: 20px" 
             class="flex mb-2 md6"
             label="Traži cijelu riječ"
             v-model="useCustomFilteringFn"
             /> 
-            <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+            <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
                 label="Trenutna stranica"
                 class="flex mb-2 md6"
                 v-model="currentPage"
@@ -137,7 +137,7 @@
                 :max="Math.ceil(this.filtered.length / this.perPage)"
                 type="number"
             /> 
-            <va-input style="display: inline-block;margin-left: 2%;margin-top: 2%;width: 10%"  
+            <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
                 label="Broj pojmova na stranici"
                 class="flex mb-2 md6"
                 v-model="perPage"

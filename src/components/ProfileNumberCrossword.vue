@@ -19,6 +19,7 @@ export default {
               // User is signed out
               // ... 
           }
+          return true
           }); 
       } else {
           this.user = this.$props.friend
@@ -70,23 +71,23 @@ export default {
 </script>
 
 <template>  
-  <va-tabs v-model="value" vertical>
+  <va-tabs v-model="value" style="width: 100%;">
       <template #tabs> 
-      <va-tab
-          label="Brojevne križaljke kojima je korisnik autor"
-          name="author"
-      />
-      <va-tab
-          label="Brojevne križaljke koje je korisnik zadnji ažurirao"
-          name="updater"
-      />
-      <va-tab
-          label="Brojevne križaljke na kojima je korisnik suradnik"
-          name="collaborator"
-      />
-      <va-tab
-          label="Brojevne križaljke koje je korisnik riješio"
-          name="record"
+        <va-tab  
+            label="Autor"
+            name="author"
+        />
+        <va-tab 
+            label="Zadnji ažurirao"
+            name="updater"
+        />
+        <va-tab 
+            label="Suradnik"
+            name="collaborator"
+        />
+        <va-tab 
+            label="Riješio"
+            name="record"
       />
       </template>
   </va-tabs>
@@ -97,7 +98,7 @@ export default {
   <NumberCrosswordTable :friend="user" v-if="value=='collaborator' && collaboratorNumberCrossword.length > 0" selectMode="single" :puzzleList="collaboratorNumberCrossword"></NumberCrosswordTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorNumberCrossword.length <= 0" customMessage="Korisnik nije suradnik niti na jednoj brojevnoj križaljci"></NoDataToDisplay>  
   <NumberCrosswordTable :friend="user" v-if="value=='record' && recordNumberCrossword.length > 0" selectMode="single" :puzzleList="recordNumberCrossword"></NumberCrosswordTable>  
-  <NoDataToDisplay v-if="value=='record' && recordNumberCrossword.length <= 0" customMessage="Korisnik nije riješili niti jednu brojevnu križaljku"></NoDataToDisplay>
+  <NoDataToDisplay v-if="value=='record' && recordNumberCrossword.length <= 0" customMessage="Korisnik nije riješio niti jednu brojevnu križaljku"></NoDataToDisplay>
 </template>
 
 <style>

@@ -1,9 +1,9 @@
 <script>
 import { ref, getDownloadURL } from "firebase/storage";
-import { cryptogramsRecordsRef, projectStorage } from "../main.js";
+import { numberLettersRecordsRef, projectStorage } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usersRef } from "../main.js";
-import { cryptogramsRef } from "../main.js";
+import { numberLettersRef } from "../main.js";
 
 import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
@@ -44,14 +44,9 @@ export default {
       is_public: false,
       solution: [[]],
       is_special: [[]],
-      unnumbered: [[]],
-      unnumbered_text: [[]],
       num_letters: 1,
       rows: 1,
       columns: 1,
-      option_number: -1,
-      option: [[]],
-      new_options: [[]],
       letter_alert: "",
       alphabet: [
         "A",
@@ -89,81 +84,38 @@ export default {
         "Z",
         "Ž",
       ],
-      letters: [["", "", ""]],
-      letters_revealed: [[0, 0, 0]],
-      current_x: null,
-      current_y: null,
+      letters: [],
     };
   },
   methods: {
-    check_duplicated(x, y) {
-      for (let i = 0; i < this.values.length; i++) {
-        for (let j = 0; j < 3; j++) {
-          if (x == i && y == j) {
-            continue;
-          }
-          if (this.values[i][j] == this.values[x][y]) {
-            return true;
-          }
-        }
-      }
-      return false;
-    },
     check_letter() {
       this.letter_alert = "";
       for (let i = 0; i < this.num_letters; i++) {
-        for (let j = 0; j < 3; j++) {
-          this.values[i][j] = this.values[i][j].toUpperCase();
-          if (!this.alphabet.includes(this.values[i][j])) {
+        this.values[i] = this.values[i].toUpperCase();
+        if (!this.alphabet.includes(this.values[i])) {
+          if (this.letter_alert != "") {
+            this.letter_alert += " ";
+          }
+          this.letter_alert +=
+            i + ". slovo (" + this.values[i] + ") nije u zadanoj abecedi.";
+        }
+        this.$forceUpdate();
+      }
+      for (let i = 0; i < this.num_letters; i++) {
+        for (let j = i + 1; j < this.num_letters; j++) {
+          if (this.values[i] == this.values[j]) {
             if (this.letter_alert != "") {
               this.letter_alert += " ";
             }
             this.letter_alert +=
-              j +
-              1 +
-              ". opcija za " +
               i +
               ". slovo (" +
-              this.values[i][j] +
-              ") nije u zadanoj abecedi.";
-          }
-        }
-      }
-      for (let i = 0; i < this.num_letters; i++) {
-        for (let j = 0; j < this.num_letters; j++) {
-          for (let k = 0; k < 3; k++) {
-            for (let l = 0; l < 3; l++) {
-              if (i > j || (i == j && k >= l)) {
-                continue;
-              }
-              if (this.values[i][k] == this.values[j][l]) {
-                if (this.letter_alert != "") {
-                  this.letter_alert += " ";
-                }
-                this.letter_alert +=
-                  k +
-                  1 +
-                  ". opcija za " +
-                  i +
-                  ". slovo (" +
-                  this.values[i][k] +
-                  ") i " +
-                  (l + 1) +
-                  ". opcija za " +
-                  j +
-                  ". slovo (" +
-                  this.values[j][l] +
-                  ") su jednake.";
-              }
-            }
-          }
-        }
-      }
-      for (let i = 0; i < this.unnumbered_text.length; i++) {
-        for (let j = 0; j < this.unnumbered_text[i].length; j++) {
-          if (this.unnumbered_text[i][j] && this.unnumbered[i][j] == 1) {
-            this.unnumbered_text[i][j] =
-              this.unnumbered_text[i][j].toUpperCase();
+              this.values[i] +
+              ") i " +
+              j +
+              " slovo (" +
+              this.values[j] +
+              ") je jednako.";
           }
         }
       }
@@ -172,10 +124,8 @@ export default {
     shuffleOrder() {
       let new_order = [];
       let old_letters = [];
-      let old_revealed = [];
       for (let i = 0; i < this.num_letters; i++) {
         old_letters.push(this.letters[i]);
-        old_revealed.push(this.letters_revealed[i]);
         let new_index = Math.floor(Math.random() * this.num_letters);
         while (new_order.includes(new_index)) {
           new_index = Math.floor(Math.random() * this.num_letters);
@@ -194,44 +144,6 @@ export default {
       }
       for (let i = 0; i < this.num_letters; i++) {
         this.letters[new_order[i]] = old_letters[i];
-        this.letters_revealed[new_order[i]] = old_revealed[i];
-      }
-      for (let i = 0; i < this.num_letters; i++) {
-        this.shuffleOneLetter(i);
-      }
-    },
-    shuffleOneLetter(letter_number) {
-      let new_order = [];
-      let old_letters = [];
-      let old_revealed = [];
-      for (let i = 0; i < this.letters[letter_number].length; i++) {
-        old_letters.push(this.letters[letter_number][i]);
-        old_revealed.push(this.letters_revealed[letter_number][i]);
-        let new_index = Math.floor(
-          Math.random() * this.letters[letter_number].length
-        );
-        while (new_order.includes(new_index)) {
-          new_index = Math.floor(
-            Math.random() * this.letters[letter_number].length
-          );
-        }
-        new_order.push(new_index);
-      }
-      for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < this.columns; j++) {
-          if (this.solution[i][j] == letter_number) {
-            for (let l = 0; l < this.letters[letter_number].length; l++) {
-              if (this.option[i][j] == l) {
-                this.option[i][j] = new_order[l];
-                break;
-              }
-            }
-          }
-        }
-      }
-      for (let i = 0; i < this.letters[letter_number].length; i++) {
-        this.letters[letter_number][new_order[i]] = old_letters[i];
-        this.letters_revealed[letter_number][new_order[i]] = old_revealed[i];
       }
     },
     getAuthorUserRecord() {
@@ -302,8 +214,6 @@ export default {
       this.columns = parseInt(this.columns);
       let oldsolution = [];
       let oldisspecial = [];
-      let oldunnumbered = [];
-      let oldoption = [];
       let oldtop = [];
       let oldbottom = [];
       let oldleft = [];
@@ -313,8 +223,6 @@ export default {
       if (this.solution) {
         oldsolution = this.solution;
         oldisspecial = this.is_special;
-        oldunnumbered = this.unnumbered;
-        oldoption = this.option;
         oldtop = this.border_top;
         oldbottom = this.border_bottom;
         oldleft = this.border_left;
@@ -328,10 +236,6 @@ export default {
       }
       this.solution = [];
       this.is_special = [];
-      this.unnumbered = [];
-      this.unnumbered_text = [];
-      this.new_options = [];
-      this.option = [];
       this.border_top = [];
       this.border_bottom = [];
       this.border_left = [];
@@ -339,23 +243,15 @@ export default {
       for (let i = 0; i < maxrow; i++) {
         let solution_row = [];
         let special_row = [];
-        this.unnumbered.push([]);
-        this.unnumbered_text.push([]);
-        this.new_options.push([]);
-        this.option.push([]);
         this.border_top.push([]);
         this.border_bottom.push([]);
         this.border_left.push([]);
         this.border_right.push([]);
         for (let j = 0; j < maxcol; j++) {
-          this.unnumbered_text[i].push("");
-          this.new_options[i].push(-1);
           if (oldsolution[i]) {
             if (oldsolution[i].length > j) {
               solution_row.push(oldsolution[i][j]);
               special_row.push(oldisspecial[i][j]);
-              this.unnumbered[i].push(oldunnumbered[i][j]);
-              this.option[i].push(oldoption[i][j]);
               this.border_top[i].push(oldtop[i][j]);
               this.border_bottom[i].push(oldbottom[i][j]);
               this.border_left[i].push(oldleft[i][j]);
@@ -363,8 +259,6 @@ export default {
             } else {
               solution_row.push(-2);
               special_row.push(0);
-              this.unnumbered[i].push(0);
-              this.option[i].push(-1);
               this.border_top[i].push(0);
               this.border_bottom[i].push(0);
               this.border_left[i].push(0);
@@ -373,8 +267,6 @@ export default {
           } else {
             solution_row.push(-2);
             special_row.push(0);
-            this.unnumbered[i].push(0);
-            this.option[i].push(-1);
             this.border_top[i].push(0);
             this.border_bottom[i].push(0);
             this.border_left[i].push(0);
@@ -393,35 +285,22 @@ export default {
         }
       }
       let oldletters = [];
-      let oldlettersrevealed = [];
       let maxletters = this.num_letters;
       if (this.letters) {
         oldletters = this.letters;
-        oldlettersrevealed = this.letters_revealed;
         if (oldletters.length > maxletters) {
           maxletters = oldletters.length;
         }
       }
-      this.values = [];
       this.letters = [];
-      this.letters_revealed = [];
+      this.values = [];
       for (let i = 0; i < maxletters; i++) {
         if (oldletters.length > i) {
           this.letters.push(oldletters[i]);
-          this.values.push([]);
-          this.letters_revealed.push(oldlettersrevealed[i]);
-          for (let j = 0; j < 3; j++) {
-            if (this.letters_revealed[i][j] == 1) {
-              this.values[i].push(this.letters[i][j]);
-            } else {
-              this.values[i].push("");
-            }
-          }
         } else {
-          this.letters.push(["", "", ""]);
-          this.values.push(["", "", ""]);
-          this.letters_revealed.push([0, 0, 0]);
+          this.letters.push("");
         }
+        this.values.push("");
       }
     },
     delay(operation, delay) {
@@ -453,14 +332,11 @@ export default {
       let params_id = this.$route.params.id;
       let string_solution = [];
       let string_is_special = [];
-      let string_unnumbered = [];
-      let string_option = [];
       let string_top = [];
       let string_bottom = [];
       let string_left = [];
       let string_right = [];
-      let string_letters = [];
-      let string_letters_revealed = [];
+      let string_letters = "";
       let string_image = "";
       let string_title = "";
       let string_description = "";
@@ -473,7 +349,7 @@ export default {
       let string_last_updated = "";
       let found = false;
       let funct_ref = this.string_to_array;
-      cryptogramsRef
+      numberLettersRef
         .get(params_id)
         .then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -481,16 +357,11 @@ export default {
             if (id == params_id) {
               string_solution = funct_ref(childSnapshot.get("solution"));
               string_is_special = funct_ref(childSnapshot.get("is_special"));
-              string_unnumbered = funct_ref(childSnapshot.get("unnumbered"));
-              string_option = funct_ref(childSnapshot.get("option"));
               string_top = funct_ref(childSnapshot.get("border_top"));
               string_bottom = funct_ref(childSnapshot.get("border_bottom"));
               string_left = funct_ref(childSnapshot.get("border_left"));
               string_right = funct_ref(childSnapshot.get("border_right"));
-              string_letters = funct_ref(childSnapshot.get("letters"));
-              string_letters_revealed = funct_ref(
-                childSnapshot.get("letters_revealed")
-              );
+              string_letters = childSnapshot.get("letters");
               string_image = childSnapshot.get("image");
               string_title = childSnapshot.get("title");
               string_description = childSnapshot.get("description");
@@ -513,16 +384,12 @@ export default {
           if (found) {
             this.solution = string_solution;
             this.is_special = string_is_special;
-            this.unnumbered = string_unnumbered;
-            this.option = string_option;
             this.border_top = string_top;
             this.border_bottom = string_bottom;
             this.border_left = string_left;
             this.border_right = string_right;
             this.letters = string_letters;
-            this.letters_revealed = string_letters_revealed;
             this.image = string_image;
-            this.oldimage = this.image;
             this.title = string_title;
             this.description = string_description;
             this.author = string_author;
@@ -547,7 +414,7 @@ export default {
               this.$vaToast.init("Ne postoji zagonetka s tim brojem."),
               1000
             ).then(() => {
-              this.$router.push("/search-cryptogram");
+              this.$router.push("/search-number-letter");
             });
           }
         });
@@ -569,134 +436,19 @@ export default {
     },
     store() {
       let datetime = new Date();
-      cryptogramsRecordsRef.add({
+      numberLettersRecordsRef.add({
         puzzleID: this.$route.params.id,
         user: this.user.uid,
         score: this.time_elapsed,
         time: datetime,
       });
     },
-    findLetter(some_letter) {
-      for (let i = 0; i < this.num_letters; i++) {
-        for (let j = 0; j < 3; j++) {
-          if (this.values[i][j] == some_letter) {
-            return true;
-          }
-        }
-      }
-      return false;
-    },
-    modeChange(event) {
-      /*switch (event.code) {
-            case "Enter":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "Backspace":
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "ArrowUp":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "ArrowDown": 
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "ArrowRight":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "ArrowLeft": 
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "KeyW":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "KeyS": 
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "KeyD":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "KeyA": 
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "Digit0": 
-                this.option_number = -1
-                break; 
-            case "Digit1": 
-                this.option_number = 1
-                break; 
-            case "Digit2": 
-                this.option_number = 2
-                break; 
-            case "Digit3": 
-                this.option_number = 3
-                break; 
-        } */
-    },
     check_victory() {
       this.victory = true;
-      for (let i = 0; i < this.unnumbered.length; i++) {
-        for (let j = 0; j < this.unnumbered[i].length; j++) {
-          if (
-            this.unnumbered[i][j] == 1 &&
-            this.unnumbered_text[i][j] &&
-            this.solution[i][j] != -1 &&
-            this.option[i][j] != -1 &&
-            this.unnumbered_text[i][j] !=
-              this.letters[this.solution[i][j]][this.option[i][j]]
-          ) {
-            this.victory = false;
-            return;
-          }
-        }
-      }
       for (let i = 0; i < this.values.length; i++) {
-        for (let j = 0; j < this.values[i].length; j++) {
-          if (this.letters[i][j] != this.values[i][j]) {
-            this.victory = false;
-            return;
-          }
-        }
-      }
-      for (let i = 0; i < this.option.length; i++) {
-        for (let j = 0; j < this.option[i].length; j++) {
-          if (
-            this.unnumbered[i][j] == 0 &&
-            this.option[i][j] != -1 &&
-            this.option[i][j] != this.new_options[i][j]
-          ) {
-            this.victory = false;
-            return;
-          }
+        if (this.letters[i] != this.values[i]) {
+          this.victory = false;
+          return;
         }
       }
       if (this.victory) {
@@ -707,7 +459,7 @@ export default {
         ).then(() => {
           if (this.user && !this.cheat) {
             this.new_async(this.store(), 1000).then(() => {
-              this.$router.push("/search-cryptogram");
+              this.$router.push("/search-number-letter");
             });
           } else {
             if (!this.user) {
@@ -738,10 +490,10 @@ export default {
                   ),
                   1000
                 ).then(() => {
-                  this.$router.push("/search-cryptogram");
+                  this.$router.push("/search-number-letter");
                 });
               } else {
-                this.$router.push("/search-cryptogram");
+                this.$router.push("/search-number-letter");
               }
             }
           }
@@ -754,17 +506,21 @@ export default {
     show_solution() {
       this.cheat = true;
       for (let i = 0; i < this.letters.length; i++) {
-        for (let j = 0; j < this.letters[i].length; j++) {
-          this.values[i][j] = this.letters[i][j];
-        }
-      }
-      for (let i = 0; i < this.option.length; i++) {
-        for (let j = 0; j < this.option[i].length; j++) {
-          this.new_options[i][j] = this.option[i][j];
-        }
+        this.values[i] = this.letters[i];
       }
       this.check_victory();
       this.$forceUpdate();
+    },
+    check_duplicated(x) {
+      for (let i = 0; i < this.letters.length; i++) {
+        if (x == i) {
+          continue;
+        }
+        if (this.values[i] == this.values[x]) {
+          return true;
+        }
+      }
+      return false;
     },
     getPicture() {
       if (this.image == null) {
@@ -791,13 +547,6 @@ export default {
         }
       }
     }
-    if (this.$refs.unnumberedform) {
-      for (let i = 0; i < this.$refs.unnumberedform.length; i++) {
-        if (this.$refs.unnumberedform[i]) {
-          this.$refs.unnumberedform[i].validate();
-        }
-      }
-    }
   },
   beforeUpdate() {
     this.check_letter();
@@ -805,13 +554,6 @@ export default {
       for (let i = 0; i < this.$refs.lettersform.length; i++) {
         if (this.$refs.lettersform[i]) {
           this.$refs.lettersform[i].validate();
-        }
-      }
-    }
-    if (this.$refs.unnumberedform) {
-      for (let i = 0; i < this.$refs.unnumberedform.length; i++) {
-        if (this.$refs.unnumberedform[i]) {
-          this.$refs.unnumberedform[i].validate();
         }
       }
     }
@@ -834,7 +576,7 @@ export default {
         this.user = user;
         // ...
       } else {
-        // User is signed ouvt
+        // User is signed out
         // ...
         this.$refs.no_user_dialog.show();
       }
@@ -855,7 +597,10 @@ export default {
     <div class="myrow">
       <span style="float: left; overflow-wrap: anywhere">
         <va-button
-          @click="show_error = !show_error;$forceUpdate()"
+          @click="
+            show_error = !show_error;
+            $forceUpdate();
+          "
           style="margin-left: 10px; margin-top: 10px"
         >
           <span v-if="show_error == false"
@@ -874,100 +619,70 @@ export default {
         >{{ format(time_elapsed) }}</va-chip
       >
     </div>
-    <div class="myrow" style="max-height: 200px">
+    <div class="myrow">
       <va-infinite-scroll disabled :load="() => {}">
-        <div class="myrow" v-for="i in num_letters" v-bind:key="i">
-          <va-chip>{{ i - 1 }}. slovo</va-chip><br /><br />
-          <div
-            style="display: flex; justify-content: center; align-items: center"
-          >
-            <div style="display: flex; justify-content: top; align-items: top">
-              <va-form ref="lettersform" v-for="j in 3" v-bind:key="j">
-                <va-input
-                  class="mb-4"
-                  @click="option_number = j"
-                  @update:model-value="check_letter()"
-                  v-model="values[i - 1][j - 1]"
-                  style="
-                    padding-bottom: none;
-                    max-width: 100px;
-                    display: inline-block;
-                  "
-                  type="text"
-                  :readonly="letters_revealed[i - 1][j - 1] == 1"
-                  immediate-validation
-                  :rules="[
-                    (value) => {
-                      if (check_duplicated(i - 1, j - 1) == 1) {
-                        if (alphabet.includes(value)) {
-                          if (show_error == false) {
-                            return 'Slovo je udvostručeno.';
-                          } else {
-                            if (values[i - 1][j - 1] != letters[i - 1][j - 1]) {
-                              return 'Slovo je netočno i udvostručeno.';
-                            } else {
+        <div>
+          <table style="display: inline-table">
+            <tr>
+              <td v-for="i in num_letters" v-bind:key="i">
+                <va-form ref="lettersform">
+                  <va-input
+                    class="mb-4"
+                    @click="mode = i - 1"
+                    @update:model-value="check_letter()"
+                    v-model="values[i - 1]"
+                    style="
+                      width: 80px;
+                      min-width: 80px;
+                      max-width: 80px;
+                      margin-left: 10px;
+                    "
+                    type="text"
+                    :label="'' + (i - 1) + ''"
+                    immediate-validation
+                    :rules="[
+                      (value) => {
+                        if (
+                          show_error == false ||
+                          values[i - 1] == letters[i - 1]
+                        ) {
+                          if (check_duplicated(i - 1) == 1) {
+                            if (alphabet.includes(value)) {
                               return 'Slovo je udvostručeno.';
-                            }
-                          }
-                        } else {
-                          if (show_error == false) {
-                            return 'Slovo je udvostručeno i nije u abecedi.';
-                          } else {
-                            if (values[i - 1][j - 1] != letters[i - 1][j - 1]) {
-                              return 'Slovo je netočno, udvostručeno i nije u abecedi.';
                             } else {
                               return 'Slovo je udvostručeno i nije u abecedi.';
                             }
-                          }
-                        }
-                      } else {
-                        if (alphabet.includes(value)) {
-                          if (show_error == false) {
-                            return true;
                           } else {
-                            if (values[i - 1][j - 1] != letters[i - 1][j - 1]) {
-                              return 'Slovo je netočno.';
-                            } else {
+                            if (alphabet.includes(value)) {
                               return true;
-                            }
-                          }
-                        } else {
-                          if (show_error == false) {
-                            return 'Slovo nije u abecedi.';
-                          } else {
-                            if (values[i - 1][j - 1] != letters[i - 1][j - 1]) {
-                              return 'Slovo je netočno i nije u abecedi.';
                             } else {
                               return 'Slovo nije u abecedi.';
                             }
                           }
+                        } else {
+                          if (check_duplicated(i - 1) == 1) {
+                            if (alphabet.includes(value)) {
+                              return 'Slovo je netočno i udvostručeno.';
+                            } else {
+                              return 'Slovo je netočno, udvostručeno i nije u abecedi.';
+                            }
+                          } else {
+                            if (alphabet.includes(value)) {
+                              return true;
+                            } else {
+                              return 'Slovo je netočno i nije u abecedi.';
+                            }
+                          }
                         }
-                      }
-                    },
-                  ]"
-                >
-                  <template #append> &nbsp;&nbsp; </template>
-                </va-input>
-              </va-form>
-            </div>
-          </div>
+                      },
+                    ]"
+                  />
+                </va-form>
+              </td>
+            </tr>
+          </table>
         </div>
       </va-infinite-scroll>
-    </div>
-    <div class="myrow">
-      <va-tabs v-model="option_number">
-        <template #tabs>
-          <va-tab name="-1"> Bez opcije </va-tab>
-          <va-tab name="0"> 1. opcija </va-tab>
-          <va-tab name="1"> 2. opcija </va-tab>
-          <va-tab name="2"> 3. opcija </va-tab>
-        </template>
-      </va-tabs>
-    </div> 
-    <div class="myrow">
-      <span v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</span
-      >
     </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
@@ -977,139 +692,29 @@ export default {
               <td
                 v-for="j in columns"
                 v-bind:key="j"
-                @click="
-                  new_options[i - 1][j - 1] = option_number;
-                  check_victory();
-                "
-                @mouseover="
-                  current_x = i;
-                  current_y = j;
-                "
                 :class="{
-                  unnumbered: unnumbered[i - 1][j - 1] == 1,
                   black: solution[i - 1][j - 1] == -1,
                   special: is_special[i - 1][j - 1] == 1,
                   wrong:
-                    (show_error &&
-                      new_options[i - 1][j - 1] != option[i - 1][j - 1]) ||
-                    (solution[i - 1][j - 1] != -2 &&
-                      solution[i - 1][j - 1] != -1 &&
-                      new_options[i - 1][j - 1] != -1 &&
-                      values[solution[i - 1][j - 1]][
-                        new_options[i - 1][j - 1]
-                      ] !=
-                        letters[solution[i - 1][j - 1]][
-                          new_options[i - 1][j - 1]
-                        ]),
+                    letters[solution[i - 1][j - 1]] !=
+                      values[solution[i - 1][j - 1]] && show_error,
                   bordertop: border_top[i - 1][j - 1] == 1,
                   borderbottom: border_bottom[i - 1][j - 1] == 1,
                   borderleft: border_left[i - 1][j - 1] == 1,
                   borderright: border_right[i - 1][j - 1] == 1,
                 }"
               >
-                <div v-if="unnumbered[i - 1][j - 1] == 0">
-                  <sup
+                <div>
+                  <span
                     v-if="
-                      solution[i - 1][j - 1] != -2 &&
-                      solution[i - 1][j - 1] != -1
+                      solution[i - 1][j - 1] == -2 ||
+                      solution[i - 1][j - 1] == -1
                     "
-                    >{{ solution[i - 1][j - 1] }}</sup
-                  >&nbsp;<span
-                    v-if="
-                      solution[i - 1][j - 1] != -2 &&
-                      solution[i - 1][j - 1] != -1 &&
-                      new_options[i - 1][j - 1] != -1
-                    "
-                    >{{
-                      values[solution[i - 1][j - 1]][new_options[i - 1][j - 1]]
-                    }}</span
+                  ></span>
+                  <span v-else
+                    ><sup>{{ solution[i - 1][j - 1] }}</sup
+                    >&nbsp;{{ values[solution[i - 1][j - 1]] }}</span
                   >
-                </div>
-                <div v-else class="unnumbered">
-                  <va-form ref="unnumberedform">
-                    <va-input
-                      class="mb-4"
-                      @update:model-value="check_letter()"
-                      v-model="unnumbered_text[i - 1][j - 1]"
-                      outline
-                      type="text"
-                      :readonly="letters_revealed[i - 1][j - 1] == 1"
-                      style="
-                        padding-bottom: none;
-                        max-width: 100px;
-                        display: inline-block;
-                      "
-                      immediate-validation
-                      :rules="[
-                        (value) => {
-                          if (findLetter(value) == false) {
-                            if (alphabet.includes(value)) {
-                              if (show_error == false) {
-                                return 'Slovo nije na popisu.';
-                              } else {
-                                if (
-                                  value !=
-                                  letters[solution[i - 1][j - 1]][
-                                    option[i - 1][j - 1]
-                                  ]
-                                ) {
-                                  return 'Slovo je netočno i nije na popisu.';
-                                } else {
-                                  return 'Slovo nije na popisu.';
-                                }
-                              }
-                            } else {
-                              if (show_error == false) {
-                                return 'Slovo nije na popisu i nije u abecedi.';
-                              } else {
-                                if (
-                                  value !=
-                                  letters[solution[i - 1][j - 1]][
-                                    option[i - 1][j - 1]
-                                  ]
-                                ) {
-                                  return 'Slovo je netočno, nije na popisu i nije u abecedi.';
-                                } else {
-                                  return 'Slovo nije na popisu i nije u abecedi.';
-                                }
-                              }
-                            }
-                          } else {
-                            if (alphabet.includes(value)) {
-                              if (show_error == false) {
-                                return true;
-                              } else {
-                                if (
-                                  value !=
-                                  letters[solution[i - 1][j - 1]][
-                                    option[i - 1][j - 1]
-                                  ]
-                                ) {
-                                  return 'Slovo je netočno.';
-                                } else {
-                                  return true;
-                                }
-                              }
-                            } else {
-                              if (show_error == false) {
-                                return 'Slovo nije u abecedi.';
-                              } else {
-                                if (
-                                  value !=
-                                  letters[solution[i - 1][j - 1]][
-                                    option[i - 1][j - 1]
-                                  ]
-                                ) {
-                                  return 'Slovo je netočno i nije u abecedi.';
-                                } else {
-                                  return 'Slovo nije u abecedi.';
-                                }
-                              }
-                            }
-                          }
-                        },
-                      ]"
-                  /></va-form>
                 </div>
               </td>
             </tr>
@@ -1231,10 +836,6 @@ export default {
 }
 .special {
   background-color: salmon;
-}
-.unnumbered {
-  min-width: 60px;
-  background-color: orange !important;
 }
 .wrong {
   color: #de1041;
