@@ -1,14 +1,32 @@
- 
 <script>
-import { usersRef, friendsRef } from "../main.js";
+import { usersRef, friendsRef } from "../firebase_main.js"
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import NoDataToDisplay from "./NoDataToDisplay.vue";
+import LoadingBar from "./LoadingBar.vue";
 export default {
   components: {
     NoDataToDisplay,
+    LoadingBar
+  },
+  mounted() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User
+        this.user = user;
+        // ...
+      } else {
+        // User is signed ouvt
+        // ...
+      }
+      return true;
+    });
   },
   props: ["dbRef", "puzzleId", "userId"],
   data() {
     return {
+      fully_loaded: false,
       already_rated: false,
       documentRated: "",
       sum_ratings: 0,
@@ -40,6 +58,7 @@ export default {
         { text: "Silazno", value: "desc" },
         { text: "Bez sortiranja", value: null },
       ],
+      user: null,
     };
   },
   methods: {
@@ -95,7 +114,7 @@ export default {
                   let user_display_name = "Skriveno";
                   let user_email = "skriveno";
                   let visibility_user = childSnapshotUser.get("visible");
-                  if (visibility_user == true || me.$props.userId == idUser) {
+                  if (visibility_user == true || me.user.uid == idUser) {
                     user_display_name = childSnapshotUser.get("displayName");
                     user_email = childSnapshotUser.get("email");
                   }
@@ -106,8 +125,8 @@ export default {
                         let id1 = childSnapshotFriend.get("user1");
                         let id2 = childSnapshotFriend.get("user2");
                         if (
-                          (id1 == me.$props.userId && id2 == idUser) ||
-                          (id2 == me.$props.userId && id1 == idUser)
+                          (id1 == me.user.uid && id2 == idUser) ||
+                          (id2 == me.user.uid && id1 == idUser)
                         ) {
                           user_display_name =
                             childSnapshotFriend.get("displayName");
@@ -129,7 +148,10 @@ export default {
             });
           }
         });
-      });
+      })
+        .then(() => {
+          this.fully_loaded = true;
+        });
     },
     submit() {
       if (this.already_rated == false) {
@@ -184,8 +206,13 @@ export default {
 </script>
 
 <template>
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else>
   <div class="myrow" v-if="user_ratings.length > 0">
-    <va-chip> Ocjena: {{ sum_ratings / user_ratings.length }} </va-chip>
+    <va-chip
+      ><va-icon name="stars"></va-icon>&nbsp;Ocjena:
+      {{ sum_ratings / user_ratings.length }}
+    </va-chip>
   </div>
   <span v-if="user_ratings.length > 0">
     <div class="myrow">
@@ -227,7 +254,7 @@ export default {
           margin-top: 20px;
           width: 10%;
         "
-        label="Broj pojmova na stranici"
+        label="Broj pojmova"
         class="flex mb-2 md6"
         v-model="perPage"
         :min="1"
@@ -266,7 +293,7 @@ export default {
       </template>
       <template #bodyAppend>
         <tr>
-          <td colspan="4" class="table-example--pagination">
+          <td colspan="5" class="table-example--pagination">
             <va-pagination v-model="currentPage" input :pages="pages" />
           </td>
         </tr>
@@ -280,9 +307,10 @@ export default {
   <div class="myrow" v-if="$props.userId">
     <va-list-item>
       <va-list-item-section avatar>
-        <va-avatar>
+        <va-chip>
+          <va-icon name="star" size="large"> </va-icon>&nbsp;
           {{ value }}
-        </va-avatar>
+        </va-chip>
       </va-list-item-section>
       <va-list-item-section>
         <va-list-item-label caption>
@@ -298,16 +326,23 @@ export default {
     </va-list-item>
   </div>
   <div class="myrow" v-if="$props.userId">
-    <va-input
-      type="textarea"
-      placeholder="Obrazložite ocjenu"
-      label="Komentar"
-      v-model="comment"
-    ></va-input>
+    <va-form>
+      <va-input
+        type="textarea"
+        placeholder="Obrazložite ocjenu"
+        label="Komentar"
+        :rules="[(value) => (value && value.length > 0) || 'Unesite komentar.']"
+        immediate-validation
+        v-model="comment"
+      ></va-input>
+    </va-form>
   </div>
   <div class="myrow" v-if="$props.userId">
-    <va-button @click="submit()">Ocjenite</va-button>
+    <va-button :disabled="comment.length < 1" @click="submit()"
+      ><va-icon name="rate_review"></va-icon>&nbsp;Ocjenite</va-button
+    >
   </div>
+  </span>
 </template>
 
 <style>

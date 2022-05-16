@@ -1,7 +1,7 @@
  
 <script>
     import { getAuth, onAuthStateChanged } from "firebase/auth"
-    import { tournamentsRef } from "../main.js"   
+    import { tournamentsRef } from "../firebase_main.js"   
     import Navbar from "./Navbar.vue" 
     import IntegramTable from "./IntegramTable.vue" 
     import NonogramTable from "./NonogramTable.vue" 
@@ -11,7 +11,8 @@
     import InitialTable from "./InitialTable.vue"
     import EightTable from "./EightTable.vue"
     import NoDataToDisplay from "./NoDataToDisplay.vue" 
-    import { usersRef } from "../main.js"
+    import { usersRef } from "../firebase_main.js"
+import LoadingBar from "./LoadingBar.vue";
     export default {
         emits: ["selectedNonograms"],  
         props: ["puzzleList", "selectMode", "start_time", "end_time"], 
@@ -24,7 +25,8 @@
             EightTable,
             InitialTable,
             NoDataToDisplay,
-            NumberLetterTable
+            NumberLetterTable,
+            LoadingBar
         },
         mounted() {   
             const auth = getAuth()
@@ -43,6 +45,7 @@
         },
         data() {
             return {
+                fully_loaded: false,
                 value: 'integram',
                 user: null, 
                 tournaments: [],
@@ -137,7 +140,10 @@
                             })
                         }).then(() => {me.$forceUpdate()}) 
                     })
-                }) 
+                })
+        .then(() => {
+          this.fully_loaded = true;
+        }); 
             },
             sortByOptions () {
                 return this.columns.map(({ key }) => key)
@@ -167,8 +173,12 @@
 
 <template>  
   <Navbar></Navbar>  
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else>
   <body class="mybody"> 
-    <h1 class="display-1">Turniri</h1>
+    <div class="myrow">
+        <h1 class="display-1">Turniri</h1>
+    </div>
     <div class="myrow">
         <va-input
         class="flex mb-2 md6" style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 25%" 
@@ -189,7 +199,7 @@
             type="number"
         /> 
         <va-input style="display: inline-block;margin-left: 20px;margin-top: 20px;width: 10%"  
-            label="Broj pojmova na stranici"
+            label="Broj pojmova"
             class="flex mb-2 md6"
             v-model="perPage"
             :min="1"
@@ -347,6 +357,7 @@
         </span>
     </div>
     </body>
+  </span>
 </template>
 
 <style>

@@ -1,9 +1,9 @@
 <script>
-import { eightsRecordsRef, eightsRef } from "../main.js";
-import { usersRef } from "../main.js";
+import { eightsRecordsRef, eightsRef } from "../firebase_main.js"
+import { usersRef, friendsRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { ref, getDownloadURL } from "firebase/storage";
-import { projectStorage } from "../main.js";
+import { projectStorage } from "../firebase_main.js"
 
 import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
@@ -15,6 +15,7 @@ export default {
   },
   data() {
     return {
+      dir_to_display: null,
       fully_loaded: false,
       victory: false,
       cheat: false,
@@ -101,11 +102,11 @@ export default {
           this.fully_loaded = true;
         })
         .catch((error) => {});
-    }, 
+    },
     getAuthorUserRecord() {
-      let some_id = this.author;
+      let some_id = this.author; let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = this.user.uid; let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -135,16 +136,16 @@ export default {
                 });
               })
               .then(() => {
-                this.authorUserRecord = newRecord;
+                my_activity.authorUserRecord = newRecord;
               });
           }
         });
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater;
+      let some_id = this.updater; let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = this.user.uid; let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -174,16 +175,16 @@ export default {
                 });
               })
               .then(() => {
-                this.updaterUserRecord = newRecord;
+                my_activity.updaterUserRecord = newRecord;
               });
           }
         });
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = [];
+      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i];
+        let some_id = this.permissions[i]; let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -214,7 +215,7 @@ export default {
                   });
                 })
                 .then(() => {
-                  this.permissionsUserRecords.push(newRecord);
+                  my_activity.permissionsUserRecords.push(newRecord);
                 });
             }
           });
@@ -918,53 +919,81 @@ export default {
         0
       "
     >
-      <va-infinite-scroll disabled :load="() => {}">
-        <div style="max-height: 320px">
+      <va-tabs v-model="dir_to_display">
+        <template #tabs>
+          <va-tab v-if="words_by_dir[0].length > 0" name="0">
+            <span>&#8598;</span>
+          </va-tab>
           <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
-            <va-chip
-              outline
-              v-if="words_in_dir.length > 0"
-              style="padding: 20px; margin-left: 20px; margin-top: 20px"
-            >
-              <span>
-                <va-chip v-if="i == 0">&#8598;</va-chip>
-                <va-chip v-if="i == 1">&#8592;</va-chip>
-                <va-chip v-if="i == 2">&#8601;</va-chip>
-                <va-chip v-if="i == 3">&#8593;</va-chip>
-                <va-chip v-if="i == 4">&#8595;</va-chip>
-                <va-chip v-if="i == 5">&#8599;</va-chip>
-                <va-chip v-if="i == 6">&#8594;</va-chip>
-                <va-chip v-if="i == 7">&#8600;</va-chip>
-                &nbsp;
-                <va-icon @click="remove_dir(i)" name="delete" />
-                <br />
-                <br />
-                <div style="max-height: 200px">
-                  <va-infinite-scroll disabled :load="() => {}">
-                    <div v-for="(word, j) in words_in_dir" v-bind:key="j">
-                      <span
-                        @click="select_word(i, j)"
-                        :class="{
-                          selected:
-                            word_index == j && get_dir(mode_x, mode_y) == i,
-                          placed: placed_words[i][j] != 0,
-                        }"
-                      >
-                        {{ word[2] }}
-                      </span>
-                      &nbsp;
-                      <va-icon @click="remove_word(i, j)" name="delete" />
-                    </div>
-                  </va-infinite-scroll>
-                </div>
-              </span>
-            </va-chip>
+            <va-tab v-if="words_in_dir.length > 0 && i > 0" :name="i">
+              <span v-if="i == 1">&#8592;</span>
+              <span v-if="i == 2">&#8601;</span>
+              <span v-if="i == 3">&#8593;</span>
+              <span v-if="i == 4">&#8595;</span>
+              <span v-if="i == 5">&#8599;</span>
+              <span v-if="i == 6">&#8594;</span>
+              <span v-if="i == 7">&#8600;</span>
+            </va-tab>
           </span>
-        </div>
-      </va-infinite-scroll>
+        </template>
+      </va-tabs>
+    </div>
+    <div
+      class="myrow"
+      v-if="
+        words_by_dir[0].length +
+          words_by_dir[1].length +
+          words_by_dir[2].length +
+          words_by_dir[3].length +
+          words_by_dir[4].length +
+          words_by_dir[5].length +
+          words_by_dir[6].length +
+          words_by_dir[7].length >
+        0
+      "
+    >
+      <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
+        <va-chip
+          outline
+          v-if="words_in_dir.length > 0 && i == dir_to_display"
+          style="padding: 20px; margin-left: 20px; margin-top: 20px"
+        >
+          <span>
+            <va-chip v-if="i == 0">&#8598;</va-chip>
+            <va-chip v-if="i == 1">&#8592;</va-chip>
+            <va-chip v-if="i == 2">&#8601;</va-chip>
+            <va-chip v-if="i == 3">&#8593;</va-chip>
+            <va-chip v-if="i == 4">&#8595;</va-chip>
+            <va-chip v-if="i == 5">&#8599;</va-chip>
+            <va-chip v-if="i == 6">&#8594;</va-chip>
+            <va-chip v-if="i == 7">&#8600;</va-chip>
+            &nbsp;
+            <va-icon @click="remove_dir(i)" name="delete" />
+            <br />
+            <br />
+            <div style="max-height: 200px">
+              <va-infinite-scroll disabled :load="() => {}">
+                <div v-for="(word, j) in words_in_dir" v-bind:key="j">
+                  <span
+                    @click="select_word(i, j)"
+                    :class="{
+                      selected: word_index == j && get_dir(mode_x, mode_y) == i,
+                      placed: placed_words[i][j] != 0,
+                    }"
+                  >
+                    {{ word[2] }}
+                  </span>
+                  &nbsp;
+                  <va-icon @click="remove_word(i, j)" name="delete" />
+                </div>
+              </va-infinite-scroll>
+            </div>
+          </span>
+        </va-chip>
+      </span>
     </div>
     <div class="myrow" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 50%" />
+      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
     <div class="myrow" v-if="!image">
       <va-alert

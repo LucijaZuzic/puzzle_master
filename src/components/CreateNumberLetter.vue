@@ -1,10 +1,10 @@
 <script>
 import { ref, uploadBytes } from "firebase/storage";
-import { projectStorage } from "../main.js";
+import { projectStorage } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
-import { usersRef } from "../main.js";
-import { numberLettersRef, friendsRef } from "../main.js";
+import { usersRef } from "../firebase_main.js"
+import { numberLettersRef, friendsRef } from "../firebase_main.js"
 
 export default {
   components: {
@@ -83,7 +83,6 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let displayName = "";
       let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
@@ -821,9 +820,9 @@ export default {
         <template #label>
           <span>Broj redaka</span>
         </template>
-        <template #append>
+        <!--<template #append>
           <va-input type="number" v-model="rows" :min="1" :max="50" />
-        </template>
+        </template>-->
       </va-slider>
     </div>
     <div class="myrow">
@@ -837,9 +836,9 @@ export default {
         <template #label>
           <span>Broj stupaca</span>
         </template>
-        <template #append>
+        <!--<template #append>
           <va-input type="number" v-model="columns" :min="1" :max="50" />
-        </template>
+        </template>-->
       </va-slider>
     </div>
     <div class="myrow">
@@ -854,14 +853,14 @@ export default {
         <template #label>
           <span>Broj slova</span>
         </template>
-        <template #append>
+        <!--<template #append>
           <va-input
             type="num_letters"
             v-model="num_letters"
             :min="1"
             :max="alphabet.length"
           />
-        </template>
+        </template>-->
       </va-slider>
     </div>
     <div class="myrow">
@@ -1080,7 +1079,7 @@ export default {
       />
     </div>
     <div class="myrow" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 50%" />
+      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
     <div class="myrow" v-if="!image">
       <va-alert

@@ -1,14 +1,17 @@
  
 <script>
-import { usersRef, friendRequestsRef, friendsRef } from "../main.js";
+import { usersRef, friendRequestsRef, friendsRef } from "../firebase_main.js"
 import NoDataToDisplay from "./NoDataToDisplay.vue";
+import LoadingBar from "./LoadingBar.vue";
 export default {
   components: {
     NoDataToDisplay,
+    LoadingBar
   },
   props: ["userId"],
   data() {
     return {
+      fully_loaded: false,
       friends: [],
       selectedItemsEmitted: [],
       new_item: "",
@@ -57,22 +60,7 @@ export default {
         hours = "0" + hours;
       }
       return hours + ":" + minutes + ":" + seconds;
-    },
-    removeFriend(me, other) {
-      friendsRef
-        .get()
-        .then(function (snapshotUser) {
-          snapshotUser.forEach(function (childSnapshotUser) {
-            let idDoc = childSnapshotUser.id;
-            let id1 = childSnapshotUser.get("user1");
-            let id2 = childSnapshotUser.get("user2");
-            if ((id1 == me && id2 == other) || (id2 == me && id1 == other)) {
-              friendsRef.doc(idDoc).delete();
-            }
-          });
-        })
-        .then(() => {});
-    },
+    }, 
     fetch_users() {
       this.friends = [];
       let me = this;
@@ -101,7 +89,10 @@ export default {
             });
           }
         });
-      });
+     })
+        .then(() => {
+          this.fully_loaded = true;
+        });
     },
     sortByOptions() {
       return this.columns.map(({ key }) => key);
@@ -124,6 +115,8 @@ export default {
 </script>
 
 <template>
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else>
   <span v-if="friends.length > 0">
     <div class="myrow">
       <va-input
@@ -164,7 +157,7 @@ export default {
           margin-top: 20px;
           width: 10%;
         "
-        label="Broj pojmova na stranici"
+        label="Broj pojmova"
         class="flex mb-2 md6"
         v-model="perPage"
         :min="1"
@@ -201,7 +194,7 @@ export default {
       </template> 
       <template #bodyAppend>
         <tr>
-          <td colspan="4" class="table-example--pagination">
+          <td colspan="3" class="table-example--pagination">
             <va-pagination v-model="currentPage" input :pages="pages" />
           </td>
         </tr>
@@ -212,6 +205,7 @@ export default {
     v-if="friends.length <= 0"
     customMessage="Korisnik nije poslao zahtjev za prijateljstvo"
   ></NoDataToDisplay>
+  </span>
 </template>
 
 <style>

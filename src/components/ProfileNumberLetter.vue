@@ -1,5 +1,5 @@
 <script> 
-import { numberLettersRef, numberLettersRecordsRef } from '../main' 
+import { numberLettersRef, numberLettersRecordsRef } from "../firebase_main.js" 
 import NumberLetterTable from './NumberLetterTable.vue'
 import NoDataToDisplay from './NoDataToDisplay.vue'
 
@@ -86,7 +86,7 @@ export default {
             name="collaborator"
         />
         <va-tab 
-            label="Riješio"
+            label="Rezultati"
             name="record"
       />
       </template>
@@ -98,7 +98,7 @@ export default {
   <NumberLetterTable :friend="user" v-if="value=='collaborator' && collaboratorNumberLetter.length > 0" selectMode="single" :puzzleList="collaboratorNumberLetter"></NumberLetterTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorNumberLetter.length <= 0" customMessage='Korisnik nije suradnik niti na jednoj zagonetki tipa "Isti broj - Isto slovo"'></NoDataToDisplay>  
   <NumberLetterTable :friend="user" v-if="value=='record' && recordNumberLetter.length > 0" selectMode="single" :puzzleList="recordNumberLetter"></NumberLetterTable>  
-  <NoDataToDisplay v-if="value=='record' && recordNumberLetter.length <= 0" customMessage='Korisnik nije riješio niti jednu zagonetku tipa "Isti broj - Isto slovo"'></NoDataToDisplay>  
+  <NoDataToDisplay v-if="value=='record' && recordNumberLetter.length <= 0" customMessage='Korisnik nije Rezultati niti jednu zagonetku tipa "Isti broj - Isto slovo"'></NoDataToDisplay>  
 </template>
 
 <style>

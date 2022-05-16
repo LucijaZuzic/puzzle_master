@@ -6,10 +6,10 @@ import {
   getMetadata,
   deleteObject,
 } from "firebase/storage";
-import { projectStorage, friendsRef } from "../main.js";
+import { projectStorage, friendsRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { usersRef } from "../main.js";
-import { cryptogramsRef } from "../main.js";
+import { usersRef } from "../firebase_main.js"
+import { cryptogramsRef } from "../firebase_main.js"
 
 import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
@@ -104,9 +104,9 @@ export default {
   },
   methods: { 
     getAuthorUserRecord() {
-      let some_id = this.author;
+      let some_id = this.author; let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = this.user.uid; let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -136,16 +136,16 @@ export default {
                 });
               })
               .then(() => {
-                this.authorUserRecord = newRecord;
+                my_activity.authorUserRecord = newRecord;
               });
           }
         });
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater;
+      let some_id = this.updater; let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = this.user.uid; let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -175,16 +175,16 @@ export default {
                 });
               })
               .then(() => {
-                this.updaterUserRecord = newRecord;
+                my_activity.updaterUserRecord = newRecord;
               });
           }
         });
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = [];
+      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i];
+        let some_id = this.permissions[i]; let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -215,7 +215,7 @@ export default {
                   });
                 })
                 .then(() => {
-                  this.permissionsUserRecords.push(newRecord);
+                  my_activity.permissionsUserRecords.push(newRecord);
                 });
             }
           });
@@ -259,7 +259,6 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let displayName = "";
       let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
@@ -1953,7 +1952,7 @@ export default {
       />
     </div>
     <div class="myrow" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 50%" />
+      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
     <div class="myrow" v-if="!image">
       <va-alert
@@ -1995,6 +1994,29 @@ export default {
         :max-rows="5"
         :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
       />
+    </div>
+    <div class="myrow">
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
+          authorUserRecord.email
+        }})</va-chip
+      >
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
+      >
+      <br />
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
+          updaterUserRecord.email
+        }})</va-chip
+      >
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
+      >
     </div>
     <div class="myrow">
       <va-button

@@ -1,6 +1,6 @@
 <script>
-import { nonogramsRef, friendsRef } from "../main.js";
-import { usersRef } from "../main.js";
+import { nonogramsRef, friendsRef } from "../firebase_main.js"
+import { usersRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
 
@@ -43,7 +43,6 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let displayName = "";
       let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");

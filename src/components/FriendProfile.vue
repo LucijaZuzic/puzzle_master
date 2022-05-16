@@ -1,22 +1,29 @@
 <script>
 import NoDataToDisplay from "./NoDataToDisplay.vue";
 import Navbar from "./Navbar.vue";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, OAuthCredential, onAuthStateChanged } from "firebase/auth";
 import ProfileNonogram from "./ProfileNonogram.vue";
-import { usersRef, friendsRef, friendRequestsRef } from "../main.js";
+import { usersRef, friendsRef, friendRequestsRef } from "../firebase_main.js";
 import ProfileInitial from "./ProfileInitial.vue";
 import ProfileIntegram from "./ProfileIntegram.vue";
 import ProfileNumberLetter from "./ProfileNumberLetter.vue";
 import ProfileEight from "./ProfileEight.vue";
 import ProfileNumberCrossword from "./ProfileNumberCrossword.vue";
-import ProfileCryptogram from "./ProfileCryptogram.vue"; 
+import ProfileCryptogram from "./ProfileCryptogram.vue";
 import FriendRequestsReceivedTable from "./FriendRequestsReceivedTable.vue";
 import FriendRequestsSentTable from "./FriendRequestsSentTable.vue";
-import FriendsTable from "./FriendsTable.vue"; 
+import FriendsTable from "./FriendsTable.vue";
+import LoadingBar from "./LoadingBar.vue";
 export default {
   methods: {
-    checkIfUsersAreFriends(me, other) {
-      let areFriendsTemp = me == other;
+    checkStatus() {
+      let my_activity = this;
+      let me = this.user.uid;
+      let other = this.friend.uid;
+      if (me == other) {
+        this.areFriends = true;
+        this.requestSent = true;
+      }
       friendsRef
         .get()
         .then(function (snapshotUser) {
@@ -24,31 +31,30 @@ export default {
             let id1 = childSnapshotUser.get("user1");
             let id2 = childSnapshotUser.get("user2");
             if ((id1 == me && id2 == other) || (id2 == me && id1 == other)) {
-              areFriendsTemp = true;
+              my_activity.areFriends = true;
             }
           });
-        }) 
+        })
         .then(() => {
-          this.areFriends = areFriendsTemp;
+          friendRequestsRef
+            .get()
+            .then(function (snapshotUser) {
+              snapshotUser.forEach(function (childSnapshotUser) {
+                let id1 = childSnapshotUser.get("sender");
+                let id2 = childSnapshotUser.get("receiver");
+                if (
+                  (id1 == me && id2 == other) ||
+                  (id2 == me && id1 == other)
+                ) {
+                  my_activity.requestSent = true;
+                }
+              });
+            })
+            .then(() => {
+              this.fully_loaded = true;
+            });
         });
     },
-    checkIfRequestIsSent(me, other) {
-      let requestSentTemp = me == other
-      friendRequestsRef
-        .get()
-        .then(function (snapshotUser) {
-          snapshotUser.forEach(function (childSnapshotUser) {
-            let id1 = childSnapshotUser.get("sender");
-            let id2 = childSnapshotUser.get("receiver");
-            if ((id1 == me && id2 == other) || (id2 == me && id1 == other)) {
-              requestSentTemp = true;
-            }
-          });
-        }) 
-        .then(() => {
-          this.requestSent = requestSentTemp;
-        });
-    }, 
     authenticate() {
       const auth = getAuth();
       onAuthStateChanged(auth, (user) => {
@@ -65,6 +71,8 @@ export default {
       });
       let requestedEmail = this.$route.params.email;
       let someUser = { email: "", displayName: "", uid: "" };
+      let my_activity = this;
+      let me = this.user.uid;
       usersRef
         .get()
         .then(function (snapshotUser) {
@@ -81,15 +89,20 @@ export default {
           });
         })
         .then(() => {
-          this.friend = someUser;
+          my_activity.friend = someUser;
+          my_activity.checkStatus();
         });
     },
     sendFriendRequest(me, other) {
-      friendRequestsRef.add({
-        sender: me,
-        receiver: other,
-        time: new Date()
-      });
+      friendRequestsRef
+        .add({
+          sender: me,
+          receiver: other,
+          time: new Date(),
+        })
+        .then(() => {
+          this.$forceUpdate();
+        });
     },
     removeFriend(me, other) {
       friendsRef
@@ -104,7 +117,9 @@ export default {
             }
           });
         })
-        .then(() => {});
+        .then(() => {
+          this.$forceUpdate();
+        });
     },
     setVisibility() {
       usersRef
@@ -130,13 +145,15 @@ export default {
       }
     );
   },
+  beforeUpdate() {
+    this.checkStatus();
+  },
   mounted() {
     this.authenticate();
-    this.checkIfUsersAreFriends();
-    this.checkIfRequestIsSent();
   },
   data() {
     return {
+      fully_loaded: false,
       areFriends: false,
       requestSent: false,
       user: { email: "", displayName: "", uid: "" },
@@ -157,14 +174,18 @@ export default {
     NoDataToDisplay,
     FriendsTable,
     FriendRequestsSentTable,
-    FriendRequestsReceivedTable
-},
+    FriendRequestsReceivedTable,
+    LoadingBar,
+  },
 };
 </script>
 
 <template>
   <Navbar></Navbar>
-  <body class="mybody">
+  <body class="mybody" v-if="!fully_loaded">
+    <LoadingBar></LoadingBar>
+  </body>
+  <body class="mybody" v-else>
     <span
       v-if="friend.email != '' || friend.displayName != '' || friend.uid != ''"
     >
@@ -173,9 +194,25 @@ export default {
           <h1 class="display-1">
             Profil korisnika {{ friend.displayName }} ({{ friend.email }})
           </h1>
-          <va-icon v-if="areFriends" @click="removeFriend(user.uid, friend.uid)" name="person_remove" size="large"></va-icon>
-          <va-icon v-if="!areFriends && !requestSent" @click="sendFriendRequest(user.uid, friend.uid)" name="person_add" size="large"></va-icon>
-          <va-icon v-if="!areFriends && requestSent" name="person_add_disabled" size="large"></va-icon>
+        </div>
+        <div class="myrow">
+          <va-icon
+            v-if="areFriends"
+            @click="removeFriend(user.uid, friend.uid)"
+            name="person_remove"
+            size="large"
+          ></va-icon>
+          <va-icon
+            v-if="!areFriends && !requestSent"
+            @click="sendFriendRequest(user.uid, friend.uid)"
+            name="person_add"
+            size="large"
+          ></va-icon>
+          <va-icon
+            v-if="!areFriends && requestSent"
+            name="person_add_disabled"
+            size="large"
+          ></va-icon>
         </div>
       </span>
       <span v-else>
@@ -191,10 +228,10 @@ export default {
               $forceUpdate();
             "
             style="margin-left: 10px; margin-top: 10px"
-          ><span v-if="friend.visible == true"><va-icon name="lock_open" />&nbsp;Javno</span>
-            <span v-else
-              ><va-icon name="lock" />&nbsp;Privatno</span
+            ><span v-if="friend.visible == true"
+              ><va-icon name="lock_open" />&nbsp;Javno</span
             >
+            <span v-else><va-icon name="lock" />&nbsp;Privatno</span>
           </va-button>
           <va-button @click="setVisibility()"
             >Promjeni vidljivost profila</va-button
@@ -241,8 +278,16 @@ export default {
         <va-tabs v-model="friendOption" style="width: 100%">
           <template #tabs>
             <va-tab label="Prijatelji" name="friend" />
-            <va-tab label="Primljeni zahtjevi za prijateljstvo" name="received" v-if="user.email == friend.email" /> 
-            <va-tab label="Poslani zahtjevi za prijateljstvo" name="sent" />
+            <va-tab
+              label="Primljeni zahtjevi za prijateljstvo"
+              name="received"
+              v-if="user.email == friend.email"
+            />
+            <va-tab
+              label="Poslani zahtjevi za prijateljstvo"
+              name="sent"
+              v-if="user.email == friend.email"
+            />
           </template>
         </va-tabs>
         <FriendsTable
@@ -272,5 +317,4 @@ export default {
   </body>
 </template>
 
-<style>
-</style>
+<style></style>

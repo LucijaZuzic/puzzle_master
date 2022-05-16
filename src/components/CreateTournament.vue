@@ -1,7 +1,7 @@
  
 <script>
     import Navbar from './Navbar.vue'
-    import { tournamentsRef } from "../main.js"
+    import { tournamentsRef } from "../firebase_main.js"
     import IntegramTable from "./IntegramTable.vue"
     import NonogramTable from "./NonogramTable.vue" 
     import CryptogramTable from './CryptogramTable.vue'
@@ -176,17 +176,32 @@
 <template> 
   <Navbar></Navbar>   
   <body class="mybody"> 
-    <va-time-input v-model="start_time" @update:model-value="writeTimeToStart()"/>
-    <va-date-input v-model="start_date" @update:model-value="writeDateToStart()"/>
-    <va-time-input v-model="end_time" @update:model-value="writeTimeToEnd()"/>
-    <va-date-input v-model="end_date" @update:model-value="writeDateToEnd()"/>
+    <div class="myrow">
+        <h1 class="display-1">Novi turnir</h1>
+    </div>
+    <div class="myrow">
+        <h2 class="display-2">Odabir vremena</h2>
+    </div>
+    <div class="myrow">
+        <va-time-input v-model="start_time" @update:model-value="writeTimeToStart()"/>
+    </div>
+    <div class="myrow">
+        <va-date-input v-model="start_date" @update:model-value="writeDateToStart()"/>
+    </div>
+    <div class="myrow">
+        <va-time-input v-model="end_time" @update:model-value="writeTimeToEnd()"/>
+    </div>
+    <div class="myrow">
+        <va-date-input v-model="end_date" @update:model-value="writeDateToEnd()"/>
+    </div>
     <div class="myrow" v-if="!is_correct_time">
         <va-alert style="white-space: pre-wrap;" color="danger" title="Nije odabrano ispravno vrijeme" center class="mb-4">
             {{time_alert}}
         </va-alert> 
     </div> 
-    <br>
-    <br>
+    <div class="myrow">
+        <h2 class="display-2">Odabir zagonetki</h2>
+    </div>
     <va-tabs v-model="value"  style="width: 100%;">
         <template #tabs> 
             <va-tab

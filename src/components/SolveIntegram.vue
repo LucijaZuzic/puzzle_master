@@ -1,9 +1,9 @@
 <script>
 import { ref, getDownloadURL } from "firebase/storage";
-import { projectStorage } from "../main.js";
-import { integramsRef } from "../main.js";
-import { usersRef } from "../main.js";
-import { integramsRecordsRef } from "../main.js";
+import { projectStorage } from "../firebase_main.js"
+import { integramsRef } from "../firebase_main.js"
+import { usersRef } from "../firebase_main.js"
+import { integramsRecordsRef, friendsRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import Navbar from "./Navbar.vue";
@@ -16,6 +16,9 @@ export default {
   },
   data() {
     return {
+      category_to_display: 1,
+      value_to_display: 1,
+      urls: [],
       fully_loaded: false,
       title: "",
       user: null,
@@ -79,11 +82,12 @@ export default {
       }
     );
   },
-  methods: { 
-   getAuthorUserRecord() {
-      let some_id = this.author;
+  methods: {
+    getAuthorUserRecord() {
+      let some_id = this.author; let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
       let me = this.user.uid;
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -113,16 +117,17 @@ export default {
                 });
               })
               .then(() => {
-                this.authorUserRecord = newRecord;
+                my_activity.authorUserRecord = newRecord;
               });
           }
         });
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater;
+      let some_id = this.updater; let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
       let me = this.user.uid;
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -152,16 +157,16 @@ export default {
                 });
               })
               .then(() => {
-                this.updaterUserRecord = newRecord;
+                my_activity.updaterUserRecord = newRecord;
               });
           }
         });
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = [];
+      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid; 
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i];
+        let some_id = this.permissions[i]; let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -192,7 +197,7 @@ export default {
                   });
                 })
                 .then(() => {
-                  this.permissionsUserRecords.push(newRecord);
+                  my_activity.permissionsUserRecords.push(newRecord);
                 });
             }
           });
@@ -1173,6 +1178,14 @@ export default {
         });
     },
     getPicture() {
+      this.urls = [];
+      let me = this;
+      for (let i = 0; i < this.numcategories; i++) {
+        this.urls.push([]);
+        for (let j = 0; j < this.numvalues; j++) {
+          this.urls[i].push("");
+        }
+      }
       for (let i = 0; i < this.numcategories; i++) {
         for (let j = 0; j < this.numvalues; j++) {
           if (
@@ -1188,12 +1201,20 @@ export default {
                 // Get the download URL
                 getDownloadURL(reference)
                   .then((url) => {
-                    document.getElementById("img" + j + ":" + i).src = url;
+                    me.urls[j][i] = url;
+                    this.$forceUpdate();
+                    if (document.getElementById("img" + j + ":" + i)) {
+                      document.getElementById("img" + j + ":" + i).src = url;
+                    }
                   })
                   .catch((error) => {});
               } else {
                 let comp_url = URL.createObjectURL(file);
-                document.getElementById("img" + j + ":" + i).src = comp_url;
+                me.urls[j][i] = comp_url;
+                this.$forceUpdate();
+                if (document.getElementById("img" + j + ":" + i)) {
+                  document.getElementById("img" + j + ":" + i).src = comp_url;
+                }
               }
             }
           }
@@ -1258,100 +1279,6 @@ export default {
       ><br />
     </div>
     <br />
-    <div class="myrow" style="max-height: 650px">
-      <va-infinite-scroll disabled :load="() => {}">
-        <div class="myrow">
-          <va-card
-            v-for="j in numcategories"
-            :color="colors_for_number[j - 1]"
-            style="margin-bottom: 20px"
-            v-bind:key="j"
-            :class="{
-              first: j == 1,
-              second: j == 2,
-              third: j == 3,
-              fourth: j == 4,
-              fifth: j == 5,
-            }"
-          >
-            <va-card-title>
-              <span></span>
-              <va-chip :color="colors_for_number[j - 1]"
-                >{{ j }}. kategorija&nbsp;<va-icon
-                  v-if="is_image[j - 1] == false"
-                  name="title" /><va-icon v-else name="photo"
-              /></va-chip>
-            </va-card-title>
-            <va-card-content style="background-color: white">
-              <br />
-              <div class="myrow">
-                <va-chip :color="colors_for_number[j - 1]">{{
-                  category_names[j - 1]
-                }}</va-chip>
-              </div>
-              <va-divider></va-divider>
-              <span v-for="k in numvalues" v-bind:key="k">
-                <div
-                  class="myrow"
-                  v-if="my_solution[order[0][k - 1]][j - 1] != ''"
-                >
-                  <va-chip
-                    :color="colors_for_number[j - 1]"
-                    style="display: inline-block; overflow-wrap: anywhere"
-                    v-if="
-                      my_solution[order[0][k - 1]][j - 1] != '' &&
-                      (my_solution[order[0][k - 1]][j - 1] ==
-                        category_values[order[0][k - 1]][j - 1] ||
-                        (my_solution[order[0][k - 1]][j - 1] !=
-                          category_values[order[0][k - 1]][j - 1] &&
-                          !show_error))
-                    "
-                  >
-                    <span v-if="is_image[j - 1] == true">
-                      {{
-                        my_solution[order[0][k - 1]][j - 1]
-                          .split("/")
-                          [
-                            my_solution[order[0][k - 1]][j - 1].split("/")
-                              .length - 1
-                          ].split(".")[0]
-                      }}</span
-                    >
-                    <span v-else>{{
-                      my_solution[order[0][k - 1]][j - 1]
-                    }}</span>
-                  </va-chip>
-                  <va-chip
-                    style="display: inline-block; overflow-wrap: anywhere"
-                    color="danger"
-                    v-if="
-                      my_solution[order[0][k - 1]][j - 1] != '' &&
-                      my_solution[order[0][k - 1]][j - 1] !=
-                        category_values[order[0][k - 1]][j - 1] &&
-                      show_error
-                    "
-                  >
-                    <span v-if="is_image[j - 1] == true">
-                      {{
-                        my_solution[order[0][k - 1]][j - 1]
-                          .split("/")
-                          [
-                            my_solution[order[0][k - 1]][j - 1].split("/")
-                              .length - 1
-                          ].split(".")[0]
-                      }}</span
-                    >
-                    <span v-else>{{
-                      my_solution[order[0][k - 1]][j - 1]
-                    }}</span>
-                  </va-chip>
-                </div>
-              </span>
-            </va-card-content>
-          </va-card>
-        </div>
-      </va-infinite-scroll>
-    </div>
     <br />
     <div class="myrow" v-if="alert">
       <va-alert
@@ -1605,90 +1532,207 @@ export default {
         ><va-icon name="delete" />&nbsp;Izbriši</va-button
       >
     </div>
-    <div class="myrow" style="max-height: 650px">
-      <va-infinite-scroll disabled :load="() => {}">
-        <div class="myrow" v-for="i in numcategories" v-bind:key="i">
-          <va-card
-            v-if="too_long[i - 1] == true && is_image[i - 1] == false"
-            :color="colors_for_number[i - 1]"
-          >
-            <va-card-title
-              ><va-chip :color="colors_for_number[i - 1]"
-                >{{ i }}. kategorija&nbsp;
-                <va-icon v-if="is_image[i - 1] == false" name="title" /><va-icon
-                  v-else
-                  name="photo" /></va-chip
-            ></va-card-title>
-            <va-card-content style="background-color: white">
-              <br />
-              <va-list
-                v-if="too_long[i - 1] == true && is_image[i - 1] == false"
-              >
-                <va-list-item v-for="j in numvalues" v-bind:key="j">
-                  <va-list-item-section avatar>
-                    <span
-                      :class="{
-                        padded: true,
-                        first: i == 1,
-                        second: i == 2,
-                        third: i == 3,
-                        fourth: i == 4,
-                        fifth: i == 5,
-                      }"
-                    >
-                      {{ i }}{{ alphabet[j - 1] }}
-                    </span>
-                  </va-list-item-section>
-
-                  <va-list-item-section style="overflow-wrap: anywhere">
-                    {{ category_values[j - 1][i - 1] }}
-                  </va-list-item-section>
-                </va-list-item>
-              </va-list>
-            </va-card-content>
-          </va-card>
-          <va-card
-            v-if="is_image[i - 1] == true"
-            :color="colors_for_number[i - 1]"
-          >
-            <va-card-title
-              ><va-chip :color="colors_for_number[i - 1]"
-                >{{ i }}. kategorija&nbsp;
-                <va-icon v-if="is_image[i - 1] == false" name="title" /><va-icon
-                  v-else
-                  name="photo" /></va-chip
-            ></va-card-title>
-            <va-card-content style="background-color: white">
-              <br />
+    <div class="myrow">
+      <va-tabs v-model="category_to_display">
+        <template #tabs>
+          <span v-for="i in numcategories" v-bind:key="i">
+            <va-tab :name="i">
+              <span>{{ i }}. kategorija</span>
+            </va-tab>
+          </span>
+        </template>
+      </va-tabs>
+    </div>
+    <div class="myrow">
+      <span
+        v-for="j in numcategories"
+        v-bind:key="j"
+        :color="colors_for_number[j - 1]"
+        style="margin-bottom: 20px"
+      >
+        <va-card
+          v-if="j == category_to_display"
+          :color="colors_for_number[j - 1]"
+          style="margin-bottom: 20px"
+          :class="{
+            first: j == 1,
+            second: j == 2,
+            third: j == 3,
+            fourth: j == 4,
+            fifth: j == 5,
+          }"
+        >
+          <va-card-title>
+            <span></span>
+            <va-chip :color="colors_for_number[j - 1]"
+              >{{ j }}. kategorija&nbsp;<va-icon
+                v-if="is_image[j - 1] == false"
+                name="title" /><va-icon v-else name="photo"
+            /></va-chip>
+          </va-card-title>
+          <va-card-content style="background-color: white">
+            <br />
+            <div class="myrow">
+              <va-chip :color="colors_for_number[j - 1]">{{
+                category_names[j - 1]
+              }}</va-chip>
+            </div>
+            <va-divider></va-divider>
+            <span v-for="k in numvalues" v-bind:key="k">
               <div
-                v-for="j in numvalues"
-                v-bind:key="j"
-                class="image_container"
+                class="myrow"
+                v-if="my_solution[order[0][k - 1]][j - 1] != ''"
               >
+                <va-chip
+                  :color="colors_for_number[j - 1]"
+                  style="display: inline-block; overflow-wrap: anywhere"
+                  v-if="
+                    my_solution[order[0][k - 1]][j - 1] != '' &&
+                    (my_solution[order[0][k - 1]][j - 1] ==
+                      category_values[order[0][k - 1]][j - 1] ||
+                      (my_solution[order[0][k - 1]][j - 1] !=
+                        category_values[order[0][k - 1]][j - 1] &&
+                        !show_error))
+                  "
+                >
+                  <span v-if="is_image[j - 1] == true">
+                    {{
+                      my_solution[order[0][k - 1]][j - 1]
+                        .split("/")
+                        [
+                          my_solution[order[0][k - 1]][j - 1].split("/")
+                            .length - 1
+                        ].split(".")[0]
+                    }}</span
+                  >
+                  <span v-else>{{ my_solution[order[0][k - 1]][j - 1] }}</span>
+                </va-chip>
+                <va-chip
+                  style="display: inline-block; overflow-wrap: anywhere"
+                  color="danger"
+                  v-if="
+                    my_solution[order[0][k - 1]][j - 1] != '' &&
+                    my_solution[order[0][k - 1]][j - 1] !=
+                      category_values[order[0][k - 1]][j - 1] &&
+                    show_error
+                  "
+                >
+                  <span v-if="is_image[j - 1] == true">
+                    {{
+                      my_solution[order[0][k - 1]][j - 1]
+                        .split("/")
+                        [
+                          my_solution[order[0][k - 1]][j - 1].split("/")
+                            .length - 1
+                        ].split(".")[0]
+                    }}</span
+                  >
+                  <span v-else>{{ my_solution[order[0][k - 1]][j - 1] }}</span>
+                </va-chip>
+              </div>
+              <div class="myrow" v-else><va-chip color="warning">?</va-chip></div>
+            </span>
+          </va-card-content>
+        </va-card>
+      </span>
+    </div>
+    <span v-for="i in numcategories" v-bind:key="i">
+      <div
+        class="myrow"
+        v-if="
+          too_long[i - 1] == true &&
+          is_image[i - 1] == false &&
+          i == category_to_display
+        "
+      >
+        <va-card :color="colors_for_number[i - 1]">
+          <!--<va-card-title
+            ><va-chip :color="colors_for_number[i - 1]"
+              >{{ i }}. kategorija&nbsp;
+              <va-icon v-if="is_image[i - 1] == false" name="title" /><va-icon
+                v-else
+                name="photo" /></va-chip
+          ></va-card-title>-->
+          <va-card-content style="background-color: white">
+            <!--<br />-->
+            <va-list v-if="too_long[i - 1] == true && is_image[i - 1] == false">
+              <va-list-item v-for="j in numvalues" v-bind:key="j">
+                <va-list-item-section avatar>
+                  <span
+                    :class="{
+                      padded: true,
+                      first: i == 1,
+                      second: i == 2,
+                      third: i == 3,
+                      fourth: i == 4,
+                      fifth: i == 5,
+                    }"
+                  >
+                    {{ i }}{{ alphabet[j - 1] }}
+                  </span>
+                </va-list-item-section>
+
+                <va-list-item-section style="overflow-wrap: anywhere">
+                  {{ category_values[j - 1][i - 1] }}
+                </va-list-item-section>
+              </va-list-item>
+            </va-list>
+          </va-card-content>
+        </va-card>
+      </div>
+      <div
+        class="myrow"
+        v-if="is_image[i - 1] == true && i == category_to_display"
+      >
+        <va-card :color="colors_for_number[i - 1]">
+          <!--<va-card-title
+              ><va-chip :color="colors_for_number[i - 1]"
+                >{{ i }}. kategorija&nbsp;
+                <va-icon v-if="is_image[i - 1] == false" name="title" /><va-icon
+                  v-else
+                  name="photo" /></va-chip
+            ></va-card-title>-->
+          <va-card-content style="background-color: white">
+            <!--<br />-->
+            <va-tabs
+              v-model="value_to_display"
+              :color="colors_for_number[i - 1]"
+            >
+              <template #tabs>
+                <span v-for="val in numvalues" v-bind:key="val">
+                  <va-tab :name="val">
+                    <span>{{ i }}{{ alphabet[val - 1] }}</span>
+                  </va-tab>
+                </span>
+              </template>
+            </va-tabs>
+            <span v-for="j in numvalues" v-bind:key="j">
+              <div v-if="j == value_to_display" class="image_container">
                 <img
                   :id="'img' + (j - 1) + ':' + (i - 1)"
                   alt="Nema slike"
+                  :src="urls[j - 1][i - 1]"
                   style="width: 100%"
                 />
-                <div
-                  :class="{
-                    padded: true,
-                    topleft: true,
-                    first: i == 1,
-                    second: i == 2,
-                    third: i == 3,
-                    fourth: i == 4,
-                    fifth: i == 5,
-                  }"
-                >
-                  {{ i }}{{ alphabet[j - 1] }}
-                </div>
+                <!--<div
+                    :class="{
+                      padded: true,
+                      topleft: true,
+                      first: i == 1,
+                      second: i == 2,
+                      third: i == 3,
+                      fourth: i == 4,
+                      fifth: i == 5,
+                    }"
+                  >
+                    {{ i }}{{ alphabet[j - 1] }}
+                  </div>-->
               </div>
-            </va-card-content>
-          </va-card>
-        </div>
-      </va-infinite-scroll>
-    </div>
+            </span>
+          </va-card-content>
+        </va-card>
+      </div>
+    </span>
     <div class="myrow">
       <va-card>
         <va-card-title>Naslov zagonetke</va-card-title>
@@ -1804,7 +1848,7 @@ th {
 .image_container {
   display: inline-block;
   position: relative;
-  width: 19%;
+  width: 100%;
   margin-right: 1%;
   text-align: center;
 }

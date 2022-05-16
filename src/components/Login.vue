@@ -1,5 +1,5 @@
 <script>
-import { ui, uiConfig } from '../main.js'
+import { ui, uiConfig } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from './Navbar.vue'
 

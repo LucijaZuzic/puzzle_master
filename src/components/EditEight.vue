@@ -1,6 +1,6 @@
 <script>
-import { eightsRef, friendsRef } from "../main.js";
-import { usersRef } from "../main.js";
+import { eightsRef, friendsRef } from "../firebase_main.js"
+import { usersRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   ref,
@@ -9,7 +9,7 @@ import {
   getMetadata,
   deleteObject,
 } from "firebase/storage";
-import { projectStorage } from "../main.js";
+import { projectStorage } from "../firebase_main.js"
 
 import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
@@ -21,6 +21,7 @@ export default {
   },
   data() {
     return {
+      dir_to_display: null,
       fully_loaded: false,
       word_warning: "",
       word: "",
@@ -116,11 +117,11 @@ export default {
         this.imageURL = comp_url;
         this.fully_loaded = true;
       }
-    }, 
+    },
     getAuthorUserRecord() {
-      let some_id = this.author;
+      let some_id = this.author; let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = this.user.uid; let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -150,16 +151,16 @@ export default {
                 });
               })
               .then(() => {
-                this.authorUserRecord = newRecord;
+                my_activity.authorUserRecord = newRecord;
               });
           }
         });
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater;
+      let some_id = this.updater; let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = this.user.uid; let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -189,16 +190,16 @@ export default {
                 });
               })
               .then(() => {
-                this.updaterUserRecord = newRecord;
+                my_activity.updaterUserRecord = newRecord;
               });
           }
         });
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = [];
+      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i];
+        let some_id = this.permissions[i]; let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -229,7 +230,7 @@ export default {
                   });
                 })
                 .then(() => {
-                  this.permissionsUserRecords.push(newRecord);
+                  my_activity.permissionsUserRecords.push(newRecord);
                 });
             }
           });
@@ -268,12 +269,11 @@ export default {
         }
       }
     },
-   checkIfUserExists() {
+    checkIfUserExists() {
       let email = this.collaborator;
       let found = false;
       let hidden = true;
       let uid = "";
-      let displayName = "";
       let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
@@ -1435,41 +1435,70 @@ export default {
         0
       "
     >
-      <va-infinite-scroll disabled :load="() => {}">
-        <div style="max-height: 320px">
+      <va-tabs v-model="dir_to_display">
+        <template #tabs>
+          <va-tab v-if="words_by_dir[0].length > 0" name="0">
+            <span>&#8598;</span>
+          </va-tab>
           <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
-            <va-chip
-              outline
-              v-if="words_in_dir.length > 0"
-              style="padding: 20px; margin-left: 20px; margin-top: 20px"
-            >
-              <span>
-                <va-chip v-if="i == 0">&#8598;</va-chip>
-                <va-chip v-if="i == 1">&#8592;</va-chip>
-                <va-chip v-if="i == 2">&#8601;</va-chip>
-                <va-chip v-if="i == 3">&#8593;</va-chip>
-                <va-chip v-if="i == 4">&#8595;</va-chip>
-                <va-chip v-if="i == 5">&#8599;</va-chip>
-                <va-chip v-if="i == 6">&#8594;</va-chip>
-                <va-chip v-if="i == 7">&#8600;</va-chip>
-                &nbsp;
-                <va-icon @click="remove_dir(i)" name="delete" />
-                <br />
-                <br />
-                <div style="max-height: 200px">
-                  <va-infinite-scroll disabled :load="() => {}">
-                    <div v-for="(word, j) in words_in_dir" v-bind:key="j">
-                      {{ word[2] }}&nbsp;({{ word[1] + 1 }},{{ word[0] + 1 }})
-                      &nbsp;
-                      <va-icon @click="remove_word(i, j)" name="delete" />
-                    </div>
-                  </va-infinite-scroll>
-                </div>
-              </span>
-            </va-chip>
+            <va-tab v-if="words_in_dir.length > 0 && i > 0" :name="i">
+              <span v-if="i == 1">&#8592;</span>
+              <span v-if="i == 2">&#8601;</span>
+              <span v-if="i == 3">&#8593;</span>
+              <span v-if="i == 4">&#8595;</span>
+              <span v-if="i == 5">&#8599;</span>
+              <span v-if="i == 6">&#8594;</span>
+              <span v-if="i == 7">&#8600;</span>
+            </va-tab>
           </span>
-        </div>
-      </va-infinite-scroll>
+        </template>
+      </va-tabs>
+    </div>
+    <div
+      class="myrow"
+      v-if="
+        words_by_dir[0].length +
+          words_by_dir[1].length +
+          words_by_dir[2].length +
+          words_by_dir[3].length +
+          words_by_dir[4].length +
+          words_by_dir[5].length +
+          words_by_dir[6].length +
+          words_by_dir[7].length >
+        0
+      "
+    >
+      <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
+        <va-chip
+          outline
+          v-if="words_in_dir.length > 0 && i == dir_to_display"
+          style="padding: 20px; margin-left: 20px; margin-top: 20px"
+        >
+          <span>
+            <va-chip v-if="i == 0">&#8598;</va-chip>
+            <va-chip v-if="i == 1">&#8592;</va-chip>
+            <va-chip v-if="i == 2">&#8601;</va-chip>
+            <va-chip v-if="i == 3">&#8593;</va-chip>
+            <va-chip v-if="i == 4">&#8595;</va-chip>
+            <va-chip v-if="i == 5">&#8599;</va-chip>
+            <va-chip v-if="i == 6">&#8594;</va-chip>
+            <va-chip v-if="i == 7">&#8600;</va-chip>
+            &nbsp;
+            <va-icon @click="remove_dir(i)" name="delete" />
+            <br />
+            <br />
+            <div style="max-height: 200px">
+              <va-infinite-scroll disabled :load="() => {}">
+                <div v-for="(word, j) in words_in_dir" v-bind:key="j">
+                  {{ word[2] }}&nbsp;({{ word[1] + 1 }},{{ word[0] + 1 }})
+                  &nbsp;
+                  <va-icon @click="remove_word(i, j)" name="delete" />
+                </div>
+              </va-infinite-scroll>
+            </div>
+          </span>
+        </va-chip>
+      </span>
     </div>
     <div class="myrow">
       <va-button
@@ -1488,7 +1517,7 @@ export default {
       />
     </div>
     <div class="myrow" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 50%" />
+      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
     <div class="myrow" v-if="!image">
       <va-alert
@@ -1530,6 +1559,29 @@ export default {
         :max-rows="5"
         :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
       />
+    </div>
+    <div class="myrow">
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
+          authorUserRecord.email
+        }})</va-chip
+      >
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
+      >
+      <br />
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
+          updaterUserRecord.email
+        }})</va-chip
+      >
+      <va-chip
+        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
+      >
     </div>
     <div class="myrow">
       <va-button

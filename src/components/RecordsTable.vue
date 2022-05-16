@@ -1,14 +1,33 @@
  
 <script>
-import { usersRef, friendsRef } from "../main.js";
+import { usersRef, friendsRef } from "../firebase_main.js"
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import NoDataToDisplay from "./NoDataToDisplay.vue";
+import LoadingBar from "./LoadingBar.vue";
 export default {
   components: {
     NoDataToDisplay,
+    LoadingBar
+  },
+  mounted() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User
+        this.user = user;
+        // ...
+      } else {
+        // User is signed ouvt
+        // ...
+      }
+      return true;
+    });
   },
   props: ["dbRef", "puzzleId", "userId", "start_time", "end_time"],
   data() {
     return {
+      fully_loaded: false,
       user_records: [],
       selectedItemsEmitted: [],
       new_item: "",
@@ -24,6 +43,7 @@ export default {
       sortingOrder: "asc",
       perPage: 10,
       currentPage: 1,
+      user: null,
       columns: [
         { key: "user_display_name", sortable: true },
         { key: "user_email", sortable: true },
@@ -89,7 +109,7 @@ export default {
                   let user_display_name = "Skriveno";
                   let user_email = "skriveno"; 
                   let visibility_user = childSnapshotUser.get("visible");
-                  if (visibility_user == true || me.$props.userId == idUser) {
+                  if (visibility_user == true || me.user.uid == idUser) {
                     user_display_name = childSnapshotUser.get("displayName");
                     user_email = childSnapshotUser.get("email");
                   }
@@ -100,8 +120,8 @@ export default {
                         let id1 = childSnapshotFriend.get("user1");
                         let id2 = childSnapshotFriend.get("user2");
                         if (
-                          (id1 == me.$props.userId && id2 == idUser) ||
-                          (id2 == me.$props.userId && id1 == idUser)
+                          (id1 == me.user.uid && id2 == idUser) ||
+                          (id2 == me.user.uid && id1 == idUser)
                         ) {
                           user_display_name =
                             childSnapshotFriend.get("displayName");
@@ -122,7 +142,10 @@ export default {
             });
           }
         });
-      });
+      })
+        .then(() => {
+          this.fully_loaded = true;
+        });
     },
     sortByOptions() {
       return this.columns.map(({ key }) => key);
@@ -145,6 +168,8 @@ export default {
 </script>
 
 <template>
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else>
   <span v-if="user_records.length > 0">
     <div class="myrow">
       <va-input
@@ -185,7 +210,7 @@ export default {
           margin-top: 20px;
           width: 10%;
         "
-        label="Broj pojmova na stranici"
+        label="Broj pojmova"
         class="flex mb-2 md6"
         v-model="perPage"
         :min="1"
@@ -234,6 +259,7 @@ export default {
     v-if="user_records.length <= 0"
     customMessage="Nema rekorda koji zadovoljavaju kriterije"
   ></NoDataToDisplay>
+  </span>
 </template>
 
 <style>

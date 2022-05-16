@@ -1,6 +1,6 @@
 <script> 
   
-import { usersRef } from "../main.js"
+import { usersRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth" 
 export default {
     mounted() {    

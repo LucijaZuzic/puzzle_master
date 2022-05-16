@@ -1,5 +1,5 @@
 <script> 
-import { initialsRef, initialsRecordsRef } from '../main' 
+import { initialsRef, initialsRecordsRef } from "../firebase_main.js" 
 import InitialTable from './InitialTable.vue'
 import NoDataToDisplay from './NoDataToDisplay.vue'
 
@@ -86,7 +86,7 @@ export default {
             name="collaborator"
         />
         <va-tab 
-            label="Riješio"
+            label="Rezultati"
             name="record"
       />
       </template>
@@ -98,7 +98,7 @@ export default {
   <InitialTable :friend="user" v-if="value=='collaborator' && collaboratorInitial.length > 0" selectMode="single" :puzzleList="collaboratorInitial"></InitialTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorInitial.length <= 0" customMessage="Korisnik nije suradnik niti na jednoj inicijalnoj osmosmjerci"></NoDataToDisplay>  
   <InitialTable :friend="user" v-if="value=='record' && recordInitial.length > 0" selectMode="single" :puzzleList="recordInitial"></InitialTable>  
-  <NoDataToDisplay v-if="value=='record' && recordInitial.length <= 0" customMessage="Korisnik nije riješio niti jednu inicijalnu osmosmjerku"></NoDataToDisplay>  
+  <NoDataToDisplay v-if="value=='record' && recordInitial.length <= 0" customMessage="Korisnik nije Rezultati niti jednu inicijalnu osmosmjerku"></NoDataToDisplay>  
 </template>
 
 <style>

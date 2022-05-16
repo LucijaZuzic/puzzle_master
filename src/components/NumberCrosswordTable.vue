@@ -1,16 +1,17 @@
  
 <script>
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { numberCrosswordsRef } from "../main.js";
+import { numberCrosswordsRef } from "../firebase_main.js"
 import {
   numberCrosswordsRecordsRef,
   numberCrosswordsRatingsRef,
-} from "../main.js";
+} from "../firebase_main.js"
 import RecordsTable from "./RecordsTable.vue";
 import RatingsTable from "./RatingsTable.vue";
-import { usersRef, friendsRef } from "../main.js";
-import { projectStorage } from "../main.js";
+import { usersRef, friendsRef } from "../firebase_main.js"
+import { projectStorage } from "../firebase_main.js"
 import { ref, listAll, deleteObject, getMetadata } from "firebase/storage";
+import LoadingBar from "./LoadingBar.vue";
 
 export default {
   emits: ["selectedNumberCrosswords"],
@@ -18,6 +19,7 @@ export default {
   components: {
     RecordsTable,
     RatingsTable,
+    LoadingBar
   },
   mounted() {
     if (!this.$props.friend) {
@@ -40,6 +42,7 @@ export default {
   },
   data() {
     return {
+      fully_loaded: false,
       value: "all",
       user: null,
       numberCrosswordsRecordsRef: numberCrosswordsRecordsRef,
@@ -240,11 +243,11 @@ export default {
                                               id1 == idUpdater)
                                           ) {
                                             updater_display_name =
-                                              childSnapshotAuthor.get(
+                                              childSnapshotUpdater.get(
                                                 "displayName"
                                               );
                                             updater_email =
-                                              childSnapshotUserUpdater.get(
+                                              childSnapshotUpdater.get(
                                                 "email"
                                               );
                                           }
@@ -301,7 +304,10 @@ export default {
               });
           }
         });
-      });
+      })
+        .then(() => {
+          this.fully_loaded = true;
+        });
     },
     sortByOptions() {
       return this.columns.map(({ key }) => key);
@@ -411,6 +417,8 @@ export default {
 </script>
 
 <template>
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else>
   <div class="myrow">
     <va-input
       class="flex mb-2 md6"
@@ -450,7 +458,7 @@ export default {
         margin-top: 20px;
         width: 10%;
       "
-      label="Broj pojmova na stranici"
+      label="Broj pojmova"
       class="flex mb-2 md6"
       v-model="perPage"
       :min="1"
@@ -559,8 +567,8 @@ export default {
       style="width: 100%"
     >
       <template #tabs>
-        <va-tab label="Svi rekordi" name="all" />
-        <va-tab label="Rekordi korisnika" name="mine" />
+        <va-tab label="Svi rezultati" name="all" />
+        <va-tab label="Rezultati korisnika" name="mine" />
         <va-tab label="Ocjena" name="rate" />
       </template>
     </va-tabs>
@@ -591,8 +599,8 @@ export default {
       style="width: 100%"
     >
       <template #tabs>
-        <va-tab label="Svi rekordi" name="all" />
-        <va-tab label="Rekordi korisnika" name="mine" />
+        <va-tab label="Svi rezultati" name="all" />
+        <va-tab label="Rezultati korisnika" name="mine" />
         <va-tab label="Ocjena" name="rate" />
       </template>
     </va-tabs>
@@ -620,6 +628,7 @@ export default {
       ></RecordsTable>
     </span>
   </div>
+  </span>
 </template>
 
 <style>

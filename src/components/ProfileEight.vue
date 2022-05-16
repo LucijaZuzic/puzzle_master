@@ -1,5 +1,5 @@
 <script> 
-import { eightsRef, eightsRecordsRef } from '../main' 
+import { eightsRef, eightsRecordsRef } from "../firebase_main.js" 
 import EightTable from './EightTable.vue'
 import NoDataToDisplay from './NoDataToDisplay.vue'
 
@@ -86,7 +86,7 @@ export default {
             name="collaborator"
         />
         <va-tab 
-            label="Riješio"
+            label="Rezultati"
             name="record"
       />
       </template>
@@ -98,7 +98,7 @@ export default {
   <EightTable :friend="user" v-if="value=='collaborator' && collaboratorEight.length > 0" selectMode="single" :puzzleList="collaboratorEight"></EightTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorEight.length <= 0" customMessage="Korisnik nije suradnik niti na jednoj osmosmjerci"></NoDataToDisplay>  
   <EightTable :friend="user" v-if="value=='record' && recordEight.length > 0" selectMode="single" :puzzleList="recordEight"></EightTable>  
-  <NoDataToDisplay v-if="value=='record' && recordEight.length <= 0" customMessage="Korisnik nije riješio niti jednu osmosmjerku"></NoDataToDisplay>  
+  <NoDataToDisplay v-if="value=='record' && recordEight.length <= 0" customMessage="Korisnik nije Rezultati niti jednu osmosmjerku"></NoDataToDisplay>  
 </template>
 
 <style>

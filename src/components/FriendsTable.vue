@@ -1,14 +1,17 @@
  
 <script>
-import { usersRef, friendsRef } from "../main.js";
+import { usersRef, friendsRef } from "../firebase_main.js"
 import NoDataToDisplay from "./NoDataToDisplay.vue";
+import LoadingBar from "./LoadingBar.vue";
 export default {
   components: {
     NoDataToDisplay,
+    LoadingBar
   },
   props: ["userId"],
   data() {
     return {
+      fully_loaded: false,
       friends: [],
       selectedItemsEmitted: [],
       new_item: "",
@@ -93,7 +96,7 @@ export default {
                   me.friends.push({
                     user_display_name: user_display_name,
                     user_email: user_email,
-                    time: childSnapshotFriend.get("time"),
+                    time: new Date(childSnapshotFriend.get("time").seconds * 1000),
                     user_id: id2,
                   });
                 }
@@ -118,7 +121,10 @@ export default {
             });
           }
         });
-      });
+      })
+        .then(() => {
+          this.fully_loaded = true;
+        });
     },
     sortByOptions() {
       return this.columns.map(({ key }) => key);
@@ -141,6 +147,8 @@ export default {
 </script>
 
 <template>
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else>
   <span v-if="friends.length > 0">
     <div class="myrow">
       <va-input
@@ -181,7 +189,7 @@ export default {
           margin-top: 20px;
           width: 10%;
         "
-        label="Broj pojmova na stranici"
+        label="Broj pojmova"
         class="flex mb-2 md6"
         v-model="perPage"
         :min="1"
@@ -237,6 +245,7 @@ export default {
     v-if="friends.length <= 0"
     customMessage="Korisnik nema prijatelja"
   ></NoDataToDisplay>
+  </span>
 </template>
 
 <style>

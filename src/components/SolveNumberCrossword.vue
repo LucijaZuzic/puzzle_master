@@ -1,10 +1,10 @@
 <script>
-import { numberCrosswordsRef, friendsRef } from "../main.js";
-import { numberCrosswordsRecordsRef } from "../main.js";
-import { usersRef } from "../main.js";
+import { numberCrosswordsRef, friendsRef } from "../firebase_main.js"
+import { numberCrosswordsRecordsRef } from "../firebase_main.js"
+import { usersRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { ref, getDownloadURL } from "firebase/storage";
-import { projectStorage } from "../main.js";
+import { projectStorage } from "../firebase_main.js"
 
 import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
@@ -64,9 +64,9 @@ export default {
   },
   methods: {
     getAuthorUserRecord() {
-      let some_id = this.author;
+      let some_id = this.author; let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = this.user.uid; let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -96,16 +96,16 @@ export default {
                 });
               })
               .then(() => {
-                this.authorUserRecord = newRecord;
+                my_activity.authorUserRecord = newRecord;
               });
           }
         });
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater;
+      let some_id = this.updater; let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = this.user.uid; let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -135,16 +135,16 @@ export default {
                 });
               })
               .then(() => {
-                this.updaterUserRecord = newRecord;
+                my_activity.updaterUserRecord = newRecord;
               });
           }
         });
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = [];
+      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i];
+        let some_id = this.permissions[i]; let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -175,7 +175,7 @@ export default {
                   });
                 })
                 .then(() => {
-                  this.permissionsUserRecords.push(newRecord);
+                  my_activity.permissionsUserRecords.push(newRecord);
                 });
             }
           });
@@ -940,7 +940,7 @@ export default {
       </span>
     </div>
     <div class="myrow" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 50%" />
+      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
     <div class="myrow" v-if="!image">
       <va-alert

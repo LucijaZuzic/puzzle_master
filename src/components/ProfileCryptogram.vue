@@ -1,5 +1,5 @@
 <script> 
-import { cryptogramsRef, cryptogramsRecordsRef } from '../main' 
+import { cryptogramsRef, cryptogramsRecordsRef } from "../firebase_main.js" 
 import CryptogramTable from './CryptogramTable.vue'
 import NoDataToDisplay from './NoDataToDisplay.vue'
 
@@ -86,7 +86,7 @@ export default {
             name="collaborator"
         />
         <va-tab 
-            label="Riješio"
+            label="Rezultati"
             name="record"
       />
       </template>
@@ -98,7 +98,7 @@ export default {
   <CryptogramTable :friend="user" v-if="value=='collaborator' && collaboratorCryptogram.length > 0" selectMode="single" :puzzleList="collaboratorCryptogram"></CryptogramTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorCryptogram.length <= 0" customMessage="Korisnik nije suradnik niti na jednom kriptogramu"></NoDataToDisplay>  
   <CryptogramTable :friend="user" v-if="value=='record' && recordCryptogram.length > 0" selectMode="single" :puzzleList="recordCryptogram"></CryptogramTable>  
-  <NoDataToDisplay v-if="value=='record' && recordCryptogram.length <= 0" customMessage="Korisnik nije riješio niti jedan kriptogram"></NoDataToDisplay>  
+  <NoDataToDisplay v-if="value=='record' && recordCryptogram.length <= 0" customMessage="Korisnik nije Rezultati niti jedan kriptogram"></NoDataToDisplay>  
 </template>
 
 <style>

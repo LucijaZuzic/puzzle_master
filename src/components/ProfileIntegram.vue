@@ -1,5 +1,5 @@
 <script> 
-import { integramsRef, integramsRecordsRef } from '../main' 
+import { integramsRef, integramsRecordsRef } from "../firebase_main.js" 
 import IntegramTable from './IntegramTable.vue'
 import NoDataToDisplay from './NoDataToDisplay.vue'
 
@@ -86,7 +86,7 @@ export default {
             name="collaborator"
         />
         <va-tab 
-            label="Riješio"
+            label="Rezultati"
             name="record"
       />
       </template>
@@ -98,7 +98,7 @@ export default {
   <IntegramTable :friend="user" v-if="value=='collaborator' && collaboratorIntegram.length > 0" selectMode="single" :puzzleList="collaboratorIntegram"></IntegramTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorIntegram.length <= 0" customMessage="Korisnik nije suradnik niti na jednom integramu"></NoDataToDisplay>  
   <IntegramTable :friend="user" v-if="value=='record' && recordIntegram.length > 0" selectMode="single" :puzzleList="recordIntegram"></IntegramTable>  
-  <NoDataToDisplay v-if="value=='record' && recordIntegram.length <= 0" customMessage="Korisnik nije riješio niti jedan integram"></NoDataToDisplay>   
+  <NoDataToDisplay v-if="value=='record' && recordIntegram.length <= 0" customMessage="Korisnik nije Rezultati niti jedan integram"></NoDataToDisplay>   
 </template>
 
 <style>

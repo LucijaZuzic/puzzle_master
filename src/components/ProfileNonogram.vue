@@ -1,5 +1,5 @@
 <script> 
-import { nonogramsRef, nonogramsRecordsRef } from '../main' 
+import { nonogramsRef, nonogramsRecordsRef } from "../firebase_main.js" 
 import NonogramTable from './NonogramTable.vue'
 import NoDataToDisplay from './NoDataToDisplay.vue'
 
@@ -86,7 +86,7 @@ export default {
             name="collaborator"
         />
         <va-tab 
-            label="Riješio"
+            label="Rezultati"
             name="record"
       />
       </template>
@@ -98,7 +98,7 @@ export default {
   <NonogramTable :friend="user" v-if="value=='collaborator' && collaboratorNonogram.length > 0" selectMode="single" :puzzleList="collaboratorNonogram"></NonogramTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorNonogram.length <= 0" customMessage="Korisnik nije suradnik niti na jednom nonogramu"></NoDataToDisplay>  
   <NonogramTable :friend="user" v-if="value=='record' && recordNonogram.length > 0" selectMode="single" :puzzleList="recordNonogram"></NonogramTable>  
-  <NoDataToDisplay v-if="value=='record' && recordNonogram.length <= 0" customMessage="Korisnik nije riješio niti jedan nonogram"></NoDataToDisplay> 
+  <NoDataToDisplay v-if="value=='record' && recordNonogram.length <= 0" customMessage="Korisnik nije Rezultati niti jedan nonogram"></NoDataToDisplay> 
 </template>
 
 <style>

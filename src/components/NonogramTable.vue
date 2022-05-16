@@ -1,13 +1,13 @@
- 
 <script>
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { nonogramsRef } from "../main.js";
-import { nonogramsRecordsRef, nonogramsRatingsRef } from "../main.js";
+import { nonogramsRef } from "../firebase_main.js";
+import { nonogramsRecordsRef, nonogramsRatingsRef } from "../firebase_main.js";
 import RecordsTable from "./RecordsTable.vue";
 import RatingsTable from "./RatingsTable.vue";
-import { usersRef, friendsRef } from "../main.js";
-import { projectStorage } from "../main.js";
+import { usersRef, friendsRef } from "../firebase_main.js";
+import { projectStorage } from "../firebase_main.js";
 import { ref, listAll, deleteObject, getMetadata } from "firebase/storage";
+import LoadingBar from "./LoadingBar.vue";
 
 export default {
   emits: ["selectedNonograms"],
@@ -15,6 +15,7 @@ export default {
   components: {
     RecordsTable,
     RatingsTable,
+    LoadingBar
   },
   mounted() {
     if (!this.$props.friend) {
@@ -37,6 +38,7 @@ export default {
   },
   data() {
     return {
+      fully_loaded: false,
       value: "all",
       user: null,
       nonogramsRecordsRef: nonogramsRecordsRef,
@@ -81,7 +83,7 @@ export default {
       ],
     };
   },
-  methods: { 
+  methods: {
     sendFriendRequest(me, other) {
       friendRequestsRef.add({
         sender: me,
@@ -238,13 +240,11 @@ export default {
                                               id1 == idUpdater)
                                           ) {
                                             updater_display_name =
-                                              childSnapshotAuthor.get(
+                                              childSnapshotUpdater.get(
                                                 "displayName"
                                               );
                                             updater_email =
-                                              childSnapshotUserUpdater.get(
-                                                "email"
-                                              );
+                                              childSnapshotUpdater.get("email");
                                           }
                                         });
                                       })
@@ -301,7 +301,10 @@ export default {
               });
           }
         });
-      });
+      })
+        .then(() => {
+          this.fully_loaded = true;
+        });
     },
     sortByOptions() {
       return this.columns.map(({ key }) => key);
@@ -411,212 +414,218 @@ export default {
 </script>
 
 <template>
-  <div class="myrow">
-    <va-input
-      class="flex mb-2 md6"
-      style="
-        display: inline-block;
-        margin-left: 20px;
-        margin-top: 20px;
-        width: 25%;
-      "
-      placeholder="Unesite pojam za pretragu"
-      v-model="filter"
-    />
-    <va-checkbox
-      style="display: inline-block; margin-left: 20px; margin-top: 20px"
-      class="flex mb-2 md6"
-      label="Traži cijelu riječ"
-      v-model="useCustomFilteringFn"
-    />
-    <va-input
-      style="
-        display: inline-block;
-        margin-left: 20px;
-        margin-top: 20px;
-        width: 10%;
-      "
-      label="Trenutna stranica"
-      class="flex mb-2 md6"
-      v-model="currentPage"
-      :min="1"
-      :max="Math.ceil(this.filtered.length / this.perPage)"
-      type="number"
-    />
-    <va-input
-      style="
-        display: inline-block;
-        margin-left: 20px;
-        margin-top: 20px;
-        width: 10%;
-      "
-      label="Broj pojmova na stranici"
-      class="flex mb-2 md6"
-      v-model="perPage"
-      :min="1"
-      :max="Math.ceil(this.filtered.length)"
-      type="number"
-    />
-  </div>
-  <va-data-table
-    :items="puzzles"
-    :filter="filter"
-    :columns="columns"
-    :hoverable="true"
-    :per-page="perPage"
-    selectable="selectable"
-    :select-mode="selectMode"
-    @selectionChange="
-      selectedItemsEmitted = $event.currentSelectedItems;
-      $emit('selectedNonograms', selectedItemsEmitted);
-    "
-    :current-page="currentPage"
-    v-model:sort-by="sortBy"
-    v-model:sorting-order="sortingOrder"
-    @filtered="filtered = $event.items"
-    no-data-filtered-html="Pretraga nije dala rezultate."
-    no-data-html="Nema podataka."
-    :filter-method="customFilteringFn"
-  >
-    <template #header(id)>Akcije</template>
-    <template #header(rows)>Broj redaka</template>
-    <template #header(columns)>Broj stupaca</template>
-    <template #header(colors)>Broj boja</template>
-    <template #header(rating)>Ocjena</template>
-    <template #header(title)>Naslov zagonetke</template>
-    <template #header(description)>Opis zagonetke</template>
-    <template #header(author_display_name)>Autor (ime)</template>
-    <template #header(author_email)>Autor (email)</template>
-    <template #header(updater_display_name)>Zadnji ažurirao (ime)</template>
-    <template #header(updater_email)>Zadnji ažurirao (email)</template>
-    <template #header(is_public)>Dozvola uređivanja</template>
-    <template #header(source)>Izvor zagonetke</template>
-    <template #header(time_created)>Vrijeme kreiranja</template>
-    <template #header(last_updated)>Vrijeme zadnje izmjene</template>
-    <template #header(deletePermission)>Izbriši</template>
-    <template #cell(time_created)="{ source: time_created }">
-      {{ time_created.toLocaleString() }}
-    </template>
-    <template #cell(last_updated)="{ source: last_updated }">
-      {{ last_updated.toLocaleString() }}
-    </template>
-    <template #cell(author_email)="{ source: author_email }">
-      <router-link
-        v-bind:to="{ name: 'profile', params: { email: author_email } }"
-      >
-        {{ author_email }}
-      </router-link>
-    </template>
-    <template #cell(updater_email)="{ source: updater_email }">
-      <router-link
-        v-bind:to="{ name: 'profile', params: { email: updater_email } }"
-      >
-        {{ updater_email }}
-      </router-link>
-    </template>
-    <template #cell(id)="{ source: id }">
-      <router-link v-bind:to="{ name: 'edit_nonogram', params: { id: id } }">
-        <va-icon name="mode_edit" />
-      </router-link>
-      <router-link v-bind:to="{ name: 'solve_nonogram', params: { id: id } }">
-        <va-icon name="play_arrow" />
-      </router-link>
-    </template>
-    <template #cell(deletePermission)="{ source: deletePermission }">
-      <va-icon
-        v-if="deletePermission.granted == true"
-        @click="deletePuzzle(deletePermission.id)"
-        name="delete"
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else>
+    <div class="myrow">
+      <va-input
+        class="flex mb-2 md6"
+        style="
+          display: inline-block;
+          margin-left: 20px;
+          margin-top: 20px;
+          width: 25%;
+        "
+        placeholder="Unesite pojam za pretragu"
+        v-model="filter"
       />
-    </template>
-    <template #cell(is_public)="{ source: is_public }"
-      ><span v-if="is_public">Svi</span
-      ><span v-else>Samo suradnici</span></template
+      <va-checkbox
+        style="display: inline-block; margin-left: 20px; margin-top: 20px"
+        class="flex mb-2 md6"
+        label="Traži cijelu riječ"
+        v-model="useCustomFilteringFn"
+      />
+      <va-input
+        style="
+          display: inline-block;
+          margin-left: 20px;
+          margin-top: 20px;
+          width: 10%;
+        "
+        label="Trenutna stranica"
+        class="flex mb-2 md6"
+        v-model="currentPage"
+        :min="1"
+        :max="Math.ceil(this.filtered.length / this.perPage)"
+        type="number"
+      />
+      <va-input
+        style="
+          display: inline-block;
+          margin-left: 20px;
+          margin-top: 20px;
+          width: 10%;
+        "
+        label="Broj pojmova"
+        class="flex mb-2 md6"
+        v-model="perPage"
+        :min="1"
+        :max="Math.ceil(this.filtered.length)"
+        type="number"
+      />
+    </div>
+    <va-data-table
+      :items="puzzles"
+      :filter="filter"
+      :columns="columns"
+      :hoverable="true"
+      :per-page="perPage"
+      selectable="selectable"
+      :select-mode="selectMode"
+      @selectionChange="
+        selectedItemsEmitted = $event.currentSelectedItems;
+        $emit('selectedNonograms', selectedItemsEmitted);
+      "
+      :current-page="currentPage"
+      v-model:sort-by="sortBy"
+      v-model:sorting-order="sortingOrder"
+      @filtered="filtered = $event.items"
+      no-data-filtered-html="Pretraga nije dala rezultate."
+      no-data-html="Nema podataka."
+      :filter-method="customFilteringFn"
     >
-    <template #bodyAppend>
-      <tr>
-        <td colspan="16" style="text-align: left">
-          <router-link to="/create-nonogram">
-            <va-icon color="primary" class="mr-4" name="add_circle" /> Nova
-            zagonetka
-          </router-link>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="16" class="table-example--pagination">
-          <va-pagination v-model="currentPage" input :pages="pages" />
-        </td>
-      </tr>
-    </template>
-  </va-data-table>
-  <div class="myrow" v-if="!start_time && !end_time && selectMode == 'single'">
-    <va-tabs
-      v-if="selectedItemsEmitted.length > 0"
-      v-model="value"
-      style="width: 100%"
-    >
-      <template #tabs>
-        <va-tab label="Svi rekordi" name="all" />
-        <va-tab label="Rekordi korisnika" name="mine" />
-        <va-tab label="Ocjena" name="rate" />
+      <template #header(id)>Akcije</template>
+      <template #header(rows)>Broj redaka</template>
+      <template #header(columns)>Broj stupaca</template>
+      <template #header(colors)>Broj boja</template>
+      <template #header(rating)>Ocjena</template>
+      <template #header(title)>Naslov zagonetke</template>
+      <template #header(description)>Opis zagonetke</template>
+      <template #header(author_display_name)>Autor (ime)</template>
+      <template #header(author_email)>Autor (email)</template>
+      <template #header(updater_display_name)>Zadnji ažurirao (ime)</template>
+      <template #header(updater_email)>Zadnji ažurirao (email)</template>
+      <template #header(is_public)>Dozvola uređivanja</template>
+      <template #header(source)>Izvor zagonetke</template>
+      <template #header(time_created)>Vrijeme kreiranja</template>
+      <template #header(last_updated)>Vrijeme zadnje izmjene</template>
+      <template #header(deletePermission)>Izbriši</template>
+      <template #cell(time_created)="{ source: time_created }">
+        {{ time_created.toLocaleString() }}
       </template>
-    </va-tabs>
-    <span v-for="item in selectedItemsEmitted" :key="item.id">
-      <RatingsTable
-        v-if="value == 'rate'"
-        :dbRef="nonogramsRatingsRef"
-        :puzzleId="selectedItemsEmitted[0].id"
-        :userId="user.uid"
-      ></RatingsTable>
-      <RecordsTable
-        v-if="value == 'all'"
-        :dbRef="nonogramsRecordsRef"
-        :puzzleId="selectedItemsEmitted[0].id"
-      ></RecordsTable>
-      <RecordsTable
-        v-if="user && value == 'mine'"
-        :dbRef="nonogramsRecordsRef"
-        :puzzleId="selectedItemsEmitted[0].id"
-        :userId="user.uid"
-      ></RecordsTable>
-    </span>
-  </div>
-  <div class="myrow" v-if="start_time && end_time && selectMode == 'single'">
-    <va-tabs
-      v-if="selectedItemsEmitted.length > 0"
-      v-model="value"
-      style="width: 100%"
-    >
-      <template #tabs>
-        <va-tab label="Svi rekordi" name="all" />
-        <va-tab label="Rekordi korisnika" name="mine" />
-        <va-tab label="Ocjena" name="rate" />
+      <template #cell(last_updated)="{ source: last_updated }">
+        {{ last_updated.toLocaleString() }}
       </template>
-    </va-tabs>
-    <span v-for="item in selectedItemsEmitted" :key="item.id">
-      <RatingsTable
-        v-if="value == 'rate'"
-        :dbRef="nonogramsRatingsRef"
-        :puzzleId="selectedItemsEmitted[0].id"
-        :userId="user.uid"
-      ></RatingsTable>
-      <RecordsTable
-        v-if="value == 'all'"
-        :dbRef="nonogramsRecordsRef"
-        :puzzleId="selectedItemsEmitted[0].id"
-        :start_time="start_time"
-        :end_time="end_time"
-      ></RecordsTable>
-      <RecordsTable
-        v-if="user && value == 'mine'"
-        :dbRef="nonogramsRecordsRef"
-        :puzzleId="selectedItemsEmitted[0].id"
-        :userId="user.uid"
-        :start_time="start_time"
-        :end_time="end_time"
-      ></RecordsTable>
-    </span>
-  </div>
+      <template #cell(author_email)="{ source: author_email }">
+        <router-link
+          v-bind:to="{ name: 'profile', params: { email: author_email } }"
+        >
+          {{ author_email }}
+        </router-link>
+      </template>
+      <template #cell(updater_email)="{ source: updater_email }">
+        <router-link
+          v-bind:to="{ name: 'profile', params: { email: updater_email } }"
+        >
+          {{ updater_email }}
+        </router-link>
+      </template>
+      <template #cell(id)="{ source: id }">
+        <router-link v-bind:to="{ name: 'edit_nonogram', params: { id: id } }">
+          <va-icon name="mode_edit" />
+        </router-link>
+        <router-link v-bind:to="{ name: 'solve_nonogram', params: { id: id } }">
+          <va-icon name="play_arrow" />
+        </router-link>
+      </template>
+      <template #cell(deletePermission)="{ source: deletePermission }">
+        <va-icon
+          v-if="deletePermission.granted == true"
+          @click="deletePuzzle(deletePermission.id)"
+          name="delete"
+        />
+      </template>
+      <template #cell(is_public)="{ source: is_public }"
+        ><span v-if="is_public">Svi</span
+        ><span v-else>Samo suradnici</span></template
+      >
+      <template #bodyAppend>
+        <tr>
+          <td colspan="16" style="text-align: left">
+            <router-link to="/create-nonogram">
+              <va-icon color="primary" class="mr-4" name="add_circle" /> Nova
+              zagonetka
+            </router-link>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="16" class="table-example--pagination">
+            <va-pagination v-model="currentPage" input :pages="pages" />
+          </td>
+        </tr>
+      </template>
+    </va-data-table>
+    <div
+      class="myrow"
+      v-if="!start_time && !end_time && selectMode == 'single'"
+    >
+      <va-tabs
+        v-if="selectedItemsEmitted.length > 0"
+        v-model="value"
+        style="width: 100%"
+      >
+        <template #tabs>
+          <va-tab label="Svi rezultati" name="all" />
+          <va-tab label="Rezultati korisnika" name="mine" />
+          <va-tab label="Ocjena" name="rate" />
+        </template>
+      </va-tabs>
+      <span v-for="item in selectedItemsEmitted" :key="item.id">
+        <RatingsTable
+          v-if="value == 'rate'"
+          :dbRef="nonogramsRatingsRef"
+          :puzzleId="selectedItemsEmitted[0].id"
+          :userId="user.uid"
+        ></RatingsTable>
+        <RecordsTable
+          v-if="value == 'all'"
+          :dbRef="nonogramsRecordsRef"
+          :puzzleId="selectedItemsEmitted[0].id"
+        ></RecordsTable>
+        <RecordsTable
+          v-if="user && value == 'mine'"
+          :dbRef="nonogramsRecordsRef"
+          :puzzleId="selectedItemsEmitted[0].id"
+          :userId="user.uid"
+        ></RecordsTable>
+      </span>
+    </div>
+    <div class="myrow" v-if="start_time && end_time && selectMode == 'single'">
+      <va-tabs
+        v-if="selectedItemsEmitted.length > 0"
+        v-model="value"
+        style="width: 100%"
+      >
+        <template #tabs>
+          <va-tab label="Svi rezultati" name="all" />
+          <va-tab label="Rezultati korisnika" name="mine" />
+          <va-tab label="Ocjena" name="rate" />
+        </template>
+      </va-tabs>
+      <span v-for="item in selectedItemsEmitted" :key="item.id">
+        <RatingsTable
+          v-if="value == 'rate'"
+          :dbRef="nonogramsRatingsRef"
+          :puzzleId="selectedItemsEmitted[0].id"
+          :userId="user.uid"
+        ></RatingsTable>
+        <RecordsTable
+          v-if="value == 'all'"
+          :dbRef="nonogramsRecordsRef"
+          :puzzleId="selectedItemsEmitted[0].id"
+          :start_time="start_time"
+          :end_time="end_time"
+        ></RecordsTable>
+        <RecordsTable
+          v-if="user && value == 'mine'"
+          :dbRef="nonogramsRecordsRef"
+          :puzzleId="selectedItemsEmitted[0].id"
+          :userId="user.uid"
+          :start_time="start_time"
+          :end_time="end_time"
+        ></RecordsTable>
+      </span>
+    </div>
+  </span>
 </template>
 
 <style>

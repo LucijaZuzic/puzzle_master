@@ -1,10 +1,10 @@
 <script>
-import { eightsRef, friendsRef } from "../main.js";
-import { usersRef } from "../main.js";
+import { eightsRef, friendsRef } from "../firebase_main.js"
+import { usersRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
 import { ref, uploadBytes } from "firebase/storage";
-import { projectStorage } from "../main.js";
+import { projectStorage } from "../firebase_main.js"
 
 export default {
   components: {
@@ -12,6 +12,7 @@ export default {
   },
   data() {
     return {
+      dir_to_display: null,
       word_warning: "",
       word: "",
       image: null,
@@ -79,13 +80,12 @@ export default {
     },
     click_file() {
       document.getElementById("fileinput").click();
-    }, 
-  checkIfUserExists() {
+    },
+    checkIfUserExists() {
       let email = this.collaborator;
       let found = false;
       let hidden = true;
       let uid = "";
-      let displayName = "";
       let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
@@ -918,41 +918,70 @@ export default {
         0
       "
     >
-      <va-infinite-scroll disabled :load="() => {}">
-        <div style="max-height: 320px">
+      <va-tabs v-model="dir_to_display">
+        <template #tabs>
+          <va-tab v-if="words_by_dir[0].length > 0" name="0">
+            <span>&#8598;</span>
+          </va-tab>
           <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
-            <va-chip
-              outline
-              v-if="words_in_dir.length > 0"
-              style="padding: 20px; margin-left: 20px; margin-top: 20px"
-            >
-              <span>
-                <va-chip v-if="i == 0">&#8598;</va-chip>
-                <va-chip v-if="i == 1">&#8592;</va-chip>
-                <va-chip v-if="i == 2">&#8601;</va-chip>
-                <va-chip v-if="i == 3">&#8593;</va-chip>
-                <va-chip v-if="i == 4">&#8595;</va-chip>
-                <va-chip v-if="i == 5">&#8599;</va-chip>
-                <va-chip v-if="i == 6">&#8594;</va-chip>
-                <va-chip v-if="i == 7">&#8600;</va-chip>
-                &nbsp;
-                <va-icon @click="remove_dir(i)" name="delete" />
-                <br />
-                <br />
-                <div style="max-height: 200px">
-                  <va-infinite-scroll disabled :load="() => {}">
-                    <div v-for="(word, j) in words_in_dir" v-bind:key="j">
-                      {{ word[2] }}&nbsp;({{ word[1] + 1 }},{{ word[0] + 1 }})
-                      &nbsp;
-                      <va-icon @click="remove_word(i, j)" name="delete" />
-                    </div>
-                  </va-infinite-scroll>
-                </div>
-              </span>
-            </va-chip>
+            <va-tab v-if="words_in_dir.length > 0 && i > 0" :name="i">
+              <span v-if="i == 1">&#8592;</span>
+              <span v-if="i == 2">&#8601;</span>
+              <span v-if="i == 3">&#8593;</span>
+              <span v-if="i == 4">&#8595;</span>
+              <span v-if="i == 5">&#8599;</span>
+              <span v-if="i == 6">&#8594;</span>
+              <span v-if="i == 7">&#8600;</span>
+            </va-tab>
           </span>
-        </div>
-      </va-infinite-scroll>
+        </template>
+      </va-tabs>
+    </div>
+    <div
+      class="myrow"
+      v-if="
+        words_by_dir[0].length +
+          words_by_dir[1].length +
+          words_by_dir[2].length +
+          words_by_dir[3].length +
+          words_by_dir[4].length +
+          words_by_dir[5].length +
+          words_by_dir[6].length +
+          words_by_dir[7].length >
+        0
+      "
+    >
+      <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
+        <va-chip
+          outline
+          v-if="words_in_dir.length > 0 && i == dir_to_display"
+          style="padding: 20px; margin-left: 20px; margin-top: 20px"
+        >
+          <span>
+            <va-chip v-if="i == 0">&#8598;</va-chip>
+            <va-chip v-if="i == 1">&#8592;</va-chip>
+            <va-chip v-if="i == 2">&#8601;</va-chip>
+            <va-chip v-if="i == 3">&#8593;</va-chip>
+            <va-chip v-if="i == 4">&#8595;</va-chip>
+            <va-chip v-if="i == 5">&#8599;</va-chip>
+            <va-chip v-if="i == 6">&#8594;</va-chip>
+            <va-chip v-if="i == 7">&#8600;</va-chip>
+            &nbsp;
+            <va-icon @click="remove_dir(i)" name="delete" />
+            <br />
+            <br />
+            <div style="max-height: 200px">
+              <va-infinite-scroll disabled :load="() => {}">
+                <div v-for="(word, j) in words_in_dir" v-bind:key="j">
+                  {{ word[2] }}&nbsp;({{ word[1] + 1 }},{{ word[0] + 1 }})
+                  &nbsp;
+                  <va-icon @click="remove_word(i, j)" name="delete" />
+                </div>
+              </va-infinite-scroll>
+            </div>
+          </span>
+        </va-chip>
+      </span>
     </div>
     <div class="myrow">
       <va-button
@@ -971,7 +1000,7 @@ export default {
       />
     </div>
     <div class="myrow" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 50%" />
+      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
     <div class="myrow" v-if="!image">
       <va-alert

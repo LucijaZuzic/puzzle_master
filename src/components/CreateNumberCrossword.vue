@@ -1,10 +1,10 @@
 <script>
-import { numberCrosswordsRef, friendsRef } from "../main.js";
-import { usersRef } from "../main.js";
+import { numberCrosswordsRef, friendsRef } from "../firebase_main.js"
+import { usersRef } from "../firebase_main.js"
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
 import { ref, uploadBytes } from "firebase/storage";
-import { projectStorage } from "../main.js";
+import { projectStorage } from "../firebase_main.js"
 
 export default {
   components: {
@@ -64,7 +64,6 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let displayName = "";
       let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
@@ -846,7 +845,7 @@ export default {
       />
     </div>
     <div class="myrow" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 50%" />
+      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
     <div class="myrow" v-if="!image">
       <va-alert

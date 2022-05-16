@@ -1,5 +1,5 @@
 <script> 
-import { numberCrosswordsRef, numberCrosswordsRecordsRef } from '../main' 
+import { numberCrosswordsRef, numberCrosswordsRecordsRef } from "../firebase_main.js" 
 import NumberCrosswordTable from './NumberCrosswordTable.vue'
 import NoDataToDisplay from './NoDataToDisplay.vue'
 
@@ -86,7 +86,7 @@ export default {
             name="collaborator"
         />
         <va-tab 
-            label="Riješio"
+            label="Rezultati"
             name="record"
       />
       </template>
@@ -98,7 +98,7 @@ export default {
   <NumberCrosswordTable :friend="user" v-if="value=='collaborator' && collaboratorNumberCrossword.length > 0" selectMode="single" :puzzleList="collaboratorNumberCrossword"></NumberCrosswordTable> 
   <NoDataToDisplay v-if="value=='collaborator' && collaboratorNumberCrossword.length <= 0" customMessage="Korisnik nije suradnik niti na jednoj brojevnoj križaljci"></NoDataToDisplay>  
   <NumberCrosswordTable :friend="user" v-if="value=='record' && recordNumberCrossword.length > 0" selectMode="single" :puzzleList="recordNumberCrossword"></NumberCrosswordTable>  
-  <NoDataToDisplay v-if="value=='record' && recordNumberCrossword.length <= 0" customMessage="Korisnik nije riješio niti jednu brojevnu križaljku"></NoDataToDisplay>
+  <NoDataToDisplay v-if="value=='record' && recordNumberCrossword.length <= 0" customMessage="Korisnik nije Rezultati niti jednu brojevnu križaljku"></NoDataToDisplay>
 </template>
 
 <style>
