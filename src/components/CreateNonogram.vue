@@ -9,7 +9,9 @@ export default {
     Navbar,
   },
   data() {
-    return {
+    return {  
+      prevx: null,
+      prevy: null,
       user: null,
       title: "",
       warning: "",
@@ -173,22 +175,36 @@ export default {
       }
       this.parse_sequence();
     },
-    increment(x, y, ismouseover) {
+    increment(x, y) {
       if (this.blocked == true) {
         return;
-      }
-      if (ismouseover && !this.drag) {
-        return;
-      }
+      } 
       if (!document.getElementById("colorpicker" + this.mode)) {
         this.mode = 0;
-      }
-      this.solution[x][y] = this.mode;
-      document.getElementById("cell" + x + ":" + y).style.backgroundColor =
+      } 
+      if (!this.drag) {
+        this.solution[x][y] = this.mode;
+        document.getElementById("cell" + x + ":" + y).style.backgroundColor =
         document.getElementById("colorpicker" + this.mode).value;
-      this.solution = [...this.solution];
-      this.parse_sequence();
-      this.$forceUpdate();
+        this.solution = [...this.solution];
+        this.parse_sequence();
+        this.$forceUpdate(); 
+      } else {
+        if (this.prevx && this.prevy) {
+          for (let i = Math.min(this.prevx, x); i <= Math.max(this.prevx, x); i++) {
+            for (let j = Math.min(this.prevy, y); j <= Math.max(this.prevy, y); j++) {
+              this.solution[i][j] = this.mode;
+              document.getElementById("cell" + i + ":" + j).style.backgroundColor =
+              document.getElementById("colorpicker" + this.mode).value;
+              this.solution = [...this.solution];
+              this.parse_sequence();
+              this.$forceUpdate(); 
+            }
+          }
+        }
+      }
+      this.prevx = x;
+      this.prevy = y;
     },
     check_equal_colors() {
       this.wrong_colors = [];
@@ -631,11 +647,11 @@ export default {
       <span v-if="current_x != null && current_y != null"
         >({{ current_x }}, {{ current_y }})</span
       >
-    </div>
+    </div> 
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table border="2">
+          <table border="2" >
             <tr v-for="column_number in maxrow" v-bind:key="column_number">
               <td
                 v-if="column_number == 1"
@@ -697,10 +713,9 @@ export default {
                 v-bind:key="column_index"
                 @mouseover="
                   current_x = row_index;
-                  current_y = column_index;
-                  increment(row_index - 1, column_index - 1, true);
-                "
-                @click="increment(row_index - 1, column_index - 1, false)"
+                  current_y = column_index;  
+                " 
+                @click="increment(row_index - 1, column_index - 1)"
                 :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
               >
                 &nbsp;
@@ -815,9 +830,9 @@ export default {
         style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
       >
         <span v-if="drag == false"
-          ><va-icon name="grid_view" />&nbsp;Bojanje jedan po jedan</span
+          ><va-icon name="grid_off" />&nbsp;Bojanje jedan po jedan</span
         ><span v-else
-          ><va-icon name="gesture" />&nbsp;Bojanje prelaskom miša</span
+          ><va-icon name="grid_on" />&nbsp;Bojanje segmenta</span
         >
       </va-button>
     </div>
