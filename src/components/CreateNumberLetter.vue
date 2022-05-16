@@ -4,14 +4,14 @@ import { projectStorage } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
 import { usersRef } from "../main.js";
-import { numberLettersRef } from "../main.js";
+import { numberLettersRef, friendsRef } from "../main.js";
 
 export default {
   components: {
     Navbar,
   },
   data() {
-    return {
+    return {   
       user: null,
       permissions: [],
       image: null,
@@ -77,51 +77,78 @@ export default {
       letters: [],
     };
   },
-  methods: {
-    checkIfUserExists() {
+  methods: { 
+  checkIfUserExists() {
       let email = this.collaborator;
       let found = false;
+      let hidden = true;
       let uid = "";
       let displayName = "";
+      let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
-        usersRef
-          .get()
-          .then(function (snapshot) {
-            snapshot.forEach(function (childSnapshot) {
-              let some_email = childSnapshot.get("email");
-              if (email == some_email) {
-                found = true;
-                uid = childSnapshot.id;
-                displayName = childSnapshot.get("displayName");
+        usersRef.get().then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let some_id = childSnapshot.id;
+            let displayName = childSnapshot.get("displayName");
+            let some_email = childSnapshot.get("email");
+            let visibility = childSnapshot.get("visible");
+            if (email == some_email) {
+              found = true;
+              uid = childSnapshot.id;
+              if (visibility == true || me == some_id) {
+                hidden = false;
               }
-            });
-          })
-          .then(() => {
-            if (found == true) {
-              let duplicate = false;
-              for (let i = 0; i < this.permissions.length; i++) {
-                if (this.permissions[i] == uid) {
-                  duplicate = true;
-                  break;
-                }
-              }
-              if (duplicate == true) {
-                this.$vaToast.init("Ne možete dodati istog suradnika dvaput.");
-              } else {
-                this.permissions.push(uid);
-                this.permissionsUserRecords.push({
-                  displayName: displayName,
-                  email: email,
+              friendsRef
+                .get()
+                .then(function (snapshotUser) {
+                  snapshotUser.forEach(function (childSnapshotUser) {
+                    let id1 = childSnapshotUser.get("user1");
+                    let id2 = childSnapshotUser.get("user2");
+                    if (
+                      (id1 == me && id2 == some_id) ||
+                      (id2 == me && id1 == some_id)
+                    ) {
+                      hidden = false;
+                    }
+                  });
+                })
+                .then(() => {
+                  if (found == true) {
+                    if (hidden == true) {
+                      this.$vaToast.init(
+                        "Ne možete dodati suradnika jer niste prijatelji."
+                      );
+                    } else {
+                      let duplicate = false;
+                      for (let i = 0; i < this.permissions.length; i++) {
+                        if (this.permissions[i] == uid) {
+                          duplicate = true;
+                          break;
+                        }
+                      }
+                      if (duplicate == true) {
+                        this.$vaToast.init(
+                          "Ne možete dodati istog suradnika dvaput."
+                        );
+                      } else {
+                        this.permissions.push(uid);
+                        this.permissionsUserRecords.push({
+                          displayName: displayName,
+                          email: email,
+                        });
+                      }
+                    }
+                  } else {
+                    this.$vaToast.init(
+                      "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
+                    );
+                  }
                 });
-              }
-            } else {
-              this.$vaToast.init(
-                "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
-              );
             }
           });
+        });
       }
     },
     initialize() {
@@ -782,7 +809,7 @@ export default {
 
 <template>
   <Navbar></Navbar>
-  <body class="mybody">
+  <body class="mybody"> 
     <div class="myrow">
       <va-slider
         class="trackMe"
@@ -905,7 +932,7 @@ export default {
           </va-tab>
         </template>
       </va-tabs>
-    </div>
+    </div> 
     <div class="myrow">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
@@ -916,7 +943,7 @@ export default {
                   <va-input
                     class="mb-4"
                     @click="mode = i - 1"
-                  @update:model-value="check_letter()"
+                    @update:model-value="check_letter()"
                     v-model="letters[i - 1]"
                     style="
                       width: 80px;
@@ -984,8 +1011,7 @@ export default {
       <span v-if="current_x != null && current_y != null"
         >({{ current_x }}, {{ current_y }})</span
       >
-    </div>
-
+    </div> 
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>

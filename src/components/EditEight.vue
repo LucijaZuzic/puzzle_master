@@ -1,5 +1,5 @@
 <script>
-import { eightsRef } from "../main.js";
+import { eightsRef, friendsRef } from "../main.js";
 import { usersRef } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -116,68 +116,124 @@ export default {
         this.imageURL = comp_url;
         this.fully_loaded = true;
       }
-    },
+    }, 
     getAuthorUserRecord() {
       let some_id = this.author;
-      let newRecord = {};
-      usersRef
-        .get(some_id)
-        .then(function (snapshot) {
-          snapshot.forEach(function (childSnapshot) {
-            let id = childSnapshot.id;
-            if (id == some_id) {
+      let newRecord = { displayName: "Skriveno", email: "skriveno" };
+      let me = this.user.uid;
+      usersRef.get(some_id).then(function (snapshot) {
+        snapshot.forEach(function (childSnapshot) {
+          let id = childSnapshot.id;
+          if (id == some_id) {
+            let visibility = childSnapshot.get("visible");
+            if (visibility == true || me == id) {
               newRecord = {
                 displayName: childSnapshot.get("displayName"),
                 email: childSnapshot.get("email"),
               };
             }
-          });
-        })
-        .then(() => {
-          this.authorUserRecord = newRecord;
+            friendsRef
+              .get()
+              .then(function (snapshotUser) {
+                snapshotUser.forEach(function (childSnapshotUser) {
+                  let id1 = childSnapshotUser.get("user1");
+                  let id2 = childSnapshotUser.get("user2");
+                  if (
+                    (id1 == me && id2 == other) ||
+                    (id2 == me && id1 == other)
+                  ) {
+                    newRecord = {
+                      displayName: childSnapshot.get("displayName"),
+                      email: childSnapshot.get("email"),
+                    };
+                  }
+                });
+              })
+              .then(() => {
+                this.authorUserRecord = newRecord;
+              });
+          }
         });
+      });
     },
     getUpdaterUserRecord() {
       let some_id = this.updater;
-      let newRecord = {};
-      usersRef
-        .get(some_id)
-        .then(function (snapshot) {
-          snapshot.forEach(function (childSnapshot) {
-            let id = childSnapshot.id;
-            if (id == some_id) {
+      let newRecord = { displayName: "Skriveno", email: "skriveno" };
+      let me = this.user.uid;
+      usersRef.get(some_id).then(function (snapshot) {
+        snapshot.forEach(function (childSnapshot) {
+          let id = childSnapshot.id;
+          if (id == some_id) {
+            let visibility = childSnapshot.get("visible");
+            if (visibility == true || me == id) {
               newRecord = {
                 displayName: childSnapshot.get("displayName"),
                 email: childSnapshot.get("email"),
               };
             }
-          });
-        })
-        .then(() => {
-          this.updaterUserRecord = newRecord;
+            friendsRef
+              .get()
+              .then(function (snapshotUser) {
+                snapshotUser.forEach(function (childSnapshotUser) {
+                  let id1 = childSnapshotUser.get("user1");
+                  let id2 = childSnapshotUser.get("user2");
+                  if (
+                    (id1 == me && id2 == other) ||
+                    (id2 == me && id1 == other)
+                  ) {
+                    newRecord = {
+                      displayName: childSnapshot.get("displayName"),
+                      email: childSnapshot.get("email"),
+                    };
+                  }
+                });
+              })
+              .then(() => {
+                this.updaterUserRecord = newRecord;
+              });
+          }
         });
+      });
     },
     getCollaboratorUserRecord() {
       this.permissionsUserRecords = [];
       for (let i = 0; i < this.permissions.length; i++) {
         let some_id = this.permissions[i];
-        let newRecord = {};
-        usersRef
-          .get(some_id)
-          .then(function (snapshot) {
-            snapshot.forEach(function (childSnapshot) {
-              let id = childSnapshot.id;
-              if (id == some_id) {
+        let newRecord = { displayName: "Skriveno", email: "skriveno" };
+        usersRef.get(some_id).then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let id = childSnapshot.id;
+            if (id == some_id) {
+              let visibility = childSnapshot.get("visible");
+              if (visibility == true || me == id) {
                 newRecord = {
                   displayName: childSnapshot.get("displayName"),
                   email: childSnapshot.get("email"),
                 };
               }
-            });
-          })
-          .then(() => {
-            this.permissionsUserRecords.push(newRecord);
+              friendsRef
+                .get()
+                .then(function (snapshotUser) {
+                  snapshotUser.forEach(function (childSnapshotUser) {
+                    let id1 = childSnapshotUser.get("user1");
+                    let id2 = childSnapshotUser.get("user2");
+                    if (
+                      (id1 == me && id2 == other) ||
+                      (id2 == me && id1 == other)
+                    ) {
+                      newRecord = {
+                        displayName: childSnapshot.get("displayName"),
+                        email: childSnapshot.get("email"),
+                      };
+                    }
+                  });
+                })
+                .then(() => {
+                  this.permissionsUserRecords.push(newRecord);
+                });
+            }
           });
+        });
       }
     },
     checkIdentity() {
@@ -212,50 +268,77 @@ export default {
         }
       }
     },
-    checkIfUserExists() {
+   checkIfUserExists() {
       let email = this.collaborator;
       let found = false;
+      let hidden = true;
       let uid = "";
       let displayName = "";
+      let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
-        usersRef
-          .get()
-          .then(function (snapshot) {
-            snapshot.forEach(function (childSnapshot) {
-              let some_email = childSnapshot.get("email");
-              if (email == some_email) {
-                found = true;
-                uid = childSnapshot.id;
-                displayName = childSnapshot.get("displayName");
+        usersRef.get().then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let some_id = childSnapshot.id;
+            let displayName = childSnapshot.get("displayName");
+            let some_email = childSnapshot.get("email");
+            let visibility = childSnapshot.get("visible");
+            if (email == some_email) {
+              found = true;
+              uid = childSnapshot.id;
+              if (visibility == true || me == some_id) {
+                hidden = false;
               }
-            });
-          })
-          .then(() => {
-            if (found == true) {
-              let duplicate = false;
-              for (let i = 0; i < this.permissions.length; i++) {
-                if (this.permissions[i] == uid) {
-                  duplicate = true;
-                  break;
-                }
-              }
-              if (duplicate == true) {
-                this.$vaToast.init("Ne možete dodati istog suradnika dvaput.");
-              } else {
-                this.permissions.push(uid);
-                this.permissionsUserRecords.push({
-                  displayName: displayName,
-                  email: email,
+              friendsRef
+                .get()
+                .then(function (snapshotUser) {
+                  snapshotUser.forEach(function (childSnapshotUser) {
+                    let id1 = childSnapshotUser.get("user1");
+                    let id2 = childSnapshotUser.get("user2");
+                    if (
+                      (id1 == me && id2 == some_id) ||
+                      (id2 == me && id1 == some_id)
+                    ) {
+                      hidden = false;
+                    }
+                  });
+                })
+                .then(() => {
+                  if (found == true) {
+                    if (hidden == true) {
+                      this.$vaToast.init(
+                        "Ne možete dodati suradnika jer niste prijatelji."
+                      );
+                    } else {
+                      let duplicate = false;
+                      for (let i = 0; i < this.permissions.length; i++) {
+                        if (this.permissions[i] == uid) {
+                          duplicate = true;
+                          break;
+                        }
+                      }
+                      if (duplicate == true) {
+                        this.$vaToast.init(
+                          "Ne možete dodati istog suradnika dvaput."
+                        );
+                      } else {
+                        this.permissions.push(uid);
+                        this.permissionsUserRecords.push({
+                          displayName: displayName,
+                          email: email,
+                        });
+                      }
+                    }
+                  } else {
+                    this.$vaToast.init(
+                      "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
+                    );
+                  }
                 });
-              }
-            } else {
-              this.$vaToast.init(
-                "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
-              );
             }
           });
+        });
       }
     },
     initialize() {

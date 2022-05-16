@@ -1,6 +1,6 @@
 <script>
 import { ref, uploadBytes } from "firebase/storage";
-import { usersRef } from "../main.js";
+import { usersRef, friendsRef } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
 import { projectStorage } from "../main.js";
@@ -39,51 +39,78 @@ export default {
       mode: -1,
     };
   },
-  methods: {
-    checkIfUserExists() {
+  methods: { 
+   checkIfUserExists() {
       let email = this.collaborator;
       let found = false;
+      let hidden = true;
       let uid = "";
       let displayName = "";
+      let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
-        usersRef
-          .get()
-          .then(function (snapshot) {
-            snapshot.forEach(function (childSnapshot) {
-              let some_email = childSnapshot.get("email");
-              if (email == some_email) {
-                found = true;
-                uid = childSnapshot.id;
-                displayName = childSnapshot.get("displayName");
+        usersRef.get().then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let some_id = childSnapshot.id;
+            let displayName = childSnapshot.get("displayName");
+            let some_email = childSnapshot.get("email");
+            let visibility = childSnapshot.get("visible");
+            if (email == some_email) {
+              found = true;
+              uid = childSnapshot.id;
+              if (visibility == true || me == some_id) {
+                hidden = false;
               }
-            });
-          })
-          .then(() => {
-            if (found == true) {
-              let duplicate = false;
-              for (let i = 0; i < this.permissions.length; i++) {
-                if (this.permissions[i] == uid) {
-                  duplicate = true;
-                  break;
-                }
-              }
-              if (duplicate == true) {
-                this.$vaToast.init("Ne možete dodati istog suradnika dvaput.");
-              } else {
-                this.permissions.push(uid);
-                this.permissionsUserRecords.push({
-                  displayName: displayName,
-                  email: email,
+              friendsRef
+                .get()
+                .then(function (snapshotUser) {
+                  snapshotUser.forEach(function (childSnapshotUser) {
+                    let id1 = childSnapshotUser.get("user1");
+                    let id2 = childSnapshotUser.get("user2");
+                    if (
+                      (id1 == me && id2 == some_id) ||
+                      (id2 == me && id1 == some_id)
+                    ) {
+                      hidden = false;
+                    }
+                  });
+                })
+                .then(() => {
+                  if (found == true) {
+                    if (hidden == true) {
+                      this.$vaToast.init(
+                        "Ne možete dodati suradnika jer niste prijatelji."
+                      );
+                    } else {
+                      let duplicate = false;
+                      for (let i = 0; i < this.permissions.length; i++) {
+                        if (this.permissions[i] == uid) {
+                          duplicate = true;
+                          break;
+                        }
+                      }
+                      if (duplicate == true) {
+                        this.$vaToast.init(
+                          "Ne možete dodati istog suradnika dvaput."
+                        );
+                      } else {
+                        this.permissions.push(uid);
+                        this.permissionsUserRecords.push({
+                          displayName: displayName,
+                          email: email,
+                        });
+                      }
+                    }
+                  } else {
+                    this.$vaToast.init(
+                      "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
+                    );
+                  }
                 });
-              }
-            } else {
-              this.$vaToast.init(
-                "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
-              );
             }
           });
+        });
       }
     },
     initialize() {
@@ -668,7 +695,7 @@ export default {
               <va-form ref="namesform">
                 <va-input
                   :label="'Naslov ' + j + '. kategorije'"
-                  type="text" 
+                  type="text"
                   v-model="category_names[j - 1]"
                   immediate-validation
                   @update:model-value="check_same()"
@@ -697,7 +724,6 @@ export default {
                   <span v-if="is_image[j - 1] == true">
                     <va-chip
                       :color="colors_for_number[j - 1]"
-                      
                       style="display: inline-block; overflow-wrap: anywhere"
                       @click="click_file(k - 1, j - 1)"
                     >
@@ -709,7 +735,7 @@ export default {
                         >{{ this.category_values[k - 1][j - 1].name }}</span
                       >
                       <span v-else
-                        ><va-icon name="photo"/>&nbsp;Odaberi sliku</span
+                        ><va-icon name="photo" />&nbsp;Odaberi sliku</span
                       >
                     </va-chip>
                     <input
@@ -729,7 +755,7 @@ export default {
                     :label="
                       'Vrijednost ' + j + '. kategorije za ' + k + '. pojam'
                     "
-                    type="text" 
+                    type="text"
                     v-model="category_values[k - 1][j - 1]"
                     immediate-validation
                     @update:model-value="check_same()"
@@ -782,10 +808,8 @@ export default {
                   >{{ i }}. kategorija&nbsp;
                   <va-icon
                     v-if="is_image[i - 1] == false"
-                    name="title"
-                  /><va-icon v-else name="photo" /></va-chip
-                ></va-card-title
-              >
+                    name="title" /><va-icon v-else name="photo" /></va-chip
+              ></va-card-title>
               <va-card-content style="background-color: white">
                 <br />
                 <div

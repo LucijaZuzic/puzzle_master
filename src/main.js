@@ -183,6 +183,9 @@ const cryptogramsRatingsRef = projectFirestore.collection('cryptogramsRatings')
 const numberLettersRatingsRef = projectFirestore.collection('numberLettersRatings') 
 const eightsRatingsRef = projectFirestore.collection('eightsRatings') 
 
+const friendsRef = projectFirestore.collection('friends') 
+const friendRequestsRef = projectFirestore.collection('friendRequests') 
+
 // Initialize the FirebaseUI Widget using Firebase.
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
 // Set up sign-in methods
@@ -203,4 +206,4 @@ export { ui, uiConfig,
   numberLettersRef, numberLettersRecordsRef, numberLettersRatingsRef,
   eightsRef, eightsRecordsRef, eightsRatingsRef,
   numberCrosswordsRatingsRef, nonogramsRatingsRef, integramsRatingsRef, initialsRatingsRef, cryptogramsRatingsRef,
-  usersRef, tournamentsRef };
+  usersRef, tournamentsRef, friendsRef, friendRequestsRef };

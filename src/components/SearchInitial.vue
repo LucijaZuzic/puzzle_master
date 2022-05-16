@@ -1,20 +1,24 @@
  
 <script>
-    import Navbar from './Navbar.vue'
-    import InitialTable from "./InitialTable.vue"
-    export default {
-        components: {
-            Navbar,
-            InitialTable
-        },
-    }
+import Navbar from "./Navbar.vue";
+import InitialTable from "./InitialTable.vue";
+export default {
+  components: {
+    Navbar,
+    InitialTable,
+  },
+};
 </script>
 
-<template> 
+<template>
   <Navbar></Navbar>
-  <body class="mybody"> 
+  <body class="mybody">
+    <div class="myrow">
       <h1 class="display-1">Inicijalne osmosmjerke</h1>
-      <InitialTable  selectMode="single"></InitialTable> 
+    </div>
+    <div class="myrow">
+      <InitialTable selectMode="single"></InitialTable>
+    </div>
   </body>
 </template>
 

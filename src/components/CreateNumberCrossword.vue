@@ -1,5 +1,5 @@
 <script>
-import { numberCrosswordsRef } from "../main.js";
+import { numberCrosswordsRef, friendsRef } from "../main.js";
 import { usersRef } from "../main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
@@ -12,6 +12,7 @@ export default {
   },
   data() {
     return {
+      length_to_display: null,
       image: null,
       imageURL: "",
       user: null,
@@ -61,47 +62,74 @@ export default {
     checkIfUserExists() {
       let email = this.collaborator;
       let found = false;
+      let hidden = true;
       let uid = "";
       let displayName = "";
+      let me = this.user.uid;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
-        usersRef
-          .get()
-          .then(function (snapshot) {
-            snapshot.forEach(function (childSnapshot) {
-              let some_email = childSnapshot.get("email");
-              if (email == some_email) {
-                found = true;
-                uid = childSnapshot.id;
-                displayName = childSnapshot.get("displayName");
+        usersRef.get().then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let some_id = childSnapshot.id;
+            let displayName = childSnapshot.get("displayName");
+            let some_email = childSnapshot.get("email");
+            let visibility = childSnapshot.get("visible");
+            if (email == some_email) {
+              found = true;
+              uid = childSnapshot.id;
+              if (visibility == true || me == some_id) {
+                hidden = false;
               }
-            });
-          })
-          .then(() => {
-            if (found == true) {
-              let duplicate = false;
-              for (let i = 0; i < this.permissions.length; i++) {
-                if (this.permissions[i] == uid) {
-                  duplicate = true;
-                  break;
-                }
-              }
-              if (duplicate == true) {
-                this.$vaToast.init("Ne možete dodati istog suradnika dvaput.");
-              } else {
-                this.permissions.push(uid);
-                this.permissionsUserRecords.push({
-                  displayName: displayName,
-                  email: email,
+              friendsRef
+                .get()
+                .then(function (snapshotUser) {
+                  snapshotUser.forEach(function (childSnapshotUser) {
+                    let id1 = childSnapshotUser.get("user1");
+                    let id2 = childSnapshotUser.get("user2");
+                    if (
+                      (id1 == me && id2 == some_id) ||
+                      (id2 == me && id1 == some_id)
+                    ) {
+                      hidden = false;
+                    }
+                  });
+                })
+                .then(() => {
+                  if (found == true) {
+                    if (hidden == true) {
+                      this.$vaToast.init(
+                        "Ne možete dodati suradnika jer niste prijatelji."
+                      );
+                    } else {
+                      let duplicate = false;
+                      for (let i = 0; i < this.permissions.length; i++) {
+                        if (this.permissions[i] == uid) {
+                          duplicate = true;
+                          break;
+                        }
+                      }
+                      if (duplicate == true) {
+                        this.$vaToast.init(
+                          "Ne možete dodati istog suradnika dvaput."
+                        );
+                      } else {
+                        this.permissions.push(uid);
+                        this.permissionsUserRecords.push({
+                          displayName: displayName,
+                          email: email,
+                        });
+                      }
+                    }
+                  } else {
+                    this.$vaToast.init(
+                      "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
+                    );
+                  }
                 });
-              }
-            } else {
-              this.$vaToast.init(
-                "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
-              );
             }
           });
+        });
       }
     },
     initialize() {
@@ -768,34 +796,38 @@ export default {
         brojeva u križaljci.
       </va-alert>
     </div>
-    <div class="myrow" v-else>
-      <va-infinite-scroll disabled :load="() => {}">
-        <div style="max-height: 320px">
+    <div class="myrow" v-if="!warning">
+      <va-tabs v-model="length_to_display">
+        <template #tabs>
           <span v-for="(numbers_of_length, i) in numbers_by_len" v-bind:key="i">
-            <va-chip
-              outline
-              v-if="numbers_of_length.length > 0 && i > 0"
-              style="padding: 20px; margin-left: 20px; margin-top: 20px"
-            >
-              <span>
-                <va-chip>{{ i + 1 }}</va-chip>
-                <br />
-                <br />
-                <div style="max-height: 200px">
-                  <va-infinite-scroll disabled :load="() => {}">
-                    <div
-                      v-for="(number, j) in numbers_of_length"
-                      v-bind:key="j"
-                    >
-                      {{ number }}
-                    </div>
-                  </va-infinite-scroll>
+            <va-tab v-if="numbers_of_length.length > 0 && i > 0" :name="i">
+              <span>{{ i + 1 }}</span>
+            </va-tab></span
+          >
+        </template>
+      </va-tabs>
+    </div>
+    <div class="myrow" v-if="!warning">
+      <span v-for="(numbers_of_length, i) in numbers_by_len" v-bind:key="i">
+        <va-chip
+          outline
+          v-if="numbers_of_length.length > 0 && i > 0 && i == length_to_display"
+          style="padding: 20px; margin-left: 20px; margin-top: 20px"
+        >
+          <span>
+            <va-chip>{{ i + 1 }}</va-chip>
+            <br />
+            <br />
+            <div style="max-height: 200px">
+              <va-infinite-scroll disabled :load="() => {}">
+                <div v-for="(number, j) in numbers_of_length" v-bind:key="j">
+                  {{ number }}
                 </div>
-              </span>
-            </va-chip>
+              </va-infinite-scroll>
+            </div>
           </span>
-        </div>
-      </va-infinite-scroll>
+        </va-chip>
+      </span>
     </div>
     <div class="myrow">
       <va-button

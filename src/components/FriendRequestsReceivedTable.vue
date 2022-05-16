@@ -1,15 +1,15 @@
  
 <script>
-import { usersRef, friendsRef } from "../main.js";
+import { usersRef, friendRequestsRef, friendsRef } from "../main.js";
 import NoDataToDisplay from "./NoDataToDisplay.vue";
 export default {
   components: {
     NoDataToDisplay,
   },
-  props: ["dbRef", "puzzleId", "userId", "start_time", "end_time"],
+  props: ["userId"],
   data() {
     return {
-      user_records: [],
+      friends: [],
       selectedItemsEmitted: [],
       new_item: "",
       new_item_tag: "",
@@ -27,8 +27,8 @@ export default {
       columns: [
         { key: "user_display_name", sortable: true },
         { key: "user_email", sortable: true },
-        { key: "score", sortable: true },
         { key: "time", sortable: true },
+        { key: "user_id", sortable: false },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -37,7 +37,34 @@ export default {
       ],
     };
   },
-  methods: { 
+  methods: {
+    removeFriendRequest(me, other) {
+      friendRequestsRef
+        .get()
+        .then(function (snapshotUser) {
+          snapshotUser.forEach(function (childSnapshotUser) {
+            let idDoc = childSnapshotUser.id;
+            let id1 = childSnapshotUser.get("sender");
+            let id2 = childSnapshotUser.get("receiver");
+            if ((id1 == me && id2 == other) || (id2 == me && id1 == other)) {
+              friendRequestsRef.doc(idDoc).delete();
+            }
+          });
+        })
+        .then(() => {
+          this.fetch_users();
+        });
+    },
+    acceptFriendRequest(me, other) {
+      friendsRef
+        .add({
+          user1: me,
+          user2: other,
+        })
+        .then(() => {
+          this.removeFriendRequest(me, other);
+        });
+    },
     filterExact(source) {
       if (this.filter === "") {
         return true;
@@ -59,64 +86,43 @@ export default {
       }
       return hours + ":" + minutes + ":" + seconds;
     },
+    removeFriend(me, other) {
+      friendsRef
+        .get()
+        .then(function (snapshotUser) {
+          snapshotUser.forEach(function (childSnapshotUser) {
+            let idDoc = childSnapshotUser.id;
+            let id1 = childSnapshotUser.get("user1");
+            let id2 = childSnapshotUser.get("user2");
+            if ((id1 == me && id2 == other) || (id2 == me && id1 == other)) {
+              friendsRef.doc(idDoc).delete();
+            }
+          });
+        })
+        .then(() => {});
+    },
     fetch_users() {
-      this.user_records = [];
+      this.friends = [];
       let me = this;
-      this.$props.dbRef.get().then(function (snapshot) {
-        snapshot.forEach(function (childSnapshot) {
-          let idPuzzle = childSnapshot.get("puzzleID");
-          let idUser = childSnapshot.get("user");
-          let record = new Date(childSnapshot.get("time").seconds * 1000);
-          let match = true;
-          if (me.$props.puzzleId && idPuzzle != me.$props.puzzleId) {
-            match = false;
-          }
-          if (me.$props.userId && idUser != me.$props.userId) {
-            match = false;
-          }
-          if (
-            me.$props.start_time &&
-            me.$props.end_time &&
-            (record < me.$props.start_time || record > me.$props.end_time)
-          ) {
-            match = false;
-          }
-          if (match == true) {
-            usersRef.get(idUser).then(function (snapshotUser) {
+      friendRequestsRef.get().then(function (snapshotFriend) {
+        snapshotFriend.forEach(function (childSnapshotFriend) {
+          let sender = childSnapshotFriend.get("sender");
+          let receiver = childSnapshotFriend.get("receiver");
+          if (receiver == me.$props.userId) {
+                    console.log(sender + " " + receiver + " " + me.$props.userId)
+            usersRef.get().then(function (snapshotUser) {
               snapshotUser.forEach(function (childSnapshotUser) {
-                let foundUser = childSnapshotUser.id;
-                if (foundUser == idUser) {
-                  let user_display_name = "Skriveno";
-                  let user_email = "skriveno"; 
-                  let visibility_user = childSnapshotUser.get("visible");
-                  if (visibility_user == true || me.$props.userId == idUser) {
-                    user_display_name = childSnapshotUser.get("displayName");
-                    user_email = childSnapshotUser.get("email");
-                  }
-                  friendsRef
-                    .get()
-                    .then(function (snapshotFriend) {
-                      snapshotFriend.forEach(function (childSnapshotFriend) {
-                        let id1 = childSnapshotFriend.get("user1");
-                        let id2 = childSnapshotFriend.get("user2");
-                        if (
-                          (id1 == me.$props.userId && id2 == idUser) ||
-                          (id2 == me.$props.userId && id1 == idUser)
-                        ) {
-                          user_display_name =
-                            childSnapshotFriend.get("displayName");
-                          user_email = childSnapshotFriend.get("email");
-                        }
-                      });
-                    })
-                    .then(() => {
-                      me.user_records.push({
-                        user_display_name: user_display_name,
-                        user_email: user_email,
-                        score: me.format(childSnapshot.get("score")),
-                        time: record,
-                      });
-                    });
+                let idUser = childSnapshotUser.id;
+                let user_display_name = childSnapshotUser.get("displayName");
+                let user_email = childSnapshotUser.get("email");
+                if (idUser == sender) {
+                    console.log(user_display_name + "rcv")
+                  me.friends.push({
+                    user_display_name: user_display_name,
+                    user_email: user_email,
+                    time: new Date(childSnapshotFriend.get("time").seconds * 1000),
+                    user_id: sender,
+                  });
                 }
               });
             });
@@ -145,7 +151,7 @@ export default {
 </script>
 
 <template>
-  <span v-if="user_records.length > 0">
+  <span v-if="friends.length > 0">
     <div class="myrow">
       <va-input
         class="flex mb-2 md6"
@@ -194,7 +200,7 @@ export default {
       />
     </div>
     <va-data-table
-      :items="user_records"
+      :items="friends"
       :filter="filter"
       :columns="columns"
       :hoverable="true"
@@ -209,8 +215,8 @@ export default {
     >
       <template #header(user_display_name)>Korisnik (ime)</template>
       <template #header(user_email)>Korisnik (email)</template>
-      <template #header(score)>Rezultat</template>
       <template #header(time)>Datum i vrijeme</template>
+      <template #header(user_id)>Akcije</template>
       <template #cell(time)="{ source: time }">
         {{ time.toLocaleString() }}
       </template>
@@ -220,6 +226,12 @@ export default {
         >
           {{ user_email }}
         </router-link>
+      </template>
+      <template #cell(user_id)="{ source: user_id }">
+        <va-icon name="done" @click="removeFriendRequest($props.userId, user_id)">
+        </va-icon>
+        <va-icon name="close" @click="acceptFriendRequest($props.userId, user_id)">
+        </va-icon>
       </template>
       <template #bodyAppend>
         <tr>
@@ -231,8 +243,8 @@ export default {
     </va-data-table>
   </span>
   <NoDataToDisplay
-    v-if="user_records.length <= 0"
-    customMessage="Nema rekorda koji zadovoljavaju kriterije"
+    v-if="friends.length <= 0"
+    customMessage="Korisnik nije primio zahtjev za prijateljstvo"
   ></NoDataToDisplay>
 </template>
 

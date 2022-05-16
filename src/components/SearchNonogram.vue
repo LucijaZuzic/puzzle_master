@@ -1,20 +1,24 @@
  
 <script>
-    import Navbar from './Navbar.vue'
-    import NonogramTable from "./NonogramTable.vue"
-    export default {
-        components: {
-            Navbar,
-            NonogramTable
-        },
-    }
+import Navbar from "./Navbar.vue";
+import NonogramTable from "./NonogramTable.vue";
+export default {
+  components: {
+    Navbar,
+    NonogramTable,
+  },
+};
 </script>
 
-<template> 
+<template>
   <Navbar></Navbar>
-  <body class="mybody"> 
+  <body class="mybody">
+    <div class="myrow">
       <h1 class="display-1">Nonogrami</h1>
-      <NonogramTable selectMode="single"></NonogramTable> 
+    </div>
+    <div class="myrow">
+      <NonogramTable selectMode="single"></NonogramTable>
+    </div>
   </body>
 </template>
 
