@@ -1,9 +1,9 @@
 <script>
-import { eightsRecordsRef, eightsRef } from "../firebase_main.js"
-import { usersRef, friendsRef } from "../firebase_main.js"
+import { eightsRecordsRef, eightsRef } from "../firebase_main.js";
+import { usersRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { ref, getDownloadURL } from "firebase/storage";
-import { projectStorage } from "../firebase_main.js"
+import { projectStorage } from "../firebase_main.js";
 
 import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
@@ -104,9 +104,14 @@ export default {
         .catch((error) => {});
     },
     getAuthorUserRecord() {
-      let some_id = this.author; let other = this.author;
+      let some_id = this.author;
+      let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -143,9 +148,14 @@ export default {
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater; let other = this.updater;
+      let some_id = this.updater;
+      let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -182,9 +192,15 @@ export default {
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
+      this.permissionsUserRecords = [];
+      let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i]; let other = this.permissions[i];
+        let some_id = this.permissions[i];
+        let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -819,9 +835,11 @@ export default {
           @click="show_error = !show_error"
           style="margin-left: 10px; margin-top: 10px"
         >
-          <span v-if="show_error == false"
-            ><va-icon name="report_off" />&nbsp;Ne prikazuj greške</span
-          ><span v-else><va-icon name="report" />&nbsp;Prikaži greške</span>
+          <span v-if="show_error == false">
+            <va-icon name="report_off" />
+            &nbsp;Ne prikazuj greške</span
+          >
+          <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
         </va-button>
       </span>
       <va-chip
@@ -832,17 +850,19 @@ export default {
           margin-top: 10px;
         "
         outline
-        >{{ format(time_elapsed) }}</va-chip
+      >
+        {{ format(time_elapsed) }}
+      </va-chip>
+    </div>
+    <div class="myrow">
+      <va-button style="overflow-wrap: anywhere" @click="reset()">
+        <va-icon name="delete" />
+        &nbsp;Izbriši</va-button
       >
     </div>
     <div class="myrow">
-      <va-button style="overflow-wrap: anywhere" @click="reset()"
-        ><va-icon name="delete" />&nbsp;Izbriši</va-button
-      >
-    </div>
-    <div class="myrow">
-      <span v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</span
+      <va-chip v-if="current_x != null && current_y != null"
+        >({{ current_x }}, {{ current_y }})</va-chip
       >
     </div>
     <div class="myrow" style="max-height: 400px">
@@ -1009,19 +1029,25 @@ export default {
     <div class="myrow">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Naslov zagonetke</va-card-title>
-        <va-card-content>{{ title }}</va-card-content>
+        <va-card-content>
+          {{ title }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Opis zagonetke</va-card-title>
-        <va-card-content>{{ description }}</va-card-content>
+        <va-card-content>
+          {{ description }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Izvor zagonetke</va-card-title>
-        <va-card-content>{{ source }}</va-card-content>
+        <va-card-content>
+          {{ source }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
@@ -1033,8 +1059,8 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
-      >
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
+      </va-chip>
       <br />
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
@@ -1044,16 +1070,21 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
-      >
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
+      </va-chip>
     </div>
     <div class="myrow">
-      <va-button @click="show_solution()" style="overflow-wrap: anywhere"
-        ><va-icon name="help" />&nbsp;Otkrij sva polja</va-button
+      <va-button
+        @click="$refs.show_solution_modal.show()"
+        style="overflow-wrap: anywhere"
+      >
+        <va-icon name="help" />
+        &nbsp;Otkrij sva polja</va-button
       >
     </div>
   </body>
   <va-modal
+    :mobile-fullscreen="false"
     ref="show_error"
     message="Želite li da greške budu uznačene?"
     @ok="show_error = true"
@@ -1062,6 +1093,16 @@ export default {
     cancel-text="Ne"
   />
   <va-modal
+    :mobile-fullscreen="false"
+    ref="show_solution_modal"
+    message="Želite li da se otkriju sva polja? U tom slučaju vaš rezultat neće biti spremljen."
+    @ok="show_solution()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
+  <va-modal
+    :mobile-fullscreen="false"
     ref="no_user_dialog"
     @cancel="$router.push('/login')"
     ok-text="Da"

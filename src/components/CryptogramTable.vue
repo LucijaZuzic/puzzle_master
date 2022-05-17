@@ -59,7 +59,7 @@ export default {
       columns: [],
       sortBy: "time_created",
       sortingOrder: "desc",
-      perPage: 10,
+      perPage: 1,
       currentPage: 1,
       columns: [
         { key: "rows", sortable: true },
@@ -177,7 +177,7 @@ export default {
                             childSnapshotAuthor.get("visible");
                           if (
                             visibility_author == true ||
-                            me.user.uid == idAuthor
+                            (me.user && me.user.uid == idAuthor)
                           ) {
                             author_display_name =
                               childSnapshotAuthor.get("displayName");
@@ -192,8 +192,12 @@ export default {
                                 let id1 = childSnapshotUserAuthor.get("user1");
                                 let id2 = childSnapshotUserAuthor.get("user2");
                                 if (
-                                  (id1 == me.user.uid && id2 == idAuthor) ||
-                                  (id2 == me.user.uid && id1 == idAuthor)
+                                  (me.user &&
+                                    id1 == me.user.uid &&
+                                    id2 == idAuthor) ||
+                                  (me.user &&
+                                    id2 == me.user.uid &&
+                                    id1 == idAuthor)
                                 ) {
                                   author_display_name =
                                     childSnapshotAuthor.get("displayName");
@@ -219,7 +223,7 @@ export default {
                                         childSnapshotUpdater.get("visible");
                                       if (
                                         visibility_updater == true ||
-                                        me.user.uid == idUpdater
+                                        (me.user && me.user.uid == idUpdater)
                                       ) {
                                         updater_display_name =
                                           childSnapshotUpdater.get(
@@ -243,9 +247,11 @@ export default {
                                                 "user2"
                                               );
                                             if (
-                                              (id1 == me.user.uid &&
+                                              (me.user.uid &&
+                                                id1 == me.user.uid &&
                                                 id2 == idUpdater) ||
-                                              (id2 == me.user.uid &&
+                                              (me.user.uid &&
+                                                id2 == me.user.uid &&
                                                 id1 == idUpdater)
                                             ) {
                                               updater_display_name =
@@ -430,51 +436,21 @@ export default {
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
     <div class="myrow">
-      <va-input
-        class="flex mb-2 md6"
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 25%;
-        "
-        placeholder="Unesite pojam za pretragu"
-        v-model="filter"
-      />
-      <va-checkbox
-        style="display: inline-block; margin-left: 20px; margin-top: 20px"
-        class="flex mb-2 md6"
-        label="Traži cijelu riječ"
-        v-model="useCustomFilteringFn"
-      />
-      <va-input
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 10%;
-        "
-        label="Trenutna stranica"
-        class="flex mb-2 md6"
-        v-model="currentPage"
-        :min="1"
-        :max="Math.ceil(this.filtered.length / this.perPage)"
+      <va-input placeholder="Unesite pojam za pretragu" v-model="filter" />
+    </div>
+    <div class="myrow">
+      <va-checkbox label="Traži cijelu riječ" v-model="useCustomFilteringFn" />
+    </div>
+    <div class="myrow" v-if="this.filtered.length > 1">
+      <va-slider
         type="number"
-      />
-      <va-input
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 10%;
-        "
-        label="Broj pojmova"
-        class="flex mb-2 md6"
         v-model="perPage"
         :min="1"
         :max="Math.ceil(this.filtered.length)"
-        type="number"
-      />
+        label="Broj pojmova na stranici"
+        track-label-visible
+      >
+      </va-slider>
     </div>
     <va-data-table
       :items="puzzles"
@@ -551,10 +527,10 @@ export default {
           name="delete"
         />
       </template>
-      <template #cell(is_public)="{ source: is_public }"
-        ><span v-if="is_public">Svi</span
-        ><span v-else>Samo suradnici</span></template
-      >
+      <template #cell(is_public)="{ source: is_public }">
+        <span v-if="is_public">Svi</span>
+        <span v-else>Samo suradnici</span>
+      </template>
       <template #bodyAppend>
         <tr>
           <td colspan="16" style="text-align: left">
@@ -582,28 +558,31 @@ export default {
       >
         <template #tabs>
           <va-tab label="Svi rezultati" name="all" />
-          <va-tab label="Rezultati korisnika" name="mine" />
-          <va-tab label="Ocjena" name="rate" />
+          <va-tab label="Rezultati korisnika" v-if="user" name="mine" />
+          <va-tab label="Ocjena" v-if="user" name="rate" />
         </template>
       </va-tabs>
       <span v-for="item in selectedItemsEmitted" :key="item.id">
         <RatingsTable
-          v-if="value == 'rate'"
+          v-if="user && value == 'rate'"
           :dbRef="cryptogramsRatingsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :userId="user.uid"
-        ></RatingsTable>
+        >
+        </RatingsTable>
         <RecordsTable
           v-if="value == 'all'"
           :dbRef="cryptogramsRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
-        ></RecordsTable>
+        >
+        </RecordsTable>
         <RecordsTable
           v-if="user && value == 'mine'"
           :dbRef="cryptogramsRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :userId="user.uid"
-        ></RecordsTable>
+        >
+        </RecordsTable>
       </span>
     </div>
     <div class="myrow" v-if="start_time && end_time && selectMode == 'single'">
@@ -614,24 +593,26 @@ export default {
       >
         <template #tabs>
           <va-tab label="Svi rezultati" name="all" />
-          <va-tab label="Rezultati korisnika" name="mine" />
-          <va-tab label="Ocjena" name="rate" />
+          <va-tab label="Rezultati korisnika" v-if="user" name="mine" />
+          <va-tab label="Ocjena" v-if="user" name="rate" />
         </template>
       </va-tabs>
       <span v-for="item in selectedItemsEmitted" :key="item.id">
         <RatingsTable
-          v-if="value == 'rate'"
+          v-if="user && value == 'rate'"
           :dbRef="cryptogramsRatingsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :userId="user.uid"
-        ></RatingsTable>
+        >
+        </RatingsTable>
         <RecordsTable
           v-if="value == 'all'"
           :dbRef="cryptogramsRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :start_time="start_time"
           :end_time="end_time"
-        ></RecordsTable>
+        >
+        </RecordsTable>
         <RecordsTable
           v-if="user && value == 'mine'"
           :dbRef="cryptogramsRecordsRef"
@@ -639,7 +620,8 @@ export default {
           :userId="user.uid"
           :start_time="start_time"
           :end_time="end_time"
-        ></RecordsTable>
+        >
+        </RecordsTable>
       </span>
     </div>
   </span>

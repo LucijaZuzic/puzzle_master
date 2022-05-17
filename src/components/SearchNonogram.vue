@@ -1,4 +1,3 @@
- 
 <script>
 import Navbar from "./Navbar.vue";
 import NonogramTable from "./NonogramTable.vue";
@@ -22,5 +21,4 @@ export default {
   </body>
 </template>
 
-<style>
-</style>
+<style></style>

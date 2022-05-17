@@ -1,9 +1,9 @@
 <script>
 import { ref, getDownloadURL } from "firebase/storage";
-import { projectStorage } from "../firebase_main.js"
-import { integramsRef } from "../firebase_main.js"
-import { usersRef } from "../firebase_main.js"
-import { integramsRecordsRef, friendsRef } from "../firebase_main.js"
+import { projectStorage } from "../firebase_main.js";
+import { integramsRef } from "../firebase_main.js";
+import { usersRef } from "../firebase_main.js";
+import { integramsRecordsRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import Navbar from "./Navbar.vue";
@@ -84,9 +84,13 @@ export default {
   },
   methods: {
     getAuthorUserRecord() {
-      let some_id = this.author; let other = this.author;
+      let some_id = this.author;
+      let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
@@ -124,9 +128,13 @@ export default {
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater; let other = this.updater;
+      let some_id = this.updater;
+      let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
@@ -164,9 +172,15 @@ export default {
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid; 
+      this.permissionsUserRecords = [];
+      let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i]; let other = this.permissions[i];
+        let some_id = this.permissions[i];
+        let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -1256,9 +1270,14 @@ export default {
           @click="show_error = !show_error"
           style="margin-left: 10px; margin-top: 10px"
         >
-          <span v-if="show_error == false"
-            ><va-icon name="report_off" />&nbsp;Ne prikazuj greške</span
-          ><span v-else><va-icon name="report" />&nbsp;Prikaži greške</span>
+          <span v-if="show_error == false">
+            <va-icon name="report_off" />
+            &nbsp;Ne prikazuj greške
+          </span>
+          <span v-else>
+            <va-icon name="report" />
+            &nbsp;Prikaži greške
+          </span>
         </va-button>
       </span>
       <va-chip
@@ -1269,14 +1288,18 @@ export default {
           margin-top: 10px;
         "
         outline
-        >{{ format(time_elapsed) }}</va-chip
       >
+        {{ format(time_elapsed) }}
+      </va-chip>
     </div>
     <div v-for="i in numinstructions" v-bind:key="i">
       <va-card>
-        <va-card-title>{{ i }}. uputa</va-card-title>
-        <va-card-content>{{ instructions[i - 1] }}</va-card-content> </va-card
-      ><br />
+        <va-card-title> {{ i }}. uputa</va-card-title>
+        <va-card-content>
+          {{ instructions[i - 1] }}
+        </va-card-content>
+      </va-card>
+      <br />
     </div>
     <br />
     <br />
@@ -1322,18 +1345,18 @@ export default {
                         (i - 1) % numvalues
                       ]
                     ][Math.floor((i - 1) / numvalues) + 1]
-                  }}</span
-                >
-                <span class="checkmark, text_column" v-else
-                  >{{ Math.floor((i - 1) / numvalues) + 2
+                  }}
+                </span>
+                <span class="checkmark, text_column" v-else>
+                  {{ Math.floor((i - 1) / numvalues) + 2
                   }}{{
                     alphabet[
                       order[Math.floor((i - 1) / numvalues) + 1][
                         (i - 1) % numvalues
                       ]
                     ]
-                  }}</span
-                >
+                  }}
+                </span>
               </td>
             </tr>
             <tr v-for="j in numvalues" v-bind:key="j">
@@ -1341,11 +1364,12 @@ export default {
                 <span
                   class="checkmark, text_row"
                   v-if="is_image[0] == false && too_long[0] == false"
-                  >{{ category_values[order[0][j - 1]][0] }}</span
                 >
-                <span class="checkmark, text_row" v-else
-                  >{{ 1 }}{{ alphabet[order[0][j - 1]] }}</span
-                >
+                  {{ category_values[order[0][j - 1]][0] }}
+                </span>
+                <span class="checkmark, text_row" v-else>
+                  {{ 1 }}{{ alphabet[order[0][j - 1]] }}
+                </span>
               </td>
               <td
                 v-for="i in numvalues * (numcategories - 1)"
@@ -1429,16 +1453,16 @@ export default {
                     ][numcategories - 1 - Math.floor((j - 1) / numvalues)]
                   }}
                 </span>
-                <span class="checkmark, text_row" v-else
-                  >{{ numcategories - Math.floor((j - 1) / numvalues)
+                <span class="checkmark, text_row" v-else>
+                  {{ numcategories - Math.floor((j - 1) / numvalues)
                   }}{{
                     alphabet[
                       order[Math.floor((j - 1) / numvalues) + 1][
                         (j - 1) % numvalues
                       ]
                     ]
-                  }}</span
-                >
+                  }}
+                </span>
               </td>
               <td
                 v-for="i in numvalues *
@@ -1528,8 +1552,9 @@ export default {
       </va-tabs>
     </div>
     <div class="myrow">
-      <va-button @click="clear_values()"
-        ><va-icon name="delete" />&nbsp;Izbriši</va-button
+      <va-button @click="clear_values()">
+        <va-icon name="delete" />
+        &nbsp;Izbriši</va-button
       >
     </div>
     <div class="myrow">
@@ -1537,7 +1562,7 @@ export default {
         <template #tabs>
           <span v-for="i in numcategories" v-bind:key="i">
             <va-tab :name="i">
-              <span>{{ i }}. kategorija</span>
+              <span> {{ i }}. kategorija</span>
             </va-tab>
           </span>
         </template>
@@ -1564,18 +1589,20 @@ export default {
         >
           <va-card-title>
             <span></span>
-            <va-chip :color="colors_for_number[j - 1]"
-              >{{ j }}. kategorija&nbsp;<va-icon
+            <va-chip :color="colors_for_number[j - 1]">
+              {{ j }}. kategorija&nbsp;<va-icon
                 v-if="is_image[j - 1] == false"
-                name="title" /><va-icon v-else name="photo"
-            /></va-chip>
+                name="title"
+              />
+              <va-icon v-else name="photo" />
+            </va-chip>
           </va-card-title>
           <va-card-content style="background-color: white">
             <br />
             <div class="myrow">
-              <va-chip :color="colors_for_number[j - 1]">{{
-                category_names[j - 1]
-              }}</va-chip>
+              <va-chip :color="colors_for_number[j - 1]">
+                {{ category_names[j - 1] }}
+              </va-chip>
             </div>
             <va-divider></va-divider>
             <span v-for="k in numvalues" v-bind:key="k">
@@ -1603,9 +1630,11 @@ export default {
                           my_solution[order[0][k - 1]][j - 1].split("/")
                             .length - 1
                         ].split(".")[0]
-                    }}</span
-                  >
-                  <span v-else>{{ my_solution[order[0][k - 1]][j - 1] }}</span>
+                    }}
+                  </span>
+                  <span v-else>
+                    {{ my_solution[order[0][k - 1]][j - 1] }}
+                  </span>
                 </va-chip>
                 <va-chip
                   style="display: inline-block; overflow-wrap: anywhere"
@@ -1625,12 +1654,16 @@ export default {
                           my_solution[order[0][k - 1]][j - 1].split("/")
                             .length - 1
                         ].split(".")[0]
-                    }}</span
-                  >
-                  <span v-else>{{ my_solution[order[0][k - 1]][j - 1] }}</span>
+                    }}
+                  </span>
+                  <span v-else>
+                    {{ my_solution[order[0][k - 1]][j - 1] }}
+                  </span>
                 </va-chip>
               </div>
-              <div class="myrow" v-else><va-chip color="warning">?</va-chip></div>
+              <div class="myrow" v-else>
+                <va-chip color="warning">?</va-chip>
+              </div>
             </span>
           </va-card-content>
         </va-card>
@@ -1647,14 +1680,19 @@ export default {
       >
         <va-card :color="colors_for_number[i - 1]">
           <!--<va-card-title
-            ><va-chip :color="colors_for_number[i - 1]"
-              >{{ i }}. kategorija&nbsp;
-              <va-icon v-if="is_image[i - 1] == false" name="title" /><va-icon
+            >
+<va-chip :color="colors_for_number[i - 1]"
+              >
+                  {{ i }}. kategorija&nbsp;
+              <va-icon v-if="is_image[i - 1] == false" name="title"/>
+<va-icon
                 v-else
-                name="photo" /></va-chip
-          ></va-card-title>-->
+                name="photo"/>
+</va-chip
+          >
+</va-card-title>-->
           <va-card-content style="background-color: white">
-            <!--<br />-->
+            <!--<br/>-->
             <va-list v-if="too_long[i - 1] == true && is_image[i - 1] == false">
               <va-list-item v-for="j in numvalues" v-bind:key="j">
                 <va-list-item-section avatar>
@@ -1686,14 +1724,19 @@ export default {
       >
         <va-card :color="colors_for_number[i - 1]">
           <!--<va-card-title
-              ><va-chip :color="colors_for_number[i - 1]"
-                >{{ i }}. kategorija&nbsp;
-                <va-icon v-if="is_image[i - 1] == false" name="title" /><va-icon
+              >
+<va-chip :color="colors_for_number[i - 1]"
+                >
+                  {{ i }}. kategorija&nbsp;
+                <va-icon v-if="is_image[i - 1] == false" name="title"/>
+<va-icon
                   v-else
-                  name="photo" /></va-chip
-            ></va-card-title>-->
+                  name="photo"/>
+</va-chip
+            >
+</va-card-title>-->
           <va-card-content style="background-color: white">
-            <!--<br />-->
+            <!--<br/>-->
             <va-tabs
               v-model="value_to_display"
               :color="colors_for_number[i - 1]"
@@ -1701,7 +1744,7 @@ export default {
               <template #tabs>
                 <span v-for="val in numvalues" v-bind:key="val">
                   <va-tab :name="val">
-                    <span>{{ i }}{{ alphabet[val - 1] }}</span>
+                    <span> {{ i }}{{ alphabet[val - 1] }} </span>
                   </va-tab>
                 </span>
               </template>
@@ -1736,19 +1779,25 @@ export default {
     <div class="myrow">
       <va-card>
         <va-card-title>Naslov zagonetke</va-card-title>
-        <va-card-content>{{ title }}</va-card-content>
+        <va-card-content>
+          {{ title }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
       <va-card>
         <va-card-title>Opis zagonetke</va-card-title>
-        <va-card-content>{{ description }}</va-card-content>
+        <va-card-content>
+          {{ description }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
       <va-card>
         <va-card-title>Izvor zagonetke</va-card-title>
-        <va-card-content>{{ source }}</va-card-content>
+        <va-card-content>
+          {{ source }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
@@ -1760,8 +1809,8 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
-      >
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
+      </va-chip>
       <br />
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
@@ -1771,16 +1820,21 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
-      >
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
+      </va-chip>
     </div>
     <div class="myrow">
-      <va-button @click="show_solution()" style="overflow-wrap: anywhere"
-        ><va-icon name="help" />&nbsp;Otkrij sva polja</va-button
+      <va-button
+        @click="$refs.show_solution_modal.show()"
+        style="overflow-wrap: anywhere"
+      >
+        <va-icon name="help" />
+        &nbsp;Otkrij sva polja</va-button
       >
     </div>
   </body>
   <va-modal
+    :mobile-fullscreen="false"
     ref="show_error"
     message="Želite li da greške budu uznačene?"
     @ok="show_error = true"
@@ -1789,6 +1843,16 @@ export default {
     cancel-text="Ne"
   />
   <va-modal
+    :mobile-fullscreen="false"
+    ref="show_solution_modal"
+    message="Želite li da se otkriju sva polja? U tom slučaju vaš rezultat neće biti spremljen."
+    @ok="show_solution()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
+  <va-modal
+    :mobile-fullscreen="false"
     ref="no_user_dialog"
     @cancel="$router.push('/login')"
     ok-text="Da"

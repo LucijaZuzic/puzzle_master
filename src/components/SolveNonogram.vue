@@ -1,7 +1,8 @@
 <script>
-import { nonogramsRef } from "../firebase_main.js"
-import { nonogramsRecordsRef } from "../firebase_main.js"
-import { usersRef, friendsRef } from "../firebase_main.js"
+import tinycolor from "tinycolor2/tinycolor";
+import { nonogramsRef } from "../firebase_main.js";
+import { nonogramsRecordsRef } from "../firebase_main.js";
+import { usersRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import Navbar from "./Navbar.vue";
@@ -42,8 +43,8 @@ export default {
       mode: 0,
       time_elapsed: 0,
       drag: false,
-      prev_x: -1,
-      prev_y: -1,
+      prev_x: null,
+      prev_y: null,
       num_colors: 2,
       show_error: false,
       colors: ["#FFFFFF", "#000000"],
@@ -51,11 +52,46 @@ export default {
       current_y: null,
     };
   },
-  methods: { 
+  methods: {
+    invertColor(hex) {
+      if (hex.indexOf("#") === 0) {
+        hex = hex.slice(1);
+      }
+      // convert 3-digit hex to 6-digits.
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      if (hex.length !== 6) {
+        throw new Error("Invalid HEX color.");
+      }
+      // invert color components
+      var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+        g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+        b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+      // pad each with zeros and return
+      return "#" + this.padZero(r) + this.padZero(g) + this.padZero(b);
+    },
+    padZero(str, len) {
+      len = len || 2;
+      var zeros = new Array(len).join("0");
+      return (zeros + str).slice(-len);
+    },
+    returnMostReadable(hex) {
+      return tinycolor
+        .mostReadable(hex, [hex, this.invertColor(hex), "#000000", "#ffffff"], {
+          includeFallbackColors: true,
+        })
+        .toHexString();
+    },
     getAuthorUserRecord() {
-      let some_id = this.author; let other = this.author;
+      let some_id = this.author;
+      let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -92,9 +128,14 @@ export default {
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater; let other = this.updater;
+      let some_id = this.updater;
+      let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -131,9 +172,15 @@ export default {
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
+      this.permissionsUserRecords = [];
+      let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i]; let other = this.permissions[i];
+        let some_id = this.permissions[i];
+        let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -213,23 +260,50 @@ export default {
       }
       this.parse_sequence();
     },
-    increment(x, y, ismouseover) {
-      if (this.victory) {
+    increment(x, y) {
+      if (this.victory == true) {
         return;
       }
       if (this.blocked == true) {
         return;
       }
-      if (ismouseover && !this.drag) {
-        return;
+      if (!this.drag) {
+        this.values[x][y] = this.mode;
+        document.getElementById("cell" + x + ":" + y).style.backgroundColor =
+          this.mode;
+        this.values = [...this.values];
+        this.prev_x = null;
+        this.prev_y = null;
+        this.parse_sequence();
+        this.$forceUpdate();
+      } else {
+        if (this.prev_x && this.prev_y) {
+          for (
+            let i = Math.min(this.prev_x, x);
+            i <= Math.max(this.prev_x, x);
+            i++
+          ) {
+            for (
+              let j = Math.min(this.prev_y, y);
+              j <= Math.max(this.prev_y, y);
+              j++
+            ) {
+              this.values[i][j] = this.mode;
+              document.getElementById(
+                "cell" + i + ":" + j
+              ).style.backgroundColor = this.mode;
+            }
+          }
+          this.values = [...this.values];
+          this.prev_x = null;
+          this.prev_y = null;
+          this.parse_sequence();
+          this.$forceUpdate();
+        } else {
+          this.prev_x = x;
+          this.prev_y = y;
+        }
       }
-      this.values[x][y] = this.mode;
-      document.getElementById("cell" + x + ":" + y).style.backgroundColor =
-        this.mode;
-      this.values = [...this.values];
-      this.check_victory();
-      this.parse_sequence();
-      this.$forceUpdate();
     },
     update_colors() {
       for (let i = 0; i < this.rownum; i++) {
@@ -720,17 +794,28 @@ export default {
           @click="show_error = !show_error"
           style="margin-left: 10px; margin-top: 10px"
         >
-          <span v-if="show_error == false"
-            ><va-icon name="report_off" />&nbsp;Ne prikazuj greške</span
-          ><span v-else><va-icon name="report" />&nbsp;Prikaži greške</span>
+          <span v-if="show_error == false">
+            <va-icon name="report_off" />
+            &nbsp;Ne prikazuj greške</span
+          >
+          <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
         </va-button>
       </span>
-      <va-chip style="float: right" outline>{{ format(time_elapsed) }}</va-chip>
+      <va-chip style="float: right" outline>
+        {{ format(time_elapsed) }}
+      </va-chip>
     </div>
     <div class="myrow">
-      <span v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</span
+      <va-chip v-if="current_x != null && current_y != null"
+        >({{ current_x }}, {{ current_y }})</va-chip
       >
+    </div>
+    <div class="myrow" v-if="prev_x != null && prev_y != null && drag">
+      <va-chip>
+        <va-icon name="close" @click="(prev_x = null), (prev_y = null)">
+        </va-icon>
+        &nbsp; Početak segmenta: ({{ prev_x }}, {{ prev_y }})
+      </va-chip>
     </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
@@ -798,39 +883,79 @@ export default {
                 @mouseover="
                   current_x = row_index;
                   current_y = column_index;
-                  increment(row_index - 1, column_index - 1, true);
                 "
-                @click="increment(row_index - 1, column_index - 1, false)"
+                @click="increment(row_index - 1, column_index - 1)"
                 :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
               >
                 <span
-                  style="color: white"
+                  class="numbers"
                   v-if="
+                    !(prev_x == row_index - 1 && prev_y == column_index - 1) &&
                     show_error &&
                     solution[row_index - 1][column_index - 1] !=
                       values[row_index - 1][column_index - 1] &&
                     values[row_index - 1][column_index - 1] != 0
                   "
-                  >!</span
                 >
+                  <va-icon
+                    :color="
+                      returnMostReadable(
+                        colors[values[row_index - 1][column_index - 1]]
+                      )
+                    "
+                    name="warning"
+                  >
+                  </va-icon>
+                </span>
+                <!--
                 <span
-                  style="color: black"
+                  class="numbers"
                   v-if="
+                    !(prev_x == row_index - 1 && prev_y == column_index - 1) &&
                     show_error &&
                     solution[row_index - 1][column_index - 1] !=
                       values[row_index - 1][column_index - 1] &&
                     values[row_index - 1][column_index - 1] == 0
                   "
-                  ><!--!-->&nbsp;</span
                 >
+                  <va-icon
+                    :color="
+                      returnMostReadable(
+                        colors[values[row_index - 1][column_index - 1]]
+                      )
+                    "
+                    name="warning"
+                  >
+</va-icon
+                >
+</span>-->
                 <span
+                  class="numbers"
                   v-if="
-                    !show_error ||
-                    solution[row_index - 1][column_index - 1] ==
-                      values[row_index - 1][column_index - 1]
+                    !(prev_x == row_index - 1 && prev_y == column_index - 1) &&
+                    !(
+                      show_error &&
+                      solution[row_index - 1][column_index - 1] !=
+                        values[row_index - 1][column_index - 1] &&
+                      values[row_index - 1][column_index - 1] != 0
+                    )
                   "
                   >&nbsp;</span
                 >
+                <span
+                  class="numbers"
+                  v-if="prev_x == row_index - 1 && prev_y == column_index - 1"
+                >
+                  <va-icon
+                    name="check_box_outline_blank"
+                    :color="
+                      returnMostReadable(
+                        colors[values[row_index - 1][column_index - 1]]
+                      )
+                    "
+                  >
+                  </va-icon>
+                </span>
               </td>
             </tr>
           </table>
@@ -838,8 +963,9 @@ export default {
       </va-infinite-scroll>
     </div>
     <div class="myrow">
-      <va-button style="overflow-wrap: anywhere" @click="reset()"
-        ><va-icon name="delete" />&nbsp;Izbriši</va-button
+      <va-button style="overflow-wrap: anywhere" @click="reset()">
+        <va-icon name="delete" />
+        &nbsp;Izbriši</va-button
       >
     </div>
     <div class="myrow">
@@ -879,29 +1005,35 @@ export default {
         @click="drag = !drag"
         style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
       >
-        <span v-if="drag == false"
-          ><va-icon name="grid_view" />&nbsp;Bojanje jedan po jedan</span
-        ><span v-else
-          ><va-icon name="gesture" />&nbsp;Bojanje prelaskom miša</span
-        >
+        <span v-if="drag == false">
+          <va-icon name="grid_off" />
+          &nbsp;Bojanje jedan po jedan
+        </span>
+        <span v-else><va-icon name="grid_on" /> &nbsp;Bojanje segmenta</span>
       </va-button>
     </div>
     <div class="myrow">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Naslov zagonetke</va-card-title>
-        <va-card-content>{{ title }}</va-card-content>
+        <va-card-content>
+          {{ title }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Opis zagonetke</va-card-title>
-        <va-card-content>{{ description }}</va-card-content>
+        <va-card-content>
+          {{ description }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Izvor zagonetke</va-card-title>
-        <va-card-content>{{ source }}</va-card-content>
+        <va-card-content>
+          {{ source }}
+        </va-card-content>
       </va-card>
     </div>
     <div class="myrow">
@@ -913,8 +1045,8 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
-      >
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
+      </va-chip>
       <br />
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
@@ -924,16 +1056,21 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
-      >
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
+      </va-chip>
     </div>
     <div class="myrow">
-      <va-button @click="show_solution()" style="overflow-wrap: anywhere"
-        ><va-icon name="help" />&nbsp;Otkrij sva polja</va-button
+      <va-button
+        @click="$refs.show_solution_modal.show()"
+        style="overflow-wrap: anywhere"
+      >
+        <va-icon name="help" />
+        &nbsp;Otkrij sva polja</va-button
       >
     </div>
   </body>
   <va-modal
+    :mobile-fullscreen="false"
     ref="show_error"
     message="Želite li da greške budu uznačene?"
     @ok="show_error = true"
@@ -942,6 +1079,16 @@ export default {
     cancel-text="Ne"
   />
   <va-modal
+    :mobile-fullscreen="false"
+    ref="show_solution_modal"
+    message="Želite li da se otkriju sva polja? U tom slučaju vaš rezultat neće biti spremljen."
+    @ok="show_solution()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
+  <va-modal
+    :mobile-fullscreen="false"
     ref="no_user_dialog"
     @cancel="$router.push('/login')"
     ok-text="Da"

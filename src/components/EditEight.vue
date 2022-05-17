@@ -1,6 +1,6 @@
 <script>
-import { eightsRef, friendsRef } from "../firebase_main.js"
-import { usersRef } from "../firebase_main.js"
+import { eightsRef, friendsRef } from "../firebase_main.js";
+import { usersRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   ref,
@@ -9,7 +9,7 @@ import {
   getMetadata,
   deleteObject,
 } from "firebase/storage";
-import { projectStorage } from "../firebase_main.js"
+import { projectStorage } from "../firebase_main.js";
 
 import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
@@ -119,9 +119,14 @@ export default {
       }
     },
     getAuthorUserRecord() {
-      let some_id = this.author; let other = this.author;
+      let some_id = this.author;
+      let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -158,9 +163,14 @@ export default {
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater; let other = this.updater;
+      let some_id = this.updater;
+      let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -197,9 +207,15 @@ export default {
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
+      this.permissionsUserRecords = [];
+      let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i]; let other = this.permissions[i];
+        let some_id = this.permissions[i];
+        let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -274,7 +290,10 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
@@ -1212,12 +1231,12 @@ export default {
 };
 </script>
 
-<template>
+<template> 
   <Navbar></Navbar>
   <body class="mybody" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="mybody" v-else>
+  <body class="mybody" v-else> 
     <div class="myrow">
       <va-slider
         class="trackMe"
@@ -1249,7 +1268,7 @@ export default {
           <span>Broj stupaca</span>
         </template>
         <!--<template #append>
-                <va-input type="number" v-model="columns" @update:model-value="initialize()" :min="1" :max="50" />
+                <va-input type="number" v-model="columns" @update:model-value="initialize()" :min="1" :max="50"/>
             </template>-->
       </va-slider>
     </div>
@@ -1347,7 +1366,8 @@ export default {
           <va-tab @click="word += 'Ǉ'"> Ǉ </va-tab>
           <va-tab @click="word += 'Ǌ'"> Ǌ </va-tab>
           <va-tab @click="reset()">
-            <va-icon name="delete" />&nbsp;Izbriši
+            <va-icon name="delete" />
+            &nbsp;Izbriši
           </va-tab>
         </template>
       </va-tabs>
@@ -1365,8 +1385,8 @@ export default {
       />
     </div>
     <div class="myrow">
-      <span v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</span
+      <va-chip v-if="current_x != null && current_y != null"
+        >({{ current_x }}, {{ current_y }})</va-chip
       >
     </div>
     <div class="myrow" style="max-height: 400px">
@@ -1505,8 +1525,8 @@ export default {
         style="display: inline-block; overflow-wrap: anywhere"
         @click="click_file()"
       >
-        <span v-if="this.imageURL != ''"> {{ this.imageURL }}</span
-        ><span v-else><va-icon name="photo" />&nbsp;Odaberi sliku </span>
+        <span v-if="this.imageURL != ''"> {{ this.imageURL }} </span>
+        <span v-else><va-icon name="photo" /> &nbsp;Odaberi sliku </span>
       </va-button>
       <input
         file-types="image/*"
@@ -1569,8 +1589,8 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
-      >
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
+      </va-chip>
       <br />
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
@@ -1580,17 +1600,19 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
-      >
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
+      </va-chip>
     </div>
     <div class="myrow">
       <va-button
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
       >
-        <span v-if="is_public == false"
-          ><va-icon name="public_off" />&nbsp;Samo suradnici</span
-        ><span v-else><va-icon name="public" />&nbsp;Svi</span>
+        <span v-if="is_public == false">
+          <va-icon name="public_off" />
+          &nbsp;Samo suradnici
+        </span>
+        <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
     <div class="myrow">
@@ -1649,8 +1671,8 @@ export default {
         "
         @click="store()"
       >
-        <va-icon name="mode_edit" />&nbsp;Izmijeni postojeću
-        zagonetku</va-button
+        <va-icon name="mode_edit" />
+        &nbsp;Izmijeni postojeću zagonetku</va-button
       >
       <va-button
         style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
@@ -1665,8 +1687,8 @@ export default {
         "
         @click="duplicate()"
       >
-        <va-icon name="control_point_duplicate" />&nbsp;Spremi izmjene kao novu
-        zagonetku</va-button
+        <va-icon name="control_point_duplicate" />
+        &nbsp;Spremi izmjene kao novu zagonetku</va-button
       >
     </div>
   </body>

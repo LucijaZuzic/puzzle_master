@@ -1,10 +1,10 @@
 <script>
 import { ref, uploadBytes } from "firebase/storage";
-import { usersRef, friendsRef } from "../firebase_main.js"
+import { usersRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
-import { projectStorage } from "../firebase_main.js"
-import { integramsRef } from "../firebase_main.js"
+import { projectStorage } from "../firebase_main.js";
+import { integramsRef } from "../firebase_main.js";
 
 export default {
   components: {
@@ -47,7 +47,10 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
@@ -592,7 +595,7 @@ export default {
           <span>Broj pojmova</span>
         </template>
         <!--<template #append>
-          <va-input type="number" v-model="numvalues" :min="3" :max="5" />
+          <va-input type="number" v-model="numvalues" :min="3" :max="5"/>
         </template>-->
       </va-slider>
     </div>
@@ -609,7 +612,7 @@ export default {
           <span>Broj kategorija</span>
         </template>
         <!--<template #append>
-          <va-input type="number" v-model="numcategories" :min="3" :max="5" />
+          <va-input type="number" v-model="numcategories" :min="3" :max="5"/>
         </template>-->
       </va-slider>
     </div>
@@ -631,7 +634,7 @@ export default {
             v-model="numinstructions"
             :min="5"
             :max="10"
-          />
+         />
         </template>-->
       </va-slider>
     </div>
@@ -671,7 +674,7 @@ export default {
         <template #tabs>
           <span v-for="i in numcategories" v-bind:key="i">
             <va-tab :name="i">
-              <span>{{ i }}. kategorija</span>
+              <span> {{ i }}. kategorija</span>
             </va-tab>
           </span>
         </template>
@@ -702,12 +705,11 @@ export default {
                   $forceUpdate();
                 "
               >
-                <va-icon v-if="is_image[j - 1] == false" name="title" /><va-icon
-                  v-else
-                  name="photo"
-                />
-              </span> </va-chip
-          ></va-card-title>
+                <va-icon v-if="is_image[j - 1] == false" name="title" />
+                <va-icon v-else name="photo" />
+              </span>
+            </va-chip>
+          </va-card-title>
           <va-card-content style="background-color: white">
             <br />
             <va-form ref="namesform">
@@ -750,10 +752,12 @@ export default {
                         this.category_values[k - 1][j - 1] != '' &&
                         this.category_values[k - 1][j - 1] != []
                       "
-                      >{{ this.category_values[k - 1][j - 1].name }}</span
                     >
-                    <span v-else
-                      ><va-icon name="photo" />&nbsp;Odaberi sliku</span
+                      {{ this.category_values[k - 1][j - 1].name }}
+                    </span>
+                    <span v-else>
+                      <va-icon name="photo" />
+                      &nbsp;Odaberi sliku</span
                     >
                   </va-chip>
                   <input
@@ -808,21 +812,29 @@ export default {
       >
         <va-card :color="colors_for_number[i - 1]">
           <!--<va-card-title
-            ><va-chip
+            >
+<va-chip
               :color="colors_for_number[i - 1]"
               style="overflow-wrap: anywhere"
-              >{{ i }}. kategorija&nbsp;
-              <va-icon v-if="is_image[i - 1] == false" name="title" /><va-icon
+              >
+                  {{ i }}. kategorija&nbsp;
+              <va-icon v-if="is_image[i - 1] == false" name="title"/>
+<va-icon
                 v-else
-                name="photo" /></va-chip
-          ></va-card-title>-->
+                name="photo"/>
+</va-chip
+          >
+</va-card-title>-->
           <va-card-content style="background-color: white">
-            <!--<br />-->
-            <va-tabs v-model="value_to_display" :color="colors_for_number[i - 1]">
+            <!--<br/>-->
+            <va-tabs
+              v-model="value_to_display"
+              :color="colors_for_number[i - 1]"
+            >
               <template #tabs>
                 <span v-for="val in numvalues" v-bind:key="val">
                   <va-tab :name="val">
-                    <span>{{ i }}{{ alphabet[val - 1] }}</span>
+                    <span> {{ i }}{{ alphabet[val - 1] }} </span>
                   </va-tab>
                 </span>
               </template>
@@ -901,9 +913,11 @@ export default {
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
       >
-        <span v-if="is_public == false"
-          ><va-icon name="public_off" />&nbsp;Samo suradnici</span
-        ><span v-else><va-icon name="public" />&nbsp;Svi</span>
+        <span v-if="is_public == false">
+          <va-icon name="public_off" />
+          &nbsp;Samo suradnici
+        </span>
+        <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
     <div class="myrow">
@@ -960,7 +974,8 @@ export default {
         "
         @click="store()"
       >
-        <va-icon name="add_circle" />&nbsp;Spremi zagonetku
+        <va-icon name="add_circle" />
+        &nbsp;Spremi zagonetku
       </va-button>
     </div>
   </body>

@@ -15,7 +15,7 @@ export default {
   components: {
     RecordsTable,
     RatingsTable,
-    LoadingBar
+    LoadingBar,
   },
   mounted() {
     if (!this.$props.friend) {
@@ -56,7 +56,7 @@ export default {
       columns: [],
       sortBy: "time_created",
       sortingOrder: "desc",
-      perPage: 10,
+      perPage: 1,
       currentPage: 1,
       columns: [
         { key: "rows", sortable: true },
@@ -122,186 +122,201 @@ export default {
       this.puzzles = [];
       let me = this;
       let funct_ref = this.string_to_array;
-      nonogramsRef.get().then(function (snapshot) {
-        snapshot.forEach(function (childSnapshot) {
-          let inList = true;
-          if (me.$props.puzzleList) {
-            inList = false;
-            for (let i = 0; i < me.$props.puzzleList.length; i++) {
-              if (me.$props.puzzleList[i] == childSnapshot.id) {
-                inList = true;
-                break;
+      nonogramsRef
+        .get()
+        .then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let inList = true;
+            if (me.$props.puzzleList) {
+              inList = false;
+              for (let i = 0; i < me.$props.puzzleList.length; i++) {
+                if (me.$props.puzzleList[i] == childSnapshot.id) {
+                  inList = true;
+                  break;
+                }
               }
             }
-          }
-          if (inList == true) {
-            let sum_ratings = 0;
-            let num_ratings = 0;
-            nonogramsRatingsRef
-              .get()
-              .then(function (snapshotRating) {
-                snapshotRating.forEach(function (childSnapshotRating) {
-                  let idPuzzle = childSnapshotRating.get("puzzleID");
-                  let match = true;
-                  if (idPuzzle != childSnapshot.id) {
-                    match = false;
+            if (inList == true) {
+              let sum_ratings = 0;
+              let num_ratings = 0;
+              nonogramsRatingsRef
+                .get()
+                .then(function (snapshotRating) {
+                  snapshotRating.forEach(function (childSnapshotRating) {
+                    let idPuzzle = childSnapshotRating.get("puzzleID");
+                    let match = true;
+                    if (idPuzzle != childSnapshot.id) {
+                      match = false;
+                    }
+                    if (match == true) {
+                      sum_ratings += parseFloat(
+                        childSnapshotRating.get("rating")
+                      );
+                      num_ratings += 1;
+                    }
+                  });
+                })
+                .then(() => {
+                  if (num_ratings == 0) {
+                    num_ratings = 1;
                   }
-                  if (match == true) {
-                    sum_ratings += parseFloat(
-                      childSnapshotRating.get("rating")
-                    );
-                    num_ratings += 1;
-                  }
-                });
-              })
-              .then(() => {
-                if (num_ratings == 0) {
-                  num_ratings = 1;
-                }
-                let solution = funct_ref(childSnapshot.get("solution"));
-                usersRef
-                  .get(childSnapshot.get("author"))
-                  .then(function (snapshotAuthor) {
-                    snapshotAuthor.forEach(function (childSnapshotAuthor) {
-                      let idAuthor = childSnapshotAuthor.id;
-                      if (idAuthor == childSnapshot.get("author")) {
-                        let author_display_name = "Skriveno";
-                        let author_email = "skriveno";
-                        let visibility_author =
-                          childSnapshotAuthor.get("visible");
-                        if (
-                          visibility_author == true ||
-                          me.user.uid == idAuthor
-                        ) {
-                          author_display_name =
-                            childSnapshotAuthor.get("displayName");
-                          author_email = childSnapshotAuthor.get("email");
-                        }
-                        friendsRef
-                          .get()
-                          .then(function (snapshotUserAuthor) {
-                            snapshotUserAuthor.forEach(function (
-                              childSnapshotUserAuthor
-                            ) {
-                              let id1 = childSnapshotUserAuthor.get("user1");
-                              let id2 = childSnapshotUserAuthor.get("user2");
-                              if (
-                                (id1 == me.user.uid && id2 == idAuthor) ||
-                                (id2 == me.user.uid && id1 == idAuthor)
+                  let solution = funct_ref(childSnapshot.get("solution"));
+                  usersRef
+                    .get(childSnapshot.get("author"))
+                    .then(function (snapshotAuthor) {
+                      snapshotAuthor.forEach(function (childSnapshotAuthor) {
+                        let idAuthor = childSnapshotAuthor.id;
+                        if (idAuthor == childSnapshot.get("author")) {
+                          let author_display_name = "Skriveno";
+                          let author_email = "skriveno";
+                          let visibility_author =
+                            childSnapshotAuthor.get("visible");
+                          if (
+                            visibility_author == true ||
+                            (me.user && me.user.uid == idAuthor)
+                          ) {
+                            author_display_name =
+                              childSnapshotAuthor.get("displayName");
+                            author_email = childSnapshotAuthor.get("email");
+                          }
+                          friendsRef
+                            .get()
+                            .then(function (snapshotUserAuthor) {
+                              snapshotUserAuthor.forEach(function (
+                                childSnapshotUserAuthor
                               ) {
-                                author_display_name =
-                                  childSnapshotAuthor.get("displayName");
-                                author_email = childSnapshotAuthor.get("email");
-                              }
-                            });
-                          })
-                          .then(() => {
-                            usersRef
-                              .get(childSnapshot.get("updater"))
-                              .then(function (snapshotUpdater) {
-                                snapshotUpdater.forEach(function (
-                                  childSnapshotUpdater
+                                let id1 = childSnapshotUserAuthor.get("user1");
+                                let id2 = childSnapshotUserAuthor.get("user2");
+                                if (
+                                  (me.user &&
+                                    id1 == me.user.uid &&
+                                    id2 == idAuthor) ||
+                                  (me.user &&
+                                    id2 == me.user.uid &&
+                                    id1 == idAuthor)
                                 ) {
-                                  let idUpdater = childSnapshotUpdater.id;
-                                  if (
-                                    idUpdater == childSnapshot.get("updater")
+                                  author_display_name =
+                                    childSnapshotAuthor.get("displayName");
+                                  author_email =
+                                    childSnapshotAuthor.get("email");
+                                }
+                              });
+                            })
+                            .then(() => {
+                              usersRef
+                                .get(childSnapshot.get("updater"))
+                                .then(function (snapshotUpdater) {
+                                  snapshotUpdater.forEach(function (
+                                    childSnapshotUpdater
                                   ) {
-                                    let updater_display_name = "Skriveno";
-                                    let updater_email = "skriveno";
-                                    let visibility_updater =
-                                      childSnapshotUpdater.get("visible");
+                                    let idUpdater = childSnapshotUpdater.id;
                                     if (
-                                      visibility_updater == true ||
-                                      me.user.uid == idUpdater
+                                      idUpdater == childSnapshot.get("updater")
                                     ) {
-                                      updater_display_name =
-                                        childSnapshotUpdater.get("displayName");
-                                      updater_email =
-                                        childSnapshotUpdater.get("email");
-                                    }
-                                    friendsRef
-                                      .get()
-                                      .then(function (snapshotUserUpdater) {
-                                        snapshotUserUpdater.forEach(function (
-                                          childSnapshotUserUpdater
-                                        ) {
-                                          let id1 =
-                                            childSnapshotUserUpdater.get(
-                                              "user1"
-                                            );
-                                          let id2 =
-                                            childSnapshotUserUpdater.get(
-                                              "user2"
-                                            );
-                                          if (
-                                            (id1 == me.user.uid &&
-                                              id2 == idUpdater) ||
-                                            (id2 == me.user.uid &&
-                                              id1 == idUpdater)
+                                      let updater_display_name = "Skriveno";
+                                      let updater_email = "skriveno";
+                                      let visibility_updater =
+                                        childSnapshotUpdater.get("visible");
+                                      if (
+                                        visibility_updater == true ||
+                                        (me.user && me.user.uid == idUpdater)
+                                      ) {
+                                        updater_display_name =
+                                          childSnapshotUpdater.get(
+                                            "displayName"
+                                          );
+                                        updater_email =
+                                          childSnapshotUpdater.get("email");
+                                      }
+                                      friendsRef
+                                        .get()
+                                        .then(function (snapshotUserUpdater) {
+                                          snapshotUserUpdater.forEach(function (
+                                            childSnapshotUserUpdater
                                           ) {
-                                            updater_display_name =
-                                              childSnapshotUpdater.get(
-                                                "displayName"
+                                            let id1 =
+                                              childSnapshotUserUpdater.get(
+                                                "user1"
                                               );
-                                            updater_email =
-                                              childSnapshotUpdater.get("email");
-                                          }
-                                        });
-                                      })
-                                      .then(() => {
-                                        let newDeletePermission = {
-                                          granted: false,
-                                          id: childSnapshot.id,
-                                        };
-                                        if (me.user) {
-                                          newDeletePermission = {
-                                            granted:
-                                              childSnapshotAuthor.id ==
-                                              me.user.uid,
+                                            let id2 =
+                                              childSnapshotUserUpdater.get(
+                                                "user2"
+                                              );
+                                            if (
+                                              (me.user.uid &&
+                                                id1 == me.user.uid &&
+                                                id2 == idUpdater) ||
+                                              (me.user.uid &&
+                                                id2 == me.user.uid &&
+                                                id1 == idUpdater)
+                                            ) {
+                                              updater_display_name =
+                                                childSnapshotUpdater.get(
+                                                  "displayName"
+                                                );
+                                              updater_email =
+                                                childSnapshotUpdater.get(
+                                                  "email"
+                                                );
+                                            }
+                                          });
+                                        })
+                                        .then(() => {
+                                          let newDeletePermission = {
+                                            granted: false,
                                             id: childSnapshot.id,
                                           };
-                                        }
-                                        me.puzzles.push({
-                                          rows: solution.length,
-                                          columns: solution[0].length,
-                                          colors:
-                                            childSnapshot.get("colors").length,
-                                          rating: sum_ratings / num_ratings,
-                                          title: childSnapshot.get("title"),
-                                          description:
-                                            childSnapshot.get("description"),
-                                          source: childSnapshot.get("source"),
-                                          is_public:
-                                            childSnapshot.get("is_public"),
-                                          author_display_name:
-                                            author_display_name,
-                                          author_email: author_email,
-                                          time_created: new Date(
-                                            childSnapshot.get("time_created")
-                                              .seconds * 1000
-                                          ),
-                                          updater_display_name:
-                                            updater_display_name,
-                                          updater_email: updater_email,
-                                          last_updated: new Date(
-                                            childSnapshot.get("last_updated")
-                                              .seconds * 1000
-                                          ),
-                                          id: childSnapshot.id,
-                                          deletePermission: newDeletePermission,
+                                          if (me.user) {
+                                            newDeletePermission = {
+                                              granted:
+                                                childSnapshotAuthor.id ==
+                                                me.user.uid,
+                                              id: childSnapshot.id,
+                                            };
+                                          }
+                                          me.puzzles.push({
+                                            rows: solution.length,
+                                            columns: solution[0].length,
+                                            colors:
+                                              childSnapshot.get("colors")
+                                                .length,
+                                            rating: sum_ratings / num_ratings,
+                                            title: childSnapshot.get("title"),
+                                            description:
+                                              childSnapshot.get("description"),
+                                            source: childSnapshot.get("source"),
+                                            is_public:
+                                              childSnapshot.get("is_public"),
+                                            author_display_name:
+                                              author_display_name,
+                                            author_email: author_email,
+                                            time_created: new Date(
+                                              childSnapshot.get("time_created")
+                                                .seconds * 1000
+                                            ),
+                                            updater_display_name:
+                                              updater_display_name,
+                                            updater_email: updater_email,
+                                            last_updated: new Date(
+                                              childSnapshot.get("last_updated")
+                                                .seconds * 1000
+                                            ),
+                                            id: childSnapshot.id,
+                                            deletePermission:
+                                              newDeletePermission,
+                                          });
                                         });
-                                      });
-                                  }
+                                    }
+                                  });
                                 });
-                              });
-                          });
-                      }
+                            });
+                        }
+                      });
                     });
-                  });
-              });
-          }
-        });
-      })
+                });
+            }
+          });
+        })
         .then(() => {
           this.fully_loaded = true;
         });
@@ -417,51 +432,21 @@ export default {
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
     <div class="myrow">
-      <va-input
-        class="flex mb-2 md6"
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 25%;
-        "
-        placeholder="Unesite pojam za pretragu"
-        v-model="filter"
-      />
-      <va-checkbox
-        style="display: inline-block; margin-left: 20px; margin-top: 20px"
-        class="flex mb-2 md6"
-        label="Traži cijelu riječ"
-        v-model="useCustomFilteringFn"
-      />
-      <va-input
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 10%;
-        "
-        label="Trenutna stranica"
-        class="flex mb-2 md6"
-        v-model="currentPage"
-        :min="1"
-        :max="Math.ceil(this.filtered.length / this.perPage)"
+      <va-input placeholder="Unesite pojam za pretragu" v-model="filter" />
+    </div>
+    <div class="myrow">
+      <va-checkbox label="Traži cijelu riječ" v-model="useCustomFilteringFn" />
+    </div>
+    <div class="myrow" v-if="this.filtered.length > 1">
+      <va-slider
         type="number"
-      />
-      <va-input
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 10%;
-        "
-        label="Broj pojmova"
-        class="flex mb-2 md6"
         v-model="perPage"
         :min="1"
         :max="Math.ceil(this.filtered.length)"
-        type="number"
-      />
+        label="Broj pojmova na stranici"
+        track-label-visible
+      >
+      </va-slider>
     </div>
     <va-data-table
       :items="puzzles"
@@ -534,10 +519,10 @@ export default {
           name="delete"
         />
       </template>
-      <template #cell(is_public)="{ source: is_public }"
-        ><span v-if="is_public">Svi</span
-        ><span v-else>Samo suradnici</span></template
-      >
+      <template #cell(is_public)="{ source: is_public }">
+        <span v-if="is_public">Svi</span>
+        <span v-else>Samo suradnici</span>
+      </template>
       <template #bodyAppend>
         <tr>
           <td colspan="16" style="text-align: left">
@@ -565,28 +550,31 @@ export default {
       >
         <template #tabs>
           <va-tab label="Svi rezultati" name="all" />
-          <va-tab label="Rezultati korisnika" name="mine" />
-          <va-tab label="Ocjena" name="rate" />
+          <va-tab label="Rezultati korisnika" v-if="user" name="mine" />
+          <va-tab label="Ocjena" v-if="user" name="rate" />
         </template>
       </va-tabs>
       <span v-for="item in selectedItemsEmitted" :key="item.id">
         <RatingsTable
-          v-if="value == 'rate'"
+          v-if="user && value == 'rate'"
           :dbRef="nonogramsRatingsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :userId="user.uid"
-        ></RatingsTable>
+        >
+        </RatingsTable>
         <RecordsTable
           v-if="value == 'all'"
           :dbRef="nonogramsRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
-        ></RecordsTable>
+        >
+        </RecordsTable>
         <RecordsTable
           v-if="user && value == 'mine'"
           :dbRef="nonogramsRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :userId="user.uid"
-        ></RecordsTable>
+        >
+        </RecordsTable>
       </span>
     </div>
     <div class="myrow" v-if="start_time && end_time && selectMode == 'single'">
@@ -597,24 +585,26 @@ export default {
       >
         <template #tabs>
           <va-tab label="Svi rezultati" name="all" />
-          <va-tab label="Rezultati korisnika" name="mine" />
-          <va-tab label="Ocjena" name="rate" />
+          <va-tab label="Rezultati korisnika" v-if="user" name="mine" />
+          <va-tab label="Ocjena" v-if="user" name="rate" />
         </template>
       </va-tabs>
       <span v-for="item in selectedItemsEmitted" :key="item.id">
         <RatingsTable
-          v-if="value == 'rate'"
+          v-if="user && value == 'rate'"
           :dbRef="nonogramsRatingsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :userId="user.uid"
-        ></RatingsTable>
+        >
+        </RatingsTable>
         <RecordsTable
           v-if="value == 'all'"
           :dbRef="nonogramsRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :start_time="start_time"
           :end_time="end_time"
-        ></RecordsTable>
+        >
+        </RecordsTable>
         <RecordsTable
           v-if="user && value == 'mine'"
           :dbRef="nonogramsRecordsRef"
@@ -622,7 +612,8 @@ export default {
           :userId="user.uid"
           :start_time="start_time"
           :end_time="end_time"
-        ></RecordsTable>
+        >
+        </RecordsTable>
       </span>
     </div>
   </span>

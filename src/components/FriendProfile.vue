@@ -18,7 +18,10 @@ export default {
   methods: {
     checkStatus() {
       let my_activity = this;
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       let other = this.friend.uid;
       if (me == other) {
         this.areFriends = true;
@@ -72,7 +75,10 @@ export default {
       let requestedEmail = this.$route.params.email;
       let someUser = { email: "", displayName: "", uid: "" };
       let my_activity = this;
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       usersRef
         .get()
         .then(function (snapshotUser) {
@@ -201,18 +207,21 @@ export default {
             @click="removeFriend(user.uid, friend.uid)"
             name="person_remove"
             size="large"
-          ></va-icon>
+          >
+          </va-icon>
           <va-icon
             v-if="!areFriends && !requestSent"
             @click="sendFriendRequest(user.uid, friend.uid)"
             name="person_add"
             size="large"
-          ></va-icon>
+          >
+          </va-icon>
           <va-icon
             v-if="!areFriends && requestSent"
             name="person_add_disabled"
             size="large"
-          ></va-icon>
+          >
+          </va-icon>
         </div>
       </span>
       <span v-else>
@@ -228,10 +237,12 @@ export default {
               $forceUpdate();
             "
             style="margin-left: 10px; margin-top: 10px"
-            ><span v-if="friend.visible == true"
-              ><va-icon name="lock_open" />&nbsp;Javno</span
+          >
+            <span v-if="friend.visible == true">
+              <va-icon name="lock_open" />
+              &nbsp;Javno</span
             >
-            <span v-else><va-icon name="lock" />&nbsp;Privatno</span>
+            <span v-else><va-icon name="lock" /> &nbsp;Privatno</span>
           </va-button>
           <va-button @click="setVisibility()"
             >Promjeni vidljivost profila</va-button
@@ -250,30 +261,21 @@ export default {
             <va-tab label="Osmosmjerke" name="eight" />
           </template>
         </va-tabs>
-        <ProfileIntegram
-          :friend="friend"
-          v-if="value == 'integram'"
-        ></ProfileIntegram>
-        <ProfileNonogram
-          :friend="friend"
-          v-if="value == 'nonogram'"
-        ></ProfileNonogram>
+        <ProfileIntegram :friend="friend" v-if="value == 'integram'">
+        </ProfileIntegram>
+        <ProfileNonogram :friend="friend" v-if="value == 'nonogram'">
+        </ProfileNonogram>
         <ProfileNumberCrossword
           :friend="friend"
           v-if="value == 'numberCrossword'"
-        ></ProfileNumberCrossword>
-        <ProfileCryptogram
-          :friend="friend"
-          v-if="value == 'cryptogram'"
-        ></ProfileCryptogram>
-        <ProfileNumberLetter
-          :friend="friend"
-          v-if="value == 'numberLetter'"
-        ></ProfileNumberLetter>
-        <ProfileInitial
-          :friend="friend"
-          v-if="value == 'initial'"
-        ></ProfileInitial>
+        >
+        </ProfileNumberCrossword>
+        <ProfileCryptogram :friend="friend" v-if="value == 'cryptogram'">
+        </ProfileCryptogram>
+        <ProfileNumberLetter :friend="friend" v-if="value == 'numberLetter'">
+        </ProfileNumberLetter>
+        <ProfileInitial :friend="friend" v-if="value == 'initial'">
+        </ProfileInitial>
         <ProfileEight :friend="friend" v-if="value == 'eight'"></ProfileEight>
         <va-tabs v-model="friendOption" style="width: 100%">
           <template #tabs>
@@ -290,29 +292,31 @@ export default {
             />
           </template>
         </va-tabs>
-        <FriendsTable
-          :userId="friend.uid"
-          v-if="friendOption == 'friend'"
-        ></FriendsTable>
+        <FriendsTable :userId="friend.uid" v-if="friendOption == 'friend'">
+        </FriendsTable>
         <FriendRequestsReceivedTable
           :userId="friend.uid"
           v-if="friendOption == 'received' && user.email == friend.email"
-        ></FriendRequestsReceivedTable>
+        >
+        </FriendRequestsReceivedTable>
         <FriendRequestsSentTable
           :userId="friend.uid"
           v-if="friendOption == 'sent'"
-        ></FriendRequestsSentTable>
+        >
+        </FriendRequestsSentTable>
       </span>
       <span v-else>
         <NoDataToDisplay
           customMessage="Profil korisnika je postavljen kao privatan"
-        ></NoDataToDisplay>
+        >
+        </NoDataToDisplay>
       </span>
     </span>
     <span v-else>
       <NoDataToDisplay
         customMessage="Ne postoji korisnik s navedenom email adresom"
-      ></NoDataToDisplay>
+      >
+      </NoDataToDisplay>
     </span>
   </body>
 </template>

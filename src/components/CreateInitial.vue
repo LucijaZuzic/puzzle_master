@@ -1,10 +1,10 @@
 <script>
-import { initialsRef, friendsRef } from "../firebase_main.js"
-import { usersRef } from "../firebase_main.js"
+import { initialsRef, friendsRef } from "../firebase_main.js";
+import { usersRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
 import { ref, uploadBytes } from "firebase/storage";
-import { projectStorage } from "../firebase_main.js"
+import { projectStorage } from "../firebase_main.js";
 
 export default {
   components: {
@@ -86,7 +86,10 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
@@ -722,7 +725,7 @@ export default {
           <span>Broj stupaca</span>
         </template>
         <!--<template #append>
-                <va-input type="number" v-model="columns" @update:model-value="initialize()" :min="1" :max="50" />
+                <va-input type="number" v-model="columns" @update:model-value="initialize()" :min="1" :max="50"/>
             </template>-->
       </va-slider>
     </div>
@@ -820,7 +823,8 @@ export default {
           <va-tab @click="word += 'Ǉ'"> Ǉ </va-tab>
           <va-tab @click="word += 'Ǌ'"> Ǌ </va-tab>
           <va-tab @click="reset()">
-            <va-icon name="delete" />&nbsp;Izbriši
+            <va-icon name="delete" />
+            &nbsp;Izbriši
           </va-tab>
         </template>
       </va-tabs>
@@ -838,8 +842,8 @@ export default {
       />
     </div>
     <div class="myrow">
-      <span v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</span
+      <va-chip v-if="current_x != null && current_y != null"
+        >({{ current_x }}, {{ current_y }})</va-chip
       >
     </div>
     <div class="myrow" style="max-height: 400px">
@@ -981,8 +985,8 @@ export default {
         style="display: inline-block; overflow-wrap: anywhere"
         @click="click_file()"
       >
-        <span v-if="this.imageURL != ''"> {{ this.imageURL }}</span
-        ><span v-else><va-icon name="photo" />&nbsp;Odaberi sliku </span>
+        <span v-if="this.imageURL != ''"> {{ this.imageURL }} </span>
+        <span v-else><va-icon name="photo" /> &nbsp;Odaberi sliku </span>
       </va-button>
       <input
         file-types="image/*"
@@ -1041,9 +1045,11 @@ export default {
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
       >
-        <span v-if="is_public == false"
-          ><va-icon name="public_off" />&nbsp;Samo suradnici</span
-        ><span v-else><va-icon name="public" />&nbsp;Svi</span>
+        <span v-if="is_public == false">
+          <va-icon name="public_off" />
+          &nbsp;Samo suradnici
+        </span>
+        <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
     <div class="myrow">
@@ -1101,7 +1107,8 @@ export default {
         "
         @click="store()"
       >
-        <va-icon name="add_circle" />&nbsp;Spremi zagonetku
+        <va-icon name="add_circle" />
+        &nbsp;Spremi zagonetku
       </va-button>
     </div>
   </body>

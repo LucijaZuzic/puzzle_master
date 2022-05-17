@@ -1,12 +1,11 @@
- 
 <script>
-import { usersRef, friendRequestsRef, friendsRef } from "../firebase_main.js"
+import { usersRef, friendRequestsRef, friendsRef } from "../firebase_main.js";
 import NoDataToDisplay from "./NoDataToDisplay.vue";
 import LoadingBar from "./LoadingBar.vue";
 export default {
   components: {
     NoDataToDisplay,
-    LoadingBar
+    LoadingBar,
   },
   props: ["userId"],
   data() {
@@ -25,7 +24,7 @@ export default {
       columns: [],
       sortBy: "score",
       sortingOrder: "asc",
-      perPage: 10,
+      perPage: 1,
       currentPage: 1,
       columns: [
         { key: "user_display_name", sortable: true },
@@ -108,31 +107,33 @@ export default {
     fetch_users() {
       this.friends = [];
       let me = this;
-      friendRequestsRef.get().then(function (snapshotFriend) {
-        snapshotFriend.forEach(function (childSnapshotFriend) {
-          let sender = childSnapshotFriend.get("sender");
-          let receiver = childSnapshotFriend.get("receiver");
-          if (receiver == me.$props.userId) {
-                    console.log(sender + " " + receiver + " " + me.$props.userId)
-            usersRef.get().then(function (snapshotUser) {
-              snapshotUser.forEach(function (childSnapshotUser) {
-                let idUser = childSnapshotUser.id;
-                let user_display_name = childSnapshotUser.get("displayName");
-                let user_email = childSnapshotUser.get("email");
-                if (idUser == sender) {
-                    console.log(user_display_name + "rcv")
-                  me.friends.push({
-                    user_display_name: user_display_name,
-                    user_email: user_email,
-                    time: new Date(childSnapshotFriend.get("time").seconds * 1000),
-                    user_id: sender,
-                  });
-                }
+      friendRequestsRef
+        .get()
+        .then(function (snapshotFriend) {
+          snapshotFriend.forEach(function (childSnapshotFriend) {
+            let sender = childSnapshotFriend.get("sender");
+            let receiver = childSnapshotFriend.get("receiver");
+            if (receiver == me.$props.userId) {
+              usersRef.get().then(function (snapshotUser) {
+                snapshotUser.forEach(function (childSnapshotUser) {
+                  let idUser = childSnapshotUser.id;
+                  let user_display_name = childSnapshotUser.get("displayName");
+                  let user_email = childSnapshotUser.get("email");
+                  if (idUser == sender) {
+                    me.friends.push({
+                      user_display_name: user_display_name,
+                      user_email: user_email,
+                      time: new Date(
+                        childSnapshotFriend.get("time").seconds * 1000
+                      ),
+                      user_id: sender,
+                    });
+                  }
+                });
               });
-            });
-          }
-        });
-      })
+            }
+          });
+        })
         .then(() => {
           this.fully_loaded = true;
         });
@@ -160,101 +161,81 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
-  <span v-if="friends.length > 0">
-    <div class="myrow">
-      <va-input
-        class="flex mb-2 md6"
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 25%;
-        "
-        placeholder="Unesite pojam za pretragu"
-        v-model="filter"
-      />
-      <va-checkbox
-        style="display: inline-block; margin-left: 20px; margin-top: 20px"
-        class="flex mb-2 md6"
-        label="Traži cijelu riječ"
-        v-model="useCustomFilteringFn"
-      />
-      <va-input
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 10%;
-        "
-        label="Trenutna stranica"
-        class="flex mb-2 md6"
-        v-model="currentPage"
-        :min="1"
-        :max="Math.ceil(this.filtered.length / this.perPage)"
-        type="number"
-      />
-      <va-input
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 10%;
-        "
-        label="Broj pojmova"
-        class="flex mb-2 md6"
-        v-model="perPage"
-        :min="1"
-        :max="Math.ceil(this.filtered.length)"
-        type="number"
-      />
-    </div>
-    <va-data-table
-      :items="friends"
-      :filter="filter"
-      :columns="columns"
-      :hoverable="true"
-      :per-page="perPage"
-      :current-page="currentPage"
-      v-model:sort-by="sortBy"
-      v-model:sorting-order="sortingOrder"
-      @filtered="filtered = $event.items"
-      no-data-filtered-html="Pretraga nije dala rezultate."
-      no-data-html="Nema podataka."
-      :filter-method="customFilteringFn"
-    >
-      <template #header(user_display_name)>Korisnik (ime)</template>
-      <template #header(user_email)>Korisnik (email)</template>
-      <template #header(time)>Datum i vrijeme</template>
-      <template #header(user_id)>Akcije</template>
-      <template #cell(time)="{ source: time }">
-        {{ time.toLocaleString() }}
-      </template>
-      <template #cell(user_email)="{ source: user_email }">
-        <router-link
-          v-bind:to="{ name: 'profile', params: { email: user_email } }"
+    <span v-if="friends.length > 0">
+      <div class="myrow">
+        <va-input placeholder="Unesite pojam za pretragu" v-model="filter" />
+      </div>
+      <div class="myrow">
+        <va-checkbox
+          label="Traži cijelu riječ"
+          v-model="useCustomFilteringFn"
+        />
+      </div>
+      <div class="myrow" v-if="this.filtered.length > 1">
+        <va-slider
+          type="number"
+          v-model="perPage"
+          :min="1"
+          :max="Math.ceil(this.filtered.length)"
+          label="Broj pojmova na stranici"
+          track-label-visible
         >
-          {{ user_email }}
-        </router-link>
-      </template>
-      <template #cell(user_id)="{ source: user_id }">
-        <va-icon name="done" @click="acceptFriendRequest($props.userId, user_id)">
-        </va-icon>
-        <va-icon name="close" @click="removeFriendRequest($props.userId, user_id)">
-        </va-icon>
-      </template>
-      <template #bodyAppend>
-        <tr>
-          <td colspan="4" class="table-example--pagination">
-            <va-pagination v-model="currentPage" input :pages="pages" />
-          </td>
-        </tr>
-      </template>
-    </va-data-table>
-  </span>
-  <NoDataToDisplay
-    v-if="friends.length <= 0"
-    customMessage="Korisnik nije primio zahtjev za prijateljstvo"
-  ></NoDataToDisplay>
+        </va-slider>
+      </div>
+      <va-data-table
+        :items="friends"
+        :filter="filter"
+        :columns="columns"
+        :hoverable="true"
+        :per-page="perPage"
+        :current-page="currentPage"
+        v-model:sort-by="sortBy"
+        v-model:sorting-order="sortingOrder"
+        @filtered="filtered = $event.items"
+        no-data-filtered-html="Pretraga nije dala rezultate."
+        no-data-html="Nema podataka."
+        :filter-method="customFilteringFn"
+      >
+        <template #header(user_display_name)>Korisnik (ime)</template>
+        <template #header(user_email)>Korisnik (email)</template>
+        <template #header(time)>Datum i vrijeme</template>
+        <template #header(user_id)>Akcije</template>
+        <template #cell(time)="{ source: time }">
+          {{ time.toLocaleString() }}
+        </template>
+        <template #cell(user_email)="{ source: user_email }">
+          <router-link
+            v-bind:to="{ name: 'profile', params: { email: user_email } }"
+          >
+            {{ user_email }}
+          </router-link>
+        </template>
+        <template #cell(user_id)="{ source: user_id }">
+          <va-icon
+            name="done"
+            @click="acceptFriendRequest($props.userId, user_id)"
+          >
+          </va-icon>
+          <va-icon
+            name="close"
+            @click="removeFriendRequest($props.userId, user_id)"
+          >
+          </va-icon>
+        </template>
+        <template #bodyAppend>
+          <tr>
+            <td colspan="4" class="table-example--pagination">
+              <va-pagination v-model="currentPage" input :pages="pages" />
+            </td>
+          </tr>
+        </template>
+      </va-data-table>
+    </span>
+    <NoDataToDisplay
+      v-if="friends.length <= 0"
+      customMessage="Korisnik nije primio zahtjev za prijateljstvo"
+    >
+    </NoDataToDisplay>
   </span>
 </template>
 

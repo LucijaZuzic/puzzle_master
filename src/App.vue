@@ -17,11 +17,9 @@
 .mybody {
   overflow-wrap: anywhere;
   font-family: Arial, Helvetica, sans-serif !important;
-  margin-left: 50px;
-  margin-right: 0%;
 }
 .trackMe {
-  overflow-wrap: break-word !important; 
+  overflow-wrap: break-word !important;
 }
 .myrow {
   width: 100%;

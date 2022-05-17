@@ -7,9 +7,9 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { projectStorage, friendsRef } from "../firebase_main.js"
-import { usersRef } from "../firebase_main.js"
-import { integramsRef } from "../firebase_main.js"
+import { projectStorage, friendsRef } from "../firebase_main.js";
+import { usersRef } from "../firebase_main.js";
+import { integramsRef } from "../firebase_main.js";
 
 import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
@@ -62,9 +62,14 @@ export default {
   },
   methods: {
     getAuthorUserRecord() {
-      let some_id = this.author; let other = this.author;
+      let some_id = this.author;
+      let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -101,9 +106,14 @@ export default {
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater; let other = this.updater;
+      let some_id = this.updater;
+      let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -140,9 +150,15 @@ export default {
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
+      this.permissionsUserRecords = [];
+      let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i]; let other = this.permissions[i];
+        let some_id = this.permissions[i];
+        let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -217,7 +233,10 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
@@ -982,12 +1001,12 @@ export default {
         });
     },
     getPicture() {
-      this.urls = []
-      let me = this
+      this.urls = [];
+      let me = this;
       for (let i = 0; i < this.numcategories; i++) {
-        this.urls.push([])
+        this.urls.push([]);
         for (let j = 0; j < this.numvalues; j++) {
-          this.urls[i].push("")
+          this.urls[i].push("");
         }
       }
       for (let i = 0; i < this.numcategories; i++) {
@@ -1005,8 +1024,8 @@ export default {
                 // Get the download URL
                 getDownloadURL(reference)
                   .then((url) => {
-                    me.urls[j][i] = url
-                    this.$forceUpdate()
+                    me.urls[j][i] = url;
+                    this.$forceUpdate();
                     if (document.getElementById("img" + j + ":" + i)) {
                       document.getElementById("img" + j + ":" + i).src = url;
                     }
@@ -1014,8 +1033,8 @@ export default {
                   .catch((error) => {});
               } else {
                 let comp_url = URL.createObjectURL(file);
-                me.urls[j][i] = comp_url
-                this.$forceUpdate()
+                me.urls[j][i] = comp_url;
+                this.$forceUpdate();
                 if (document.getElementById("img" + j + ":" + i)) {
                   document.getElementById("img" + j + ":" + i).src = comp_url;
                 }
@@ -1038,7 +1057,7 @@ export default {
     },
   },
   beforeUpdate() {
-    this.initialize()
+    this.initialize();
   },
   beforeMount() {
     this.initialize();
@@ -1096,7 +1115,7 @@ export default {
           <span>Broj pojmova</span>
         </template>
         <!--<template #append>
-          <va-input type="number" v-model="numvalues" :min="3" :max="5" />
+          <va-input type="number" v-model="numvalues" :min="3" :max="5"/>
         </template>-->
       </va-slider>
     </div>
@@ -1113,7 +1132,7 @@ export default {
           <span>Broj kategorija</span>
         </template>
         <!--<template #append>
-          <va-input type="number" v-model="numcategories" :min="3" :max="5" />
+          <va-input type="number" v-model="numcategories" :min="3" :max="5"/>
         </template>-->
       </va-slider>
     </div>
@@ -1135,7 +1154,7 @@ export default {
             v-model="numinstructions"
             :min="5"
             :max="10"
-          />
+         />
         </template>-->
       </va-slider>
     </div>
@@ -1175,7 +1194,7 @@ export default {
         <template #tabs>
           <span v-for="i in numcategories" v-bind:key="i">
             <va-tab :name="i">
-              <span>{{ i }}. kategorija</span>
+              <span> {{ i }}. kategorija</span>
             </va-tab>
           </span>
         </template>
@@ -1206,12 +1225,11 @@ export default {
                   $forceUpdate();
                 "
               >
-                <va-icon v-if="is_image[j - 1] == false" name="title" /><va-icon
-                  v-else
-                  name="photo"
-                />
-              </span> </va-chip
-          ></va-card-title>
+                <va-icon v-if="is_image[j - 1] == false" name="title" />
+                <va-icon v-else name="photo" />
+              </span>
+            </va-chip>
+          </va-card-title>
           <va-card-content style="background-color: white">
             <br />
             <va-form ref="namesform">
@@ -1255,22 +1273,26 @@ export default {
                         this.category_values[k - 1][j - 1] != [] &&
                         this.category_values[k - 1][j - 1].name != undefined
                       "
-                      >{{ this.category_values[k - 1][j - 1].name }}</span
                     >
+                      {{ this.category_values[k - 1][j - 1].name }}
+                    </span>
                     <span
                       v-if="
                         this.category_values[k - 1][j - 1] != '' &&
                         this.category_values[k - 1][j - 1] != [] &&
                         this.category_values[k - 1][j - 1].name == undefined
                       "
-                      >{{ this.category_values[k - 1][j - 1] }}</span
                     >
+                      {{ this.category_values[k - 1][j - 1] }}
+                    </span>
                     <span
                       v-if="
                         this.category_values[k - 1][j - 1] == '' ||
                         this.category_values[k - 1][j - 1] == []
                       "
-                      ><va-icon name="photo" />&nbsp;Odaberi sliku</span
+                    >
+                      <va-icon name="photo" />
+                      &nbsp;Odaberi sliku</span
                     >
                   </va-chip>
                   <input
@@ -1325,24 +1347,29 @@ export default {
       >
         <va-card :color="colors_for_number[i - 1]">
           <!--<va-card-title
-                ><va-chip
+                >
+<va-chip
                   :color="colors_for_number[i - 1]"
                   style="overflow-wrap: anywhere"
-                  >{{ i }}. kategorija&nbsp;
+                  >
+                  {{ i }}. kategorija&nbsp;
                   <va-icon
                     v-if="is_image[i - 1] == false"
-                    name="title" /><va-icon v-else name="photo" /></va-chip
-              ></va-card-title>-->
+                    name="title"/>
+<va-icon v-else name="photo"/>
+</va-chip
+              >
+</va-card-title>-->
           <va-card-content style="background-color: white">
-            <!--<br />-->
+            <!--<br/>-->
             <va-tabs
               v-model="value_to_display"
-              :color="colors_for_number[i - 1]" 
+              :color="colors_for_number[i - 1]"
             >
               <template #tabs>
                 <span v-for="val in numvalues" v-bind:key="val">
                   <va-tab :name="val">
-                    <span>{{ i }}{{ alphabet[val - 1] }}</span>
+                    <span> {{ i }}{{ alphabet[val - 1] }} </span>
                   </va-tab>
                 </span>
               </template>
@@ -1421,32 +1448,34 @@ export default {
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
         >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
           authorUserRecord.email
-        }})</va-chip
-      >
+        }})
+      </va-chip>
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
-      >
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
+      </va-chip>
       <br />
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
         >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
           updaterUserRecord.email
-        }})</va-chip
-      >
+        }})
+      </va-chip>
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
-      >
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
+      </va-chip>
     </div>
     <div class="myrow">
       <va-button
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
       >
-        <span v-if="is_public == false"
-          ><va-icon name="public_off" />&nbsp;Samo suradnici</span
-        ><span v-else><va-icon name="public" />&nbsp;Svi</span>
+        <span v-if="is_public == false">
+          <va-icon name="public_off" />
+          &nbsp;Samo suradnici
+        </span>
+        <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
     <div class="myrow">
@@ -1503,8 +1532,8 @@ export default {
         "
         @click="store()"
       >
-        <va-icon name="mode_edit" />&nbsp;Izmijeni postojeću
-        zagonetku</va-button
+        <va-icon name="mode_edit" />
+        &nbsp;Izmijeni postojeću zagonetku</va-button
       >&nbsp;
       <va-button
         :disabled="
@@ -1517,8 +1546,8 @@ export default {
         "
         @click="duplicate()"
       >
-        <va-icon name="control_point_duplicate" />&nbsp;Spremi izmjene kao novu
-        zagonetku</va-button
+        <va-icon name="control_point_duplicate" />
+        &nbsp;Spremi izmjene kao novu zagonetku</va-button
       >
     </div>
   </body>

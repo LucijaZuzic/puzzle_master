@@ -1,12 +1,12 @@
 <script>
-import { usersRef, friendsRef } from "../firebase_main.js"
+import { usersRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import NoDataToDisplay from "./NoDataToDisplay.vue";
 import LoadingBar from "./LoadingBar.vue";
 export default {
   components: {
     NoDataToDisplay,
-    LoadingBar
+    LoadingBar,
   },
   mounted() {
     const auth = getAuth();
@@ -44,7 +44,7 @@ export default {
       columns: [],
       sortBy: "rating",
       sortingOrder: "asc",
-      perPage: 10,
+      perPage: 1,
       currentPage: 1,
       columns: [
         { key: "user_display_name", sortable: true },
@@ -86,69 +86,73 @@ export default {
     fetch_users() {
       this.user_ratings = [];
       let me = this;
-      this.$props.dbRef.get().then(function (snapshot) {
-        snapshot.forEach(function (childSnapshot) {
-          let idPuzzle = childSnapshot.get("puzzleID");
-          let idUser = childSnapshot.get("user");
-          let idRating = childSnapshot.id;
-          if (
-            me.$props.userId &&
-            me.$props.userId == idUser &&
-            me.$props.puzzleId &&
-            idPuzzle == me.$props.puzzleId
-          ) {
-            me.already_rated = true;
-            me.documentRated = idRating;
-          }
-          let record = new Date(childSnapshot.get("time").seconds * 1000);
-          let match = true;
-          if (me.$props.puzzleId && idPuzzle != me.$props.puzzleId) {
-            match = false;
-          }
-          if (match == true) {
-            usersRef.get(idUser).then(function (snapshotUser) {
-              snapshotUser.forEach(function (childSnapshotUser) {
-                let foundUser = childSnapshotUser.id;
-                if (foundUser == idUser) {
-                  me.sum_ratings += parseFloat(childSnapshot.get("rating"));
-                  let user_display_name = "Skriveno";
-                  let user_email = "skriveno";
-                  let visibility_user = childSnapshotUser.get("visible");
-                  if (visibility_user == true || me.user.uid == idUser) {
-                    user_display_name = childSnapshotUser.get("displayName");
-                    user_email = childSnapshotUser.get("email");
+      this.$props.dbRef
+        .get()
+        .then(function (snapshot) {
+          snapshot.forEach(function (childSnapshot) {
+            let idPuzzle = childSnapshot.get("puzzleID");
+            let idUser = childSnapshot.get("user");
+            let idRating = childSnapshot.id;
+            if (
+              me.$props.userId &&
+              me.$props.userId == idUser &&
+              me.$props.puzzleId &&
+              idPuzzle == me.$props.puzzleId
+            ) {
+              me.already_rated = true;
+              me.documentRated = idRating;
+            }
+            let record = new Date(childSnapshot.get("time").seconds * 1000);
+            let match = true;
+            if (me.$props.puzzleId && idPuzzle != me.$props.puzzleId) {
+              match = false;
+            }
+            if (match == true) {
+              usersRef.get(idUser).then(function (snapshotUser) {
+                snapshotUser.forEach(function (childSnapshotUser) {
+                  let foundUser = childSnapshotUser.id;
+                  if (foundUser == idUser) {
+                    me.sum_ratings += parseFloat(childSnapshot.get("rating"));
+                    let user_display_name = "Skriveno";
+                    let user_email = "skriveno";
+                    let visibility_user = childSnapshotUser.get("visible");
+                    if (visibility_user == true || me.user.uid == idUser) {
+                      user_display_name = childSnapshotUser.get("displayName");
+                      user_email = childSnapshotUser.get("email");
+                    }
+                    friendsRef
+                      .get()
+                      .then(function (snapshotFriend) {
+                        snapshotFriend.forEach(function (childSnapshotFriend) {
+                          let id1 = childSnapshotFriend.get("user1");
+                          let id2 = childSnapshotFriend.get("user2");
+                          if (
+                            (me.user.uid &&
+                              id1 == me.user.uid &&
+                              id2 == idUser) ||
+                            (me.user.uid && id2 == me.user.uid && id1 == idUser)
+                          ) {
+                            user_display_name =
+                              childSnapshotFriend.get("displayName");
+                            user_email = childSnapshotFriend.get("email");
+                          }
+                        });
+                      })
+                      .then(() => {
+                        me.user_ratings.push({
+                          user_display_name: user_display_name,
+                          user_email: user_email,
+                          rating: parseFloat(childSnapshot.get("rating")),
+                          comment: childSnapshot.get("comment"),
+                          time: record,
+                        });
+                      });
                   }
-                  friendsRef
-                    .get()
-                    .then(function (snapshotFriend) {
-                      snapshotFriend.forEach(function (childSnapshotFriend) {
-                        let id1 = childSnapshotFriend.get("user1");
-                        let id2 = childSnapshotFriend.get("user2");
-                        if (
-                          (id1 == me.user.uid && id2 == idUser) ||
-                          (id2 == me.user.uid && id1 == idUser)
-                        ) {
-                          user_display_name =
-                            childSnapshotFriend.get("displayName");
-                          user_email = childSnapshotFriend.get("email");
-                        }
-                      });
-                    })
-                    .then(() => {
-                      me.user_ratings.push({
-                        user_display_name: user_display_name,
-                        user_email: user_email,
-                        rating: parseFloat(childSnapshot.get("rating")),
-                        comment: childSnapshot.get("comment"),
-                        time: record,
-                      });
-                    });
-                }
+                });
               });
-            });
-          }
-        });
-      })
+            }
+          });
+        })
         .then(() => {
           this.fully_loaded = true;
         });
@@ -208,140 +212,117 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
-  <div class="myrow" v-if="user_ratings.length > 0">
-    <va-chip
-      ><va-icon name="stars"></va-icon>&nbsp;Ocjena:
-      {{ sum_ratings / user_ratings.length }}
-    </va-chip>
-  </div>
-  <span v-if="user_ratings.length > 0">
-    <div class="myrow">
-      <va-input
-        class="flex mb-2 md6"
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 25%;
-        "
-        placeholder="Unesite pojam za pretragu"
-        v-model="filter"
-      />
-      <va-checkbox
-        style="display: inline-block; margin-left: 20px; margin-top: 20px"
-        class="flex mb-2 md6"
-        label="Traži cijelu riječ"
-        v-model="useCustomFilteringFn"
-      />
-      <va-input
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 10%;
-        "
-        label="Trenutna stranica"
-        class="flex mb-2 md6"
-        v-model="currentPage"
-        :min="1"
-        :max="Math.ceil(this.filtered.length / this.perPage)"
-        type="number"
-      />
-      <va-input
-        style="
-          display: inline-block;
-          margin-left: 20px;
-          margin-top: 20px;
-          width: 10%;
-        "
-        label="Broj pojmova"
-        class="flex mb-2 md6"
-        v-model="perPage"
-        :min="1"
-        :max="Math.ceil(this.filtered.length)"
-        type="number"
-      />
+    <div class="myrow" v-if="user_ratings.length > 0">
+      <va-chip>
+        <va-icon name="stars"></va-icon>&nbsp;Ocjena:
+        {{ sum_ratings / user_ratings.length }}
+      </va-chip>
     </div>
-    <va-data-table
-      :items="user_ratings"
-      :filter="filter"
-      :columns="columns"
-      :hoverable="true"
-      :per-page="perPage"
-      :current-page="currentPage"
-      v-model:sort-by="sortBy"
-      v-model:sorting-order="sortingOrder"
-      @filtered="filtered = $event.items"
-      no-data-filtered-html="Pretraga nije dala rezultate."
-      no-data-html="Nema podataka."
-      :filter-method="customFilteringFn"
-    >
-      <template #header(user_display_name)>Korisnik (ime)</template>
-      <template #header(user_email)>Korisnik (email)</template>
-      <template #header(rating)>Ocjena</template>
-      <template #header(comment)>Komentar</template>
-      <template #header(time)>Datum i vrijeme</template>
-      <template #cell(time)="{ source: time }">
-        {{ time.toLocaleString() }}
-      </template>
-      <template #cell(user_email)="{ source: user_email }">
-        <router-link
-          v-bind:to="{ name: 'profile', params: { email: user_email } }"
+    <span v-if="user_ratings.length > 0">
+      <div class="myrow">
+        <va-input placeholder="Unesite pojam za pretragu" v-model="filter" />
+      </div>
+      <div class="myrow">
+        <va-checkbox
+          label="Traži cijelu riječ"
+          v-model="useCustomFilteringFn"
+        />
+      </div>
+      <div class="myrow" v-if="this.filtered.length > 1">
+        <va-slider
+          type="number"
+          v-model="perPage"
+          :min="1"
+          :max="Math.ceil(this.filtered.length)"
+          label="Broj pojmova na stranici"
+          track-label-visible
         >
-          {{ user_email }}
-        </router-link>
-      </template>
-      <template #bodyAppend>
-        <tr>
-          <td colspan="5" class="table-example--pagination">
-            <va-pagination v-model="currentPage" input :pages="pages" />
-          </td>
-        </tr>
-      </template>
-    </va-data-table>
-  </span>
-  <NoDataToDisplay
-    v-if="user_ratings.length <= 0"
-    customMessage="Nema ocjena za odabranu zagonetku"
-  ></NoDataToDisplay>
-  <div class="myrow" v-if="$props.userId">
-    <va-list-item>
-      <va-list-item-section avatar>
-        <va-chip>
-          <va-icon name="star" size="large"> </va-icon>&nbsp;
-          {{ value }}
-        </va-chip>
-      </va-list-item-section>
-      <va-list-item-section>
-        <va-list-item-label caption>
-          <va-rating
-            style="display: inline-block"
-            v-model="value"
-            halves
-            hover
-            size="large"
-          />
-        </va-list-item-label>
-      </va-list-item-section>
-    </va-list-item>
-  </div>
-  <div class="myrow" v-if="$props.userId">
-    <va-form>
-      <va-input
-        type="textarea"
-        placeholder="Obrazložite ocjenu"
-        label="Komentar"
-        :rules="[(value) => (value && value.length > 0) || 'Unesite komentar.']"
-        immediate-validation
-        v-model="comment"
-      ></va-input>
-    </va-form>
-  </div>
-  <div class="myrow" v-if="$props.userId">
-    <va-button :disabled="comment.length < 1" @click="submit()"
-      ><va-icon name="rate_review"></va-icon>&nbsp;Ocjenite</va-button
+        </va-slider>
+      </div>
+      <va-data-table
+        :items="user_ratings"
+        :filter="filter"
+        :columns="columns"
+        :hoverable="true"
+        :per-page="perPage"
+        :current-page="currentPage"
+        v-model:sort-by="sortBy"
+        v-model:sorting-order="sortingOrder"
+        @filtered="filtered = $event.items"
+        no-data-filtered-html="Pretraga nije dala rezultate."
+        no-data-html="Nema podataka."
+        :filter-method="customFilteringFn"
+      >
+        <template #header(user_display_name)>Korisnik (ime)</template>
+        <template #header(user_email)>Korisnik (email)</template>
+        <template #header(rating)>Ocjena</template>
+        <template #header(comment)>Komentar</template>
+        <template #header(time)>Datum i vrijeme</template>
+        <template #cell(time)="{ source: time }">
+          {{ time.toLocaleString() }}
+        </template>
+        <template #cell(user_email)="{ source: user_email }">
+          <router-link
+            v-bind:to="{ name: 'profile', params: { email: user_email } }"
+          >
+            {{ user_email }}
+          </router-link>
+        </template>
+        <template #bodyAppend>
+          <tr>
+            <td colspan="5" class="table-example--pagination">
+              <va-pagination v-model="currentPage" input :pages="pages" />
+            </td>
+          </tr>
+        </template>
+      </va-data-table>
+    </span>
+    <NoDataToDisplay
+      v-if="user_ratings.length <= 0"
+      customMessage="Nema ocjena za odabranu zagonetku"
     >
-  </div>
+    </NoDataToDisplay>
+    <div class="myrow" v-if="$props.userId">
+      <va-list-item>
+        <va-list-item-section avatar>
+          <va-chip>
+            <va-icon name="star" size="large"></va-icon>&nbsp;
+            {{ value }}
+          </va-chip>
+        </va-list-item-section>
+        <va-list-item-section>
+          <va-list-item-label caption>
+            <va-rating
+              style="display: inline-block"
+              v-model="value"
+              halves
+              hover
+              size="large"
+            />
+          </va-list-item-label>
+        </va-list-item-section>
+      </va-list-item>
+    </div>
+    <div class="myrow" v-if="$props.userId">
+      <va-form>
+        <va-input
+          type="textarea"
+          placeholder="Obrazložite ocjenu"
+          label="Komentar"
+          :rules="[
+            (value) => (value && value.length > 0) || 'Unesite komentar.',
+          ]"
+          immediate-validation
+          v-model="comment"
+        >
+        </va-input>
+      </va-form>
+    </div>
+    <div class="myrow" v-if="$props.userId">
+      <va-button :disabled="comment.length < 1" @click="submit()">
+        <va-icon name="rate_review"></va-icon>&nbsp;Ocjenite</va-button
+      >
+    </div>
   </span>
 </template>
 

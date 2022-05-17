@@ -1,6 +1,7 @@
 <script>
-import { nonogramsRef, friendsRef } from "../firebase_main.js"
-import { usersRef } from "../firebase_main.js"
+import tinycolor from "tinycolor2/tinycolor";
+import { nonogramsRef, friendsRef } from "../firebase_main.js";
+import { usersRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import Navbar from "./Navbar.vue";
@@ -39,8 +40,8 @@ export default {
       mode: 0,
       blocked: false,
       drag: false,
-      prev_x: -1,
-      prev_y: -1,
+      prev_x: null,
+      prev_y: null,
       num_colors: 2,
       wrong_colors: [false, false],
       colors: ["#FFFFFF", "#000000"],
@@ -48,11 +49,46 @@ export default {
       current_y: null,
     };
   },
-  methods: { 
-  getAuthorUserRecord() {
-      let some_id = this.author; let other = this.author;
+  methods: {
+    invertColor(hex) {
+      if (hex.indexOf("#") === 0) {
+        hex = hex.slice(1);
+      }
+      // convert 3-digit hex to 6-digits.
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      if (hex.length !== 6) {
+        throw new Error("Invalid HEX color.");
+      }
+      // invert color components
+      var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+        g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+        b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+      // pad each with zeros and return
+      return "#" + this.padZero(r) + this.padZero(g) + this.padZero(b);
+    },
+    padZero(str, len) {
+      len = len || 2;
+      var zeros = new Array(len).join("0");
+      return (zeros + str).slice(-len);
+    },
+    returnMostReadable(hex) {
+      return tinycolor
+        .mostReadable(hex, [hex, this.invertColor(hex), "#000000", "#ffffff"], {
+          includeFallbackColors: true,
+        })
+        .toHexString();
+    },
+    getAuthorUserRecord() {
+      let some_id = this.author;
+      let other = this.author;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -89,9 +125,14 @@ export default {
       });
     },
     getUpdaterUserRecord() {
-      let some_id = this.updater; let other = this.updater;
+      let some_id = this.updater;
+      let other = this.updater;
       let newRecord = { displayName: "Skriveno", email: "skriveno" };
-      let me = this.user.uid; let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       usersRef.get(some_id).then(function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           let id = childSnapshot.id;
@@ -128,9 +169,15 @@ export default {
       });
     },
     getCollaboratorUserRecord() {
-      this.permissionsUserRecords = []; let my_activity = this; let me = this.user.uid;
+      this.permissionsUserRecords = [];
+      let my_activity = this;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       for (let i = 0; i < this.permissions.length; i++) {
-        let some_id = this.permissions[i]; let other = this.permissions[i];
+        let some_id = this.permissions[i];
+        let other = this.permissions[i];
         let newRecord = { displayName: "Skriveno", email: "skriveno" };
         usersRef.get(some_id).then(function (snapshot) {
           snapshot.forEach(function (childSnapshot) {
@@ -205,8 +252,11 @@ export default {
       let found = false;
       let hidden = true;
       let uid = "";
-      let me = this.user.uid;
-      let my_activity = this
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
+      let my_activity = this;
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
@@ -336,22 +386,52 @@ export default {
       }
       this.parse_sequence();
     },
-    increment(x, y, ismouseover) {
+    increment(x, y) {
       if (this.blocked == true) {
-        return;
-      }
-      if (ismouseover && !this.drag) {
         return;
       }
       if (!document.getElementById("colorpicker" + this.mode)) {
         this.mode = 0;
       }
-      this.solution[x][y] = this.mode;
-      document.getElementById("cell" + x + ":" + y).style.backgroundColor =
-        document.getElementById("colorpicker" + this.mode).value;
-      this.solution = [...this.solution];
-      this.parse_sequence();
-      this.$forceUpdate();
+      if (!this.drag) {
+        this.solution[x][y] = this.mode;
+        document.getElementById("cell" + x + ":" + y).style.backgroundColor =
+          document.getElementById("colorpicker" + this.mode).value;
+        this.solution = [...this.solution];
+        this.prev_x = null;
+        this.prev_y = null;
+        this.parse_sequence();
+        this.$forceUpdate();
+      } else {
+        if (this.prev_x && this.prev_y) {
+          for (
+            let i = Math.min(this.prev_x, x);
+            i <= Math.max(this.prev_x, x);
+            i++
+          ) {
+            for (
+              let j = Math.min(this.prev_y, y);
+              j <= Math.max(this.prev_y, y);
+              j++
+            ) {
+              this.solution[i][j] = this.mode;
+              document.getElementById(
+                "cell" + i + ":" + j
+              ).style.backgroundColor = document.getElementById(
+                "colorpicker" + this.mode
+              ).value;
+            }
+          }
+          this.solution = [...this.solution];
+          this.prev_x = null;
+          this.prev_y = null;
+          this.parse_sequence();
+          this.$forceUpdate();
+        } else {
+          this.prev_x = x;
+          this.prev_y = y;
+        }
+      }
     },
     check_equal_colors() {
       this.wrong_colors = [];
@@ -950,14 +1030,21 @@ export default {
           <span>Broj stupaca</span>
         </template>
         <!--<template #append>
-                <va-input type="number" v-model="colnum" @update:model-value="initialize()" :min="1" :max="50" />
+                <va-input type="number" v-model="colnum" @update:model-value="initialize()" :min="1" :max="50"/>
             </template>-->
       </va-slider>
     </div>
     <div class="myrow">
-      <span v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</span
+      <va-chip v-if="current_x != null && current_y != null"
+        >({{ current_x }}, {{ current_y }})</va-chip
       >
+    </div>
+    <div class="myrow" v-if="prev_x != null && prev_y != null && drag">
+      <va-chip>
+        <va-icon name="close" @click="(prev_x = null), (prev_y = null)">
+        </va-icon>
+        &nbsp; Početak segmenta: ({{ prev_x }}, {{ prev_y }})
+      </va-chip>
     </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
@@ -1025,12 +1112,25 @@ export default {
                 @mouseover="
                   current_x = row_index;
                   current_y = column_index;
-                  increment(row_index - 1, column_index - 1, true);
                 "
-                @click="increment(row_index - 1, column_index - 1, false)"
+                @click="increment(row_index - 1, column_index - 1)"
                 :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
               >
-                &nbsp;
+                <span
+                  class="numbers"
+                  v-if="prev_x == row_index - 1 && prev_y == column_index - 1"
+                >
+                  <va-icon
+                    :color="
+                      returnMostReadable(
+                        colors[solution[row_index - 1][column_index - 1]]
+                      )
+                    "
+                    name="check_box_outline_blank"
+                  >
+                  </va-icon>
+                </span>
+                <span class="numbers" v-else>&nbsp;</span>
               </td>
             </tr>
           </table>
@@ -1038,8 +1138,9 @@ export default {
       </va-infinite-scroll>
     </div>
     <div class="myrow">
-      <va-button style="overflow-wrap: anywhere" @click="reset()"
-        ><va-icon name="delete" />&nbsp;Izbriši</va-button
+      <va-button style="overflow-wrap: anywhere" @click="reset()">
+        <va-icon name="delete" />
+        &nbsp;Izbriši</va-button
       >
     </div>
     <div class="myrow">
@@ -1061,11 +1162,8 @@ export default {
     </div>
     <br />
     <div class="myrow">
-      <va-icon
-        v-if="wrong_colors[0] == true"
-        name="error"
-        color="danger"
-      ></va-icon>
+      <va-icon v-if="wrong_colors[0] == true" name="error" color="danger">
+      </va-icon>
       <button
         class="mr-2"
         style="
@@ -1090,7 +1188,8 @@ export default {
         v-for="i in num_colors - 1"
         v-bind:key="i"
       >
-        <!--<va-icon style="position:relative;left:10px" v-if="wrong_colors[i]==true" name="error" color="danger"></va-icon>-->
+        <!--<va-icon style="position:relative;left:10px" v-if="wrong_colors[i]==true" name="error" color="danger">
+</va-icon>-->
         <button
           class="mr-2"
           style="
@@ -1141,11 +1240,11 @@ export default {
         @click="drag = !drag"
         style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
       >
-        <span v-if="drag == false"
-          ><va-icon name="grid_view" />&nbsp;Bojanje jedan po jedan</span
-        ><span v-else
-          ><va-icon name="gesture" />&nbsp;Bojanje prelaskom miša</span
-        >
+        <span v-if="drag == false">
+          <va-icon name="grid_off" />
+          &nbsp;Bojanje jedan po jedan
+        </span>
+        <span v-else><va-icon name="grid_on" /> &nbsp;Bojanje segmenta</span>
       </va-button>
     </div>
     <div class="myrow" v-if="warning">
@@ -1155,7 +1254,9 @@ export default {
         center
         class="mb-4"
       >
-        <!--<p >{{warning}}</p>-->
+        <!--<p >
+                  {{warning}}
+        </p>-->
         Boje moraju biti jedinstvene.
       </va-alert>
       <br />
@@ -1200,8 +1301,8 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}</va-chip
-      >
+        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
+      </va-chip>
       <br />
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
@@ -1211,17 +1312,19 @@ export default {
       >
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</va-chip
-      >
+        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
+      </va-chip>
     </div>
     <div class="myrow">
       <va-button
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
       >
-        <span v-if="is_public == false"
-          ><va-icon name="public_off" />&nbsp;Samo suradnici</span
-        ><span v-else><va-icon name="public" />&nbsp;Svi</span>
+        <span v-if="is_public == false">
+          <va-icon name="public_off" />
+          &nbsp;Samo suradnici
+        </span>
+        <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
     <div class="myrow">
@@ -1279,8 +1382,8 @@ export default {
         "
         @click="store()"
       >
-        <va-icon name="mode_edit" />&nbsp;Izmijeni postojeću
-        zagonetku</va-button
+        <va-icon name="mode_edit" />
+        &nbsp;Izmijeni postojeću zagonetku</va-button
       >
       <va-button
         style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
@@ -1294,8 +1397,8 @@ export default {
         "
         @click="duplicate()"
       >
-        <va-icon name="control_point_duplicate" />&nbsp;Spremi izmjene kao novu
-        zagonetku</va-button
+        <va-icon name="control_point_duplicate" />
+        &nbsp;Spremi izmjene kao novu zagonetku</va-button
       >
     </div>
   </body>

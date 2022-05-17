@@ -1,17 +1,17 @@
 <script>
 import { ref, uploadBytes } from "firebase/storage";
-import { projectStorage } from "../firebase_main.js"
+import { projectStorage } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "./Navbar.vue";
-import { usersRef } from "../firebase_main.js"
-import { numberLettersRef, friendsRef } from "../firebase_main.js"
+import { usersRef } from "../firebase_main.js";
+import { numberLettersRef, friendsRef } from "../firebase_main.js";
 
 export default {
   components: {
     Navbar,
   },
   data() {
-    return {   
+    return {
       user: null,
       permissions: [],
       image: null,
@@ -77,13 +77,16 @@ export default {
       letters: [],
     };
   },
-  methods: { 
-  checkIfUserExists() {
+  methods: {
+    checkIfUserExists() {
       let email = this.collaborator;
       let found = false;
       let hidden = true;
       let uid = "";
-      let me = this.user.uid;
+      let me = null;
+      if (this.user) {
+        me = this.user.uid;
+      }
       if (this.user.email == email) {
         this.$vaToast.init("Ne možete dodati samog sebe kao suradnika.");
       } else {
@@ -808,7 +811,7 @@ export default {
 
 <template>
   <Navbar></Navbar>
-  <body class="mybody"> 
+  <body class="mybody">
     <div class="myrow">
       <va-slider
         class="trackMe"
@@ -821,7 +824,7 @@ export default {
           <span>Broj redaka</span>
         </template>
         <!--<template #append>
-          <va-input type="number" v-model="rows" :min="1" :max="50" />
+          <va-input type="number" v-model="rows" :min="1" :max="50"/>
         </template>-->
       </va-slider>
     </div>
@@ -837,7 +840,7 @@ export default {
           <span>Broj stupaca</span>
         </template>
         <!--<template #append>
-          <va-input type="number" v-model="columns" :min="1" :max="50" />
+          <va-input type="number" v-model="columns" :min="1" :max="50"/>
         </template>-->
       </va-slider>
     </div>
@@ -859,7 +862,7 @@ export default {
             v-model="num_letters"
             :min="1"
             :max="alphabet.length"
-          />
+         />
         </template>-->
       </va-slider>
     </div>
@@ -900,7 +903,8 @@ export default {
               use_option = false;
             "
           >
-            <va-icon name="border_top" />&nbsp;Iscrtkano gore
+            <va-icon name="border_top" />
+            &nbsp;Iscrtkano gore
           </va-tab>
           <va-tab
             :name="-5"
@@ -909,7 +913,8 @@ export default {
               use_option = false;
             "
           >
-            <va-icon name="border_bottom" />&nbsp;Iscrtkano dolje
+            <va-icon name="border_bottom" />
+            &nbsp;Iscrtkano dolje
           </va-tab>
           <va-tab
             :name="-6"
@@ -918,7 +923,8 @@ export default {
               use_option = false;
             "
           >
-            <va-icon name="border_left" />&nbsp;Iscrtkano lijevo
+            <va-icon name="border_left" />
+            &nbsp;Iscrtkano lijevo
           </va-tab>
           <va-tab
             :name="-7"
@@ -927,11 +933,12 @@ export default {
               use_option = false;
             "
           >
-            <va-icon name="border_right" />&nbsp;Iscrtkano desno
+            <va-icon name="border_right" />
+            &nbsp;Iscrtkano desno
           </va-tab>
         </template>
       </va-tabs>
-    </div> 
+    </div>
     <div class="myrow">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
@@ -990,27 +997,29 @@ export default {
       <va-tabs>
         <template #tabs>
           <va-tab @click="randomize_all = !randomize_all">
-            <span v-if="randomize_all == false">Nadopuni prazno</span
-            ><span v-else>Promijeni upisano</span>
+            <span v-if="randomize_all == false">Nadopuni prazno</span>
+            <span v-else>Promijeni upisano</span>
           </va-tab>
           <va-tab @click="keep_black = !keep_black">
-            <span v-if="keep_black == false">Nove barijere</span
-            ><span v-else>Zadrži barijere</span>
+            <span v-if="keep_black == false">Nove barijere</span>
+            <span v-else>Zadrži barijere</span>
           </va-tab>
           <va-tab @click="choose_random_type()">
-            <va-icon name="shuffle" />&nbsp;Odaberi nasumično
+            <va-icon name="shuffle" />
+            &nbsp;Odaberi nasumično
           </va-tab>
           <va-tab @click="choose_reset_type()">
-            <va-icon name="delete" />&nbsp;Izbriši
+            <va-icon name="delete" />
+            &nbsp;Izbriši
           </va-tab>
         </template>
       </va-tabs>
     </div>
     <div class="myrow">
-      <span v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</span
+      <va-chip v-if="current_x != null && current_y != null"
+        >({{ current_x }}, {{ current_y }})</va-chip
       >
-    </div> 
+    </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
@@ -1039,11 +1048,13 @@ export default {
                       solution[i - 1][j - 1] == -2 ||
                       solution[i - 1][j - 1] == -1
                     "
-                  ></span>
-                  <span v-else
-                    ><sup>{{ solution[i - 1][j - 1] }}</sup
-                    >&nbsp;{{ letters[solution[i - 1][j - 1]] }}</span
                   >
+                  </span>
+                  <span v-else>
+                    <sup> {{ solution[i - 1][j - 1] }} </sup>&nbsp;{{
+                      letters[solution[i - 1][j - 1]]
+                    }}
+                  </span>
                 </div>
               </td>
             </tr>
@@ -1067,8 +1078,8 @@ export default {
         style="display: inline-block; overflow-wrap: anywhere"
         @click="click_file()"
       >
-        <span v-if="this.imageURL != ''"> {{ this.imageURL }}</span
-        ><span v-else><va-icon name="photo" />&nbsp;Odaberi sliku </span>
+        <span v-if="this.imageURL != ''"> {{ this.imageURL }} </span>
+        <span v-else><va-icon name="photo" /> &nbsp;Odaberi sliku </span>
       </va-button>
       <input
         file-types="image/*"
@@ -1127,9 +1138,11 @@ export default {
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
       >
-        <span v-if="is_public == false"
-          ><va-icon name="public_off" />&nbsp;Samo suradnici</span
-        ><span v-else><va-icon name="public" />&nbsp;Svi</span>
+        <span v-if="is_public == false">
+          <va-icon name="public_off" />
+          &nbsp;Samo suradnici
+        </span>
+        <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
     <div class="myrow">
@@ -1188,7 +1201,8 @@ export default {
         "
         @click="store()"
       >
-        <va-icon name="add_circle" />&nbsp;Spremi zagonetku
+        <va-icon name="add_circle" />
+        &nbsp;Spremi zagonetku
       </va-button>
     </div>
   </body>

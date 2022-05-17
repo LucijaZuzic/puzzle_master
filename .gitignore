@@ -28,5 +28,6 @@ coverage
 *.sw?
 .vscode
 
-
+*.rar
+*.zip
 src/strucna-praksa-firebase-adminsdk-q2y2o-4e5c544a67.json
