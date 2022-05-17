@@ -1,6 +1,6 @@
 <script>
 import NoDataToDisplay from "./NoDataToDisplay.vue";
-import Navbar from "./Navbar.vue";
+
 import { getAuth, OAuthCredential, onAuthStateChanged } from "firebase/auth";
 import ProfileNonogram from "./ProfileNonogram.vue";
 import { usersRef, friendsRef, friendRequestsRef } from "../firebase_main.js";
@@ -169,7 +169,7 @@ export default {
     };
   },
   components: {
-    Navbar,
+    
     ProfileNonogram,
     ProfileInitial,
     ProfileIntegram,
@@ -187,11 +187,12 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody" v-if="!fully_loaded">
+    
     <LoadingBar></LoadingBar>
   </body>
   <body class="mybody" v-else>
+    
     <span
       v-if="friend.email != '' || friend.displayName != '' || friend.uid != ''"
     >
@@ -202,26 +203,28 @@ export default {
           </h1>
         </div>
         <div class="myrow">
-          <va-icon
-            v-if="areFriends"
-            @click="removeFriend(user.uid, friend.uid)"
-            name="person_remove"
-            size="large"
-          >
-          </va-icon>
-          <va-icon
-            v-if="!areFriends && !requestSent"
-            @click="sendFriendRequest(user.uid, friend.uid)"
-            name="person_add"
-            size="large"
-          >
-          </va-icon>
-          <va-icon
-            v-if="!areFriends && requestSent"
-            name="person_add_disabled"
-            size="large"
-          >
-          </va-icon>
+          <va-button>
+            <va-icon
+              v-if="areFriends"
+              @click="removeFriend(user.uid, friend.uid)"
+              name="person_remove"
+              size="large"
+            >
+            </va-icon>
+            <va-icon
+              v-if="!areFriends && !requestSent"
+              @click="sendFriendRequest(user.uid, friend.uid)"
+              name="person_add"
+              size="large"
+            >
+            </va-icon>
+            <va-icon
+              v-if="!areFriends && requestSent"
+              name="person_add_disabled"
+              size="large"
+            >
+            </va-icon>
+          </va-button>
         </div>
       </span>
       <span v-else>
@@ -236,7 +239,7 @@ export default {
               friend.visible = !friend.visible;
               $forceUpdate();
             "
-            style="margin-left: 10px; margin-top: 10px"
+            style="margin-left: 10px; margin-top: 10px;display:inline-block"
           >
             <span v-if="friend.visible == true">
               <va-icon name="lock_open" />
@@ -245,8 +248,10 @@ export default {
             <span v-else><va-icon name="lock" /> &nbsp;Privatno</span>
           </va-button>
           <va-button @click="setVisibility()"
-            >Promjeni vidljivost profila</va-button
+          style="margin-left: 10px; margin-top: 10px;display:inline-block"
           >
+            <va-icon name="done"></va-icon>
+          </va-button>
         </div>
       </span>
       <span v-if="user.email == friend.email || friend.visible || areFriends">

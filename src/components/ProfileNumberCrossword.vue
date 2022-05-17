@@ -130,7 +130,7 @@ export default {
   </NumberCrosswordTable>
   <NoDataToDisplay
     v-if="value == 'record' && recordNumberCrossword.length <= 0"
-    customMessage="Korisnik nije Rezultati niti jednu brojevnu križaljku"
+    customMessage="Korisnik nije riješio niti jednu brojevnu križaljku"
   >
   </NoDataToDisplay>
 </template>

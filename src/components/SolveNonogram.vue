@@ -5,16 +5,15 @@ import { nonogramsRecordsRef } from "../firebase_main.js";
 import { usersRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-import Navbar from "./Navbar.vue";
 import LoadingBar from "./LoadingBar.vue";
 
 export default {
   components: {
-    Navbar,
     LoadingBar,
   },
   data() {
     return {
+      allow_mouseover: false,
       fully_loaded: false,
       title: "",
       user: null,
@@ -260,11 +259,24 @@ export default {
       }
       this.parse_sequence();
     },
-    increment(x, y) {
+    increment(x, y, is_mouseover) {
       if (this.victory == true) {
         return;
       }
       if (this.blocked == true) {
+        return;
+      }
+      if (is_mouseover) {
+        if (this.allow_mouseover) {
+          this.values[x][y] = this.mode;
+          document.getElementById("cell" + x + ":" + y).style.backgroundColor =
+            this.mode;
+          this.values = [...this.values];
+          this.prev_x = null;
+          this.prev_y = null;
+          this.parse_sequence();
+          this.$forceUpdate();
+        }
         return;
       }
       if (!this.drag) {
@@ -783,7 +795,6 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
@@ -883,8 +894,9 @@ export default {
                 @mouseover="
                   current_x = row_index;
                   current_y = column_index;
+                  increment(row_index - 1, column_index - 1, true)
                 "
-                @click="increment(row_index - 1, column_index - 1)"
+                @click="increment(row_index - 1, column_index - 1, false)"
                 :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
               >
                 <span
@@ -1002,8 +1014,33 @@ export default {
     </div>
     <div class="myrow">
       <va-button
-        @click="drag = !drag"
+        @click="
+          allow_mouseover = !allow_mouseover;
+          if (allow_mouseover) {
+            drag = false;
+          }
+        "
         style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+      >
+        <span v-if="allow_mouseover == false">
+          <va-icon name="grid_view" />
+          &nbsp;Bojanje gestom isključeno
+        </span>
+        <span v-else
+          ><va-icon name="gesture" /> &nbsp;Bojanje gestom uključeno</span
+        >
+      </va-button>
+    </div>
+    <div class="myrow">
+      <va-button
+        @click="
+          drag = !drag;
+          if (allow_mouseover) {
+            drag = false;
+          }
+        "
+        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+        :disabled="allow_mouseover"
       >
         <span v-if="drag == false">
           <va-icon name="grid_off" />

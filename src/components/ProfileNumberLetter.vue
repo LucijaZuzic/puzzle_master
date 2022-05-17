@@ -127,7 +127,7 @@ export default {
   </NumberLetterTable>
   <NoDataToDisplay
     v-if="value == 'record' && recordNumberLetter.length <= 0"
-    customMessage='Korisnik nije Rezultati niti jednu zagonetku tipa "Isti broj - Isto slovo"'
+    customMessage='Korisnik nije riješio niti jednu zagonetku tipa "Isti broj - Isto slovo"'
   >
   </NoDataToDisplay>
 </template>

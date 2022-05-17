@@ -138,7 +138,11 @@ const routes = [
     name: "solve_number_crossword",
   },
 
-  { path: "/profile/:email", component: FriendProfile, name: "profile" },
+  {
+    path: "/profile/:email",
+    component: FriendProfile,
+    name: "profile"
+  },
 
   {
     path: "/create-cryptogram",
@@ -162,7 +166,7 @@ const routes = [
   },
 
   { path: "/create-initial", component: CreateInitial, name: "create_initial" },
-  { path: "/search-initial", component: SearchInitial },
+  { path: "/search-initial", component: SearchInitial, name: "search_initial" },
   { path: "/edit-initial/:id", component: EditInitial, name: "edit_initial" },
   {
     path: "/solve-initial/:id",
@@ -175,7 +179,7 @@ const routes = [
     component: CreateNumberLetter,
     name: "create_number_letter",
   },
-  { path: "/search-number-letter", component: SearchNumberLetter },
+  { path: "/search-number-letter", component: SearchNumberLetter, name: "search_number_letter" },
   {
     path: "/edit-numberletter/:id",
     component: EditNumberLetter,
@@ -187,8 +191,8 @@ const routes = [
     name: "solve_number_letter",
   },
 
-  { path: "/create-eight", component: CreateEight },
-  { path: "/search-eight", component: SearchEight },
+  { path: "/create-eight", component: CreateEight, name: "create_eight" },
+  { path: "/search-eight", component: SearchEight, name: "search_eight" },
   { path: "/edit-eight/:id", component: EditEight, name: "edit_eight" },
   { path: "/solve-eight/:id", component: SolveEight, name: "solve_eight" },
 ];

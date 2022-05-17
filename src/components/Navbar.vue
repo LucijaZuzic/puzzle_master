@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 export default {
   data() {
     return {
+      selected_destination: null,
       bgcolor: "#ffffff",
       user: null,
     };
@@ -16,6 +17,14 @@ export default {
       this.$router.push("/login");
     },
   },
+  created() {
+    this.$watch(
+      () => this.$route.name,
+      (toParams, previousParams) => {
+        this.selected_destination = this.$route.name.split("_")[this.$route.name.split("_").length - 1];
+      }
+    );
+  }, 
   mounted() {
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
@@ -33,12 +42,11 @@ export default {
   },
 };
 </script>
-<template>
-  <header>
-    <va-affix :offset-top="0" style="background-color: #2C82E0;">
-      <va-tabs :color="bgcolor">
+<template> 
+    <va-affix :offset-top="0"> 
+      <va-tabs :color="bgcolor" v-model="selected_destination" style="background-color: #2C82E0;">
         <template #tabs>
-          <va-tab>
+          <va-tab name="profile">
             <router-link v-if="user != null" :to="'/profile/' + user.email">
               <span style="color:#ffffff">
                 <va-icon name="person" />
@@ -48,13 +56,13 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab v-if="user != null">
+          <va-tab name="logout" v-if="user != null">
             <span @click="signOut()" style="color:#ffffff">
               <va-icon name="logout" />
               <span style="height: 24px"> Odjava </span>
             </span>
           </va-tab>
-          <va-tab v-else>
+          <va-tab name="login" v-else>
             <router-link :to="'/login'">
               <span style="color:#ffffff">
                 <va-icon name="login" />
@@ -62,7 +70,7 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab>
+          <va-tab name="integram">
             <router-link to="/search-integram">
               <span style="color:#ffffff">
                 <va-icon name="rule_folder" />
@@ -70,7 +78,7 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab>
+          <va-tab name="nonogram">
             <router-link to="/search-nonogram">
               <span style="color:#ffffff">
                 <va-icon name="draw" />
@@ -78,7 +86,7 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab>
+          <va-tab name="crossword">
             <router-link to="/search-number-crossword">
               <span style="color:#ffffff">
                 <va-icon name="format_list_numbered" />
@@ -86,7 +94,7 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab>
+          <va-tab name="cryptogram">
             <router-link to="/search-cryptogram">
               <span style="color:#ffffff">
                 <va-icon name="multiple_stop" />
@@ -94,7 +102,7 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab>
+          <va-tab name="letter">
             <router-link to="/search-number-letter">
               <span style="color:#ffffff">
                 <va-icon name="sync_alt" />
@@ -102,7 +110,7 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab>
+          <va-tab name="initial">
             <router-link to="/search-initial">
               <span style="color:#ffffff">
                 <va-icon name="text_rotation_none" />
@@ -110,7 +118,7 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab>
+          <va-tab name="eight">
             <router-link to="/search-eight">
               <span style="color:#ffffff">
                 <va-icon name="pattern" />
@@ -118,7 +126,7 @@ export default {
               </span>
             </router-link>
           </va-tab>
-          <va-tab>
+          <va-tab name="tournament">
             <router-link to="/search-tournament">
               <span style="color:#ffffff">
                 <va-icon name="workspace_premium" />
@@ -189,8 +197,7 @@ export default {
           </router-link></va-tab>
         </va-navbar-item>
       </template>
-    </va-navbar> -->
-  </header>
+    </va-navbar> --> 
 </template>
 
 <style></style>

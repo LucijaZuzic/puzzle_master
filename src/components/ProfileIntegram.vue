@@ -127,7 +127,7 @@ export default {
   </IntegramTable>
   <NoDataToDisplay
     v-if="value == 'record' && recordIntegram.length <= 0"
-    customMessage="Korisnik nije Rezultati niti jedan integram"
+    customMessage="Korisnik nije riješio niti jedan integram"
   >
   </NoDataToDisplay>
 </template>

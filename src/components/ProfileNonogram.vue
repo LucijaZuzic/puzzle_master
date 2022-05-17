@@ -127,7 +127,7 @@ export default {
   </NonogramTable>
   <NoDataToDisplay
     v-if="value == 'record' && recordNonogram.length <= 0"
-    customMessage="Korisnik nije Rezultati niti jedan nonogram"
+    customMessage="Korisnik nije riješio niti jedan nonogram"
   >
   </NoDataToDisplay>
 </template>

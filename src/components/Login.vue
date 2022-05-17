@@ -1,11 +1,11 @@
 <script>
 import { ui, uiConfig } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import Navbar from "./Navbar.vue";
+
 
 export default {
   components: {
-    Navbar,
+    
   },
   methods: {
     delay(operation, delay) {
@@ -42,8 +42,8 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody">
+    
     <div class="myrow">
       <h1 class="display-1">Prijava</h1>
     </div>

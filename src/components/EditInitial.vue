@@ -2,7 +2,7 @@
 import { initialsRef, friendsRef } from "../firebase_main.js";
 import { usersRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import Navbar from "./Navbar.vue";
+
 import LoadingBar from "./LoadingBar.vue";
 import {
   ref,
@@ -15,7 +15,7 @@ import { projectStorage } from "../firebase_main.js";
 
 export default {
   components: {
-    Navbar,
+    
     LoadingBar,
   },
   data() {
@@ -1225,11 +1225,12 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody" v-if="!fully_loaded">
+    
     <LoadingBar></LoadingBar>
   </body>
   <body class="mybody" v-else>
+    
     <div class="myrow">
       <va-slider
         class="trackMe"

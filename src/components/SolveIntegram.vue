@@ -6,12 +6,12 @@ import { usersRef } from "../firebase_main.js";
 import { integramsRecordsRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-import Navbar from "./Navbar.vue";
+
 import LoadingBar from "./LoadingBar.vue";
 
 export default {
   components: {
-    Navbar,
+    
     LoadingBar,
   },
   data() {
@@ -1259,11 +1259,12 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody" v-if="!fully_loaded">
+    
     <LoadingBar></LoadingBar>
   </body>
   <body class="mybody" v-else>
+    
     <div class="myrow">
       <span style="float: left; overflow-wrap: anywhere">
         <va-button

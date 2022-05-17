@@ -127,7 +127,7 @@ export default {
   </EightTable>
   <NoDataToDisplay
     v-if="value == 'record' && recordEight.length <= 0"
-    customMessage="Korisnik nije Rezultati niti jednu osmosmjerku"
+    customMessage="Korisnik nije riješio niti jednu osmosmjerku"
   >
   </NoDataToDisplay>
 </template>

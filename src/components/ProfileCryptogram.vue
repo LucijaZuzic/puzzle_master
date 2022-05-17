@@ -127,7 +127,7 @@ export default {
   </CryptogramTable>
   <NoDataToDisplay
     v-if="value == 'record' && recordCryptogram.length <= 0"
-    customMessage="Korisnik nije Rezultati niti jedan kriptogram"
+    customMessage="Korisnik nije riješio niti jedan kriptogram"
   >
   </NoDataToDisplay>
 </template>

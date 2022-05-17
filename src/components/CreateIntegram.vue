@@ -2,13 +2,13 @@
 import { ref, uploadBytes } from "firebase/storage";
 import { usersRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import Navbar from "./Navbar.vue";
+
 import { projectStorage } from "../firebase_main.js";
 import { integramsRef } from "../firebase_main.js";
 
 export default {
   components: {
-    Navbar,
+    
   },
   data() {
     return {
@@ -581,8 +581,8 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody">
+    
     <div class="myrow">
       <va-slider
         class="trackMe"

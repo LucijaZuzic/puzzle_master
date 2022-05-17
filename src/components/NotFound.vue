@@ -1,9 +1,9 @@
 <script>
-import Navbar from "./Navbar.vue";
+
 
 export default {
   components: {
-    Navbar,
+    
   },
   data() {
     return {};
@@ -12,8 +12,8 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody">
+    
     <div class="myrow">
       <h1 class="display-1">404</h1>
     </div>

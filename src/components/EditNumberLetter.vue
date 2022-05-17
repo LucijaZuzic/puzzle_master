@@ -11,12 +11,12 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usersRef } from "../firebase_main.js";
 import { numberLettersRef } from "../firebase_main.js";
 
-import Navbar from "./Navbar.vue";
+
 import LoadingBar from "./LoadingBar.vue";
 
 export default {
   components: {
-    Navbar,
+    
     LoadingBar,
   },
   data() {
@@ -1341,11 +1341,12 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody" v-if="!fully_loaded">
+    
     <LoadingBar></LoadingBar>
   </body>
   <body class="mybody" v-else>
+    
     <div class="myrow">
       <va-slider
         class="trackMe"

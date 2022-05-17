@@ -1,7 +1,7 @@
 <script>
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { tournamentsRef } from "../firebase_main.js";
-import Navbar from "./Navbar.vue";
+
 import IntegramTable from "./IntegramTable.vue";
 import NonogramTable from "./NonogramTable.vue";
 import NumberCrosswordTable from "./NumberCrosswordTable.vue";
@@ -16,7 +16,7 @@ export default {
   emits: ["selectedNonograms"],
   props: ["puzzleList", "selectMode", "start_time", "end_time"],
   components: {
-    Navbar,
+    
     IntegramTable,
     NonogramTable,
     NumberCrosswordTable,
@@ -199,12 +199,13 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody" v-if="!fully_loaded">
+    
     <LoadingBar></LoadingBar>
   </body>
   <span v-else>
     <body class="mybody">
+      
       <div class="myrow">
         <h1 class="display-1">Turniri</h1>
       </div>

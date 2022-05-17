@@ -1,5 +1,5 @@
 <script>
-import Navbar from "./Navbar.vue";
+
 import { tournamentsRef } from "../firebase_main.js";
 import IntegramTable from "./IntegramTable.vue";
 import NonogramTable from "./NonogramTable.vue";
@@ -176,7 +176,7 @@ export default {
     this.checkTime();
   },
   components: {
-    Navbar,
+    
     IntegramTable,
     NonogramTable,
     NumberCrosswordTable,
@@ -189,8 +189,8 @@ export default {
 </script>
 
 <template>
-  <Navbar></Navbar>
   <body class="mybody">
+    
     <div class="myrow">
       <h1 class="display-1">Novi turnir</h1>
     </div>

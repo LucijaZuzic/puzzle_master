@@ -127,7 +127,7 @@ export default {
   </InitialTable>
   <NoDataToDisplay
     v-if="value == 'record' && recordInitial.length <= 0"
-    customMessage="Korisnik nije Rezultati niti jednu inicijalnu osmosmjerku"
+    customMessage="Korisnik nije riješio niti jednu inicijalnu osmosmjerku"
   >
   </NoDataToDisplay>
 </template>
