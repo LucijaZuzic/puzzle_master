@@ -45,7 +45,7 @@ export default {
   <body class="mybody">
     
     <div class="myrow">
-      <h1 class="display-1">Prijava</h1>
+       <h1 class="display-1">Prijava</h1>
     </div>
     <section id="firebaseui-auth-container"></section>
     <h2 id="signed_in" visible="false" hidden="true" class="display-2">
@@ -54,4 +54,4 @@ export default {
   </body>
 </template>
 
-<style></style>
+<style scoped></style>

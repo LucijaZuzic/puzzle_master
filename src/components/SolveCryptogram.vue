@@ -15,6 +15,8 @@ export default {
   },
   data() {
     return {
+      zoom: 100,
+      max_zoom: 200,
       fully_loaded: false,
       border_top: [[]],
       border_bottom: [[]],
@@ -96,6 +98,22 @@ export default {
     };
   },
   methods: {
+    zoom_number() { 
+      if (this.zoom > this.max_zoom) {
+        this.zoom = this.max_zoom
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_in() {
+      this.zoom++;
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_out() {
+      if (this.zoom > 1) {
+        this.zoom--;
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
     check_duplicated(x, y) {
       for (let i = 0; i < this.values.length; i++) {
         for (let j = 0; j < 3; j++) {
@@ -1045,15 +1063,16 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
-      <va-chip v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</va-chip
-      >
+    <div class="myrow" v-if="current_x != null && current_y != null">
+      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
+    </div>
+    <div class="myrow"> 
+      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
     </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div class="myrow">
-          <table class="numbers_table">
+          <table class="numbers_table" id="table-to-zoom">
             <tr v-for="i in rows" v-bind:key="i">
               <td
                 v-for="j in columns"
@@ -1303,7 +1322,7 @@ export default {
   />
 </template>
 
-<style>
+<style scoped>
 .numbers_table {
   display: inline-table;
   border: 1px solid black;

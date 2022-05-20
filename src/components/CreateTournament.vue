@@ -192,7 +192,7 @@ export default {
   <body class="mybody">
     
     <div class="myrow">
-      <h1 class="display-1">Novi turnir</h1>
+       <h1 class="display-1">Novi turnir</h1>
     </div>
     <div class="myrow">
       <h2 class="display-2">Odabir vremena</h2>
@@ -333,4 +333,4 @@ export default {
   </body>
 </template>
 
-<style></style>
+<style scoped></style>

@@ -13,7 +13,7 @@ export default {
   <body class="mybody">
     
     <div class="myrow">
-      <h1 class="display-1">Integrami</h1>
+       <h1 class="display-1">Integrami</h1>
     </div>
     <div class="myrow">
       <IntegramTable selectMode="single"></IntegramTable>
@@ -21,4 +21,4 @@ export default {
   </body>
 </template>
 
-<style></style>
+<style scoped></style>

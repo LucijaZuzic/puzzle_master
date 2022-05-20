@@ -8,6 +8,8 @@ import { usersRef, friendsRef } from "../firebase_main.js";
 import { projectStorage } from "../firebase_main.js";
 import { ref, listAll, deleteObject, getMetadata } from "firebase/storage";
 import LoadingBar from "./LoadingBar.vue";
+import MyCounter from "./MyCounter.vue";
+import NoDataToDisplay from "./NoDataToDisplay.vue";
 
 export default {
   emits: ["selectedNonograms"],
@@ -16,6 +18,8 @@ export default {
     RecordsTable,
     RatingsTable,
     LoadingBar,
+    MyCounter,
+    NoDataToDisplay,
   },
   mounted() {
     if (!this.$props.friend) {
@@ -59,22 +63,22 @@ export default {
       perPage: 1,
       currentPage: 1,
       columns: [
-        { key: "rows", sortable: true },
-        { key: "columns", sortable: true },
-        { key: "colors", sortable: true },
-        { key: "rating", sortable: true },
-        { key: "title", sortable: true },
-        { key: "description", sortable: true },
-        { key: "source", sortable: true },
-        { key: "is_public", sortable: true },
-        { key: "author_display_name", sortable: true },
-        { key: "author_email", sortable: true },
-        { key: "time_created", sortable: true },
-        { key: "updater_display_name", sortable: true },
-        { key: "updater_email", sortable: true },
-        { key: "last_updated", sortable: true },
-        { key: "id", sortable: false },
-        { key: "deletePermission", sortable: false },
+        { key: "rows", sortable: true,  classes: "mytableforall" },
+        { key: "columns", sortable: true,  classes: "mytableforall" },
+        { key: "colors", sortable: true,  classes: "mytableforall" },
+        { key: "rating", sortable: true,  classes: "mytableforall" },
+        { key: "title", sortable: true,  classes: "mytableforall" },
+        { key: "description", sortable: true,  classes: "mytableforall" },
+        { key: "source", sortable: true,  classes: "mytableforall" },
+        { key: "is_public", sortable: true,  classes: "mytableforall" },
+        { key: "author_display_name", sortable: true,  classes: "mytableforall" },
+        { key: "author_email", sortable: true,  classes: "mytableforall" },
+        { key: "time_created", sortable: true,  classes: "mytableforall" },
+        { key: "updater_display_name", sortable: true,  classes: "mytableforall" },
+        { key: "updater_email", sortable: true,  classes: "mytableforall" },
+        { key: "last_updated", sortable: true,  classes: "mytableforall" },
+        { key: "id", sortable: false,  classes: "mytableforall" },
+        { key: "deletePermission", sortable: false,  classes: "mytableforall" },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -83,7 +87,7 @@ export default {
       ],
     };
   },
-  methods: {
+  methods: { 
     sendFriendRequest(me, other) {
       friendRequestsRef.add({
         sender: me,
@@ -432,23 +436,37 @@ export default {
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
     <div class="myrow">
-      <va-input placeholder="Unesite pojam za pretragu" v-model="filter" />
+      <router-link to="/create-nonogram">
+        <va-button>
+        <va-icon name="add_circle" />&nbsp;Nova
+        zagonetka</va-button>
+      </router-link>
     </div>
-    <div class="myrow">
-      <va-checkbox label="Traži cijelu riječ" v-model="useCustomFilteringFn" />
-    </div>
-    <div class="myrow" v-if="this.filtered.length > 1">
-      <va-slider
-        type="number"
-        v-model="perPage"
-        :min="1"
-        :max="Math.ceil(this.filtered.length)"
-        label="Broj pojmova na stranici"
-        track-label-visible
-      >
-      </va-slider>
-    </div>
-    <va-data-table
+    <span v-if="puzzles.length > 0">
+      <div class="myrow">
+        <va-input
+          style="display: inline-block"
+          placeholder="Unesite pojam za pretragu"
+          v-model="filter"
+        />
+        &nbsp;
+        <va-checkbox
+          style="display: inline-block"
+          label="Traži cijelu riječ"
+          v-model="useCustomFilteringFn"
+        />
+      </div>
+      <div class="myrow">
+        <MyCounter
+          :min_value="1"
+          :max_value="Math.ceil(this.filtered.length)"
+          v-bind:value="perPage"
+          @input="(n) => (perPage = n)"
+          :some_text="'Broj rezultata na stranici'"
+        ></MyCounter>
+      </div>
+      <va-data-table
+         
       :items="puzzles"
       :filter="filter"
       :columns="columns"
@@ -523,22 +541,18 @@ export default {
         <span v-if="is_public">Svi</span>
         <span v-else>Samo suradnici</span>
       </template>
-      <template #bodyAppend>
+      <template #bodyAppend> 
         <tr>
-          <td colspan="16" style="text-align: left">
-            <router-link to="/create-nonogram">
-              <va-icon color="primary" class="mr-4" name="add_circle" /> Nova
-              zagonetka
-            </router-link>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="16" class="table-example--pagination">
-            <va-pagination v-model="currentPage" input :pages="pages" />
+          <td colspan="16">
+              <div style="display:inline-block;margin-top: 10px">
+                <va-pagination v-model="currentPage" input :pages="pages" />
+              </div>
           </td>
         </tr>
       </template>
     </va-data-table>
+    </span>
+    <NoDataToDisplay v-else customMessage="Nema zagonetki"></NoDataToDisplay>
     <div
       class="myrow"
       v-if="!start_time && !end_time && selectMode == 'single'"
@@ -619,9 +633,5 @@ export default {
   </span>
 </template>
 
-<style>
-.table-example--pagination {
-  text-align: center;
-  text-align: -webkit-center;
-}
+<style scoped>
 </style>

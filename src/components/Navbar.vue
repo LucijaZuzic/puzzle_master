@@ -200,4 +200,4 @@ export default {
     </va-navbar> --> 
 </template>
 
-<style></style>
+<style scoped></style>

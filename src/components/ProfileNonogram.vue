@@ -132,4 +132,4 @@ export default {
   </NoDataToDisplay>
 </template>
 
-<style></style>
+<style scoped></style>

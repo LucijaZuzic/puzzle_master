@@ -15,6 +15,8 @@ export default {
   },
   data() {
     return {
+      zoom: 100,
+      max_zoom: 200,
       current_x: null,
       current_y: null,
       fully_loaded: false,
@@ -90,6 +92,22 @@ export default {
     };
   },
   methods: {
+    zoom_number() { 
+      if (this.zoom > this.max_zoom) {
+        this.zoom = this.max_zoom
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_in() {
+      this.zoom++;
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_out() {
+      if (this.zoom > 1) {
+        this.zoom--;
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
     check_letter() {
       this.letter_alert = "";
       for (let i = 0; i < this.num_letters; i++) {
@@ -700,7 +718,7 @@ export default {
     <div class="myrow">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table style="display: inline-table">
+          <table style="display: inline-table" id="table-to-zoom">
             <tr>
               <td v-for="i in num_letters" v-bind:key="i">
                 <va-form ref="lettersform">
@@ -762,10 +780,11 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow">
-      <va-chip v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</va-chip
-      >
+    <div class="myrow" v-if="current_x != null && current_y != null">
+      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
+    </div>
+    <div class="myrow"> 
+      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
     </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
@@ -911,7 +930,7 @@ export default {
   />
 </template>
 
-<style>
+<style scoped>
 .numbers_table {
   display: inline-table;
   border: 1px solid black;

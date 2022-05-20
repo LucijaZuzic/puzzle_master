@@ -198,9 +198,12 @@ export default {
     >
       <span v-if="user.email != friend.email">
         <div class="myrow">
-          <h1 class="display-1">
-            Profil korisnika {{ friend.displayName }} ({{ friend.email }})
+           <h1 class="display-1">
+            Profil korisnika
           </h1>
+          <h2 class="display-2">
+            {{ friend.displayName }} ({{ friend.email }})
+          </h2>
         </div>
         <div class="myrow">
           <va-button>
@@ -229,9 +232,15 @@ export default {
       </span>
       <span v-else>
         <div class="myrow">
-          <h1 class="display-1">
-            Moj profil - {{ friend.displayName }} ({{ friend.email }})
+           <h1 class="display-1">
+            Moj profil
           </h1>
+          <h2 class="display-2">
+            {{ friend.displayName }}
+          </h2>
+          <h3 class="display-3">
+            ({{ friend.email }})
+          </h3>
         </div>
         <div class="myrow">
           <va-button
@@ -250,7 +259,7 @@ export default {
           <va-button @click="setVisibility()"
           style="margin-left: 10px; margin-top: 10px;display:inline-block"
           >
-            <va-icon name="done"></va-icon>
+            <va-icon name="verified_user"></va-icon>&nbsp; Izmjeni vidljivost profila
           </va-button>
         </div>
       </span>
@@ -326,4 +335,4 @@ export default {
   </body>
 </template>
 
-<style></style>
+<style scoped></style>

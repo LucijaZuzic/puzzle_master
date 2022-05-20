@@ -13,6 +13,8 @@ export default {
   },
   data() {
     return {
+      zoom: 100,
+      max_zoom: 200,
       allow_mouseover: false,
       fully_loaded: false,
       title: "",
@@ -39,6 +41,10 @@ export default {
       maxrow: 0,
       row_colors: [],
       col_colors: [],
+      user_row_colors: [],
+      user_col_colors: [],
+      user_rows: [],
+      user_columns: [],
       mode: 0,
       time_elapsed: 0,
       drag: false,
@@ -46,12 +52,28 @@ export default {
       prev_y: null,
       num_colors: 2,
       show_error: false,
-      colors: ["#FFFFFF", "#000000"],
+      colors: ["#ffffff", "#000000"],
       current_x: null,
       current_y: null,
     };
   },
   methods: {
+    zoom_number() { 
+      if (this.zoom > this.max_zoom) {
+        this.zoom = this.max_zoom
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_in() {
+      this.zoom++;
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_out() {
+      if (this.zoom > 1) {
+        this.zoom--;
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
     invertColor(hex) {
       if (hex.indexOf("#") === 0) {
         hex = hex.slice(1);
@@ -231,10 +253,12 @@ export default {
     parse_sequence() {
       this.getrow();
       this.getcol();
+      this.getuserrow();
+      this.getusercol();
       this.getmaxrow();
       this.getmaxcol();
-      this.colorcol();
-      this.colorrow();
+      //this.colorcol();
+      //this.colorrow();
     },
     initialize() {
       this.columns = new Array();
@@ -276,6 +300,7 @@ export default {
           this.prev_y = null;
           this.parse_sequence();
           this.$forceUpdate();
+          this.check_victory();
         }
         return;
       }
@@ -316,6 +341,7 @@ export default {
           this.prev_y = y;
         }
       }
+      this.check_victory();
     },
     update_colors() {
       for (let i = 0; i < this.rownum; i++) {
@@ -362,12 +388,48 @@ export default {
       this.col_colors = color_val;
       this.columns = val;
     },
+    getusercol() {
+      let color_val = new Array();
+      let val = new Array();
+      for (let i = 0; i < this.colnum; i++) {
+        let color = -1;
+        let prev_color = -1;
+        let color_array = new Array();
+        let one_arr = new Array();
+        let current = 0;
+        for (let j = 0; j < this.rownum; j++) {
+          color = this.values[j][i];
+          if (color == prev_color) {
+            if (color != 0) {
+              current += 1;
+            }
+          } else {
+            if (current != 0 && prev_color != 0) {
+              color_array.push(prev_color);
+              one_arr.push(current);
+            }
+            current = 1;
+          }
+          prev_color = color;
+        }
+        if (current != 0 && prev_color != 0) {
+          color_array.push(prev_color);
+          one_arr.push(current);
+        }
+        color_val.push(color_array);
+        val.push(one_arr);
+      }
+      this.user_col_colors = color_val;
+      this.user_columns = val;
+    },
     colorcol() {
       for (let i = 0; i < this.col_colors.length; i++) {
         for (let j = 0; j < this.col_colors[i].length; j++) {
           if (document.getElementById("column" + i + ":" + j)) {
             document.getElementById("column" + i + ":" + j).style.color =
               this.colors[this.col_colors[i][j]];
+            document.getElementById("column" + i + ":" + j).style.backgroundColor =
+              this.returnMostReadable(this.colors[this.col_colors[i][j]]);
           }
         }
       }
@@ -417,12 +479,48 @@ export default {
       this.row_colors = color_val;
       this.rows = val;
     },
+    getuserrow() {
+      let color_val = new Array();
+      let val = new Array();
+      for (let i = 0; i < this.rownum; i++) {
+        let color = -1;
+        let prev_color = -1;
+        let color_array = new Array();
+        let one_arr = new Array();
+        let current = 0;
+        for (let j = 0; j < this.colnum; j++) {
+          color = this.values[i][j];
+          if (color == prev_color) {
+            if (color != 0) {
+              current += 1;
+            }
+          } else {
+            if (current != 0 && prev_color != 0) {
+              color_array.push(prev_color);
+              one_arr.push(current);
+            }
+            current = 1;
+          }
+          prev_color = color;
+        }
+        if (current != 0 && prev_color != 0) {
+          color_array.push(prev_color);
+          one_arr.push(current);
+        }
+        color_val.push(color_array);
+        val.push(one_arr);
+      }
+      this.user_row_colors = color_val;
+      this.user_rows = val;
+    },
     colorrow() {
       for (let i = 0; i < this.row_colors.length; i++) {
         for (let j = 0; j < this.row_colors[i].length; j++) {
           if (document.getElementById("row" + i + ":" + j)) {
             document.getElementById("row" + i + ":" + j).style.color =
               this.colors[this.row_colors[i][j]];
+            document.getElementById("row" + i + ":" + j).style.backgroundColor =
+              this.returnMostReadable(this.colors[this.row_colors[i][j]]);
           }
         }
       }
@@ -788,8 +886,8 @@ export default {
       document.getElementById("colorbutton" + i).style.backgroundColor =
         this.colors[i];
     }
-    this.colorcol();
-    this.colorrow();
+    //this.colorcol();
+    //this.colorrow();
   },
 };
 </script>
@@ -816,42 +914,73 @@ export default {
         {{ format(time_elapsed) }}
       </va-chip>
     </div>
-    <div class="myrow">
-      <va-chip v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</va-chip
-      >
+    <div class="myrow" v-if="current_x != null && current_y != null">
+      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
+    </div>
+    <div class="myrow"> 
+      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
     </div>
     <div class="myrow" v-if="prev_x != null && prev_y != null && drag">
       <va-chip>
+        <va-icon name="texture"></va-icon> 
+        ({{ prev_x }}, {{ prev_y }})
+        &nbsp; 
         <va-icon name="close" @click="(prev_x = null), (prev_y = null)">
         </va-icon>
-        &nbsp; Početak segmenta: ({{ prev_x }}, {{ prev_y }})
       </va-chip>
     </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table border="2">
-            <tr v-for="column_number in maxrow" v-bind:key="column_number">
+          <table style="border: 5px solid black" id="table-to-zoom"> 
+            <tr v-for="column_number in maxrow" v-bind:key="column_number" style="border: none !important;">
               <td
                 v-if="column_number == 1"
                 :colspan="maxcol"
                 :rowspan="maxrow"
-                style="background-color: #2c82e0"
-              ></td>
-              <td v-for="column_index in colnum" v-bind:key="column_index">
-                <span
-                  class="numbers"
-                  :id="
-                    'column' +
-                    (column_index - 1) +
-                    ':' +
-                    (column_number -
-                      1 -
-                      maxrow +
-                      columns[column_index - 1].length)
-                  "
-                >
+                style="background-color: #2c82e0;border-bottom: 5px solid black; border-right: 5px solid black"
+              >
+              </td>
+              <td v-for="column_index in colnum" v-bind:key="column_index" style="border: none !important;"> 
+                <va-chip square
+                  class="numbers" 
+                  v-if="
+                    columns[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]"
+                  :color="colors[
+                    col_colors[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]]"
+
+                > 
+                  <span style="text-decoration: line-through;" v-if="columns[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ] == user_columns[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ] && user_col_colors[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ] == col_colors[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]">
                   {{
                     columns[column_index - 1][
                       column_number -
@@ -860,44 +989,77 @@ export default {
                         columns[column_index - 1].length
                     ]
                   }}
-                </span>
+                  </span>
+                  <span v-else>
+                  {{
+                    columns[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]
+                  }}
+                  </span>
+                </va-chip>
               </td>
-            </tr>
+            </tr> 
             <tr v-if="maxrow == 0">
-              <td></td>
-              <td v-for="column_index in colnum" v-bind:key="column_index">
+              <td 
+                :colspan="maxcol" 
+                style="background-color: #2c82e0;border-bottom: 5px solid black; border-right: 5px solid black"
+              />
+              <td v-for="column_index in (colnum - 1)" v-bind:key="column_index" style="border: none !important;">
                 &nbsp;
               </td>
             </tr>
-            <tr v-for="row_index in rownum" v-bind:key="row_index">
-              <td v-for="row_number in maxcol" v-bind:key="row_number">
-                <span
-                  class="numbers"
-                  :id="
-                    'row' +
-                    (row_index - 1) +
-                    ':' +
-                    (row_number - 1 - maxcol + rows[row_index - 1].length)
-                  "
+            <tr v-for="row_index in rownum" v-bind:key="row_index" style="border: none !important;">
+             <td v-for="row_number in maxcol" v-bind:key="row_number" style="border: none !important;"> 
+                <va-chip square
+                  class="numbers" 
+                  v-if="rows[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]"
+                  :color="colors[row_colors[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]]"
+
                 >
+                  <span style="text-decoration: line-through;" v-if="rows[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ] == user_rows[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ] && row_colors[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ] == user_row_colors[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]">
                   {{
                     rows[row_index - 1][
                       row_number - 1 - maxcol + rows[row_index - 1].length
                     ]
                   }}
-                </span>
+                  </span>
+                  <span v-else>
+                  {{
+                    rows[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]
+                  }}
+                  </span>
+                </va-chip>
               </td>
-              <td v-if="maxcol == 0"></td>
+              <td v-if="maxcol == 0" style="border: none !important;"></td>
               <td
                 v-for="column_index in colnum"
                 v-bind:key="column_index"
                 @mouseover="
                   current_x = row_index;
                   current_y = column_index;
-                  increment(row_index - 1, column_index - 1, true)
+                  increment(row_index - 1, column_index - 1, true);
                 "
                 @click="increment(row_index - 1, column_index - 1, false)"
                 :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
+                :class="{upthick: row_index == 1, leftthick: column_index == 1}"
               >
                 <span
                   class="numbers"
@@ -909,7 +1071,7 @@ export default {
                     values[row_index - 1][column_index - 1] != 0
                   "
                 >
-                  <va-icon
+                  <va-icon size="48px"
                     :color="
                       returnMostReadable(
                         colors[values[row_index - 1][column_index - 1]]
@@ -958,8 +1120,8 @@ export default {
                   class="numbers"
                   v-if="prev_x == row_index - 1 && prev_y == column_index - 1"
                 >
-                  <va-icon
-                    name="check_box_outline_blank"
+                  <va-icon size="48px"
+                    name="texture"
                     :color="
                       returnMostReadable(
                         colors[values[row_index - 1][column_index - 1]]
@@ -981,6 +1143,18 @@ export default {
       >
     </div>
     <div class="myrow">
+      <va-icon
+        style="
+          border-radius: 50%;
+          display: inline-block;
+          position: absolute; 
+          background-color: black;
+        "
+        v-if="mode == 0"
+        name="check_circle"
+        color="success"
+      >
+      </va-icon>
       <button
         class="mr-2"
         style="
@@ -988,7 +1162,7 @@ export default {
           height: 28px;
           display: inline-block;
           background-color: white;
-          border-radius: 50%;
+          border-radius: 50%; margin:10px
         "
         :id="'colorbutton' + 0"
         @click="mode = 0"
@@ -998,6 +1172,18 @@ export default {
         v-for="i in num_colors - 1"
         v-bind:key="i"
       >
+        <va-icon
+          style="
+            border-radius: 50%;
+            display: inline-block;
+            position: absolute; 
+            background-color: black;
+          "
+          v-if="mode == i"
+          name="check_circle"
+          color="success"
+        >
+        </va-icon>
         <button
           class="mr-2"
           style="
@@ -1005,7 +1191,7 @@ export default {
             height: 28px;
             display: inline-block;
             background-color: black;
-            border-radius: 50%;
+            border-radius: 50%;margin:10px
           "
           @click="after_click(i)"
           :id="'colorbutton' + i"
@@ -1019,8 +1205,7 @@ export default {
           if (allow_mouseover) {
             drag = false;
           }
-        "
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+        " 
       >
         <span v-if="allow_mouseover == false">
           <va-icon name="grid_view" />
@@ -1030,16 +1215,14 @@ export default {
           ><va-icon name="gesture" /> &nbsp;Bojanje gestom uključeno</span
         >
       </va-button>
-    </div>
-    <div class="myrow">
+      &nbsp;
       <va-button
         @click="
           drag = !drag;
           if (allow_mouseover) {
             drag = false;
           }
-        "
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+        " 
         :disabled="allow_mouseover"
       >
         <span v-if="drag == false">
@@ -1136,7 +1319,7 @@ export default {
 </template>
 
 <style scoped>
-table {
+table {   
   display: inline-table;
   border: 1px solid black;
   border-collapse: collapse;
@@ -1147,19 +1330,21 @@ tr {
 }
 td {
   border: 1px solid black;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
   text-align: center;
   vertical-align: middle;
   border-collapse: collapse;
 }
 .numbers {
-  font-weight: bold;
-  display: block;
-  position: relative;
-  width: 24px;
-  text-align: center;
+  font-weight: bold;    
+}
+.upthick {
+  border-top: 5px solid black !important; 
+} 
+.leftthick {
+  border-left: 5px solid black !important; 
 }
 </style>

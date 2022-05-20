@@ -3,10 +3,12 @@ import { usersRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import NoDataToDisplay from "./NoDataToDisplay.vue";
 import LoadingBar from "./LoadingBar.vue";
+import MyCounter from "./MyCounter.vue";
 export default {
   components: {
     NoDataToDisplay,
     LoadingBar,
+    MyCounter
   },
   mounted() {
     const auth = getAuth();
@@ -47,11 +49,11 @@ export default {
       perPage: 1,
       currentPage: 1,
       columns: [
-        { key: "user_display_name", sortable: true },
-        { key: "user_email", sortable: true },
-        { key: "rating", sortable: true },
-        { key: "comment", sortable: true },
-        { key: "time", sortable: true },
+        { key: "user_display_name", sortable: true,  classes: "mytableforall" },
+        { key: "user_email", sortable: true,  classes: "mytableforall" },
+        { key: "rating", sortable: true,  classes: "mytableforall" },
+        { key: "comment", sortable: true,  classes: "mytableforall" },
+        { key: "time", sortable: true,  classes: "mytableforall" },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -212,6 +214,46 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
+    <div class="myrow" v-if="$props.userId">
+      <va-list-item>
+        <va-list-item-section avatar>
+          <va-chip>
+            <va-icon name="star" size="large"></va-icon>&nbsp;
+            {{ value }}
+          </va-chip>
+        </va-list-item-section>
+        <va-list-item-section>
+          <va-list-item-label caption>
+            <va-rating 
+              v-model="value"
+              halves
+              hover
+              size="large"
+            />
+          </va-list-item-label>
+        </va-list-item-section>
+      </va-list-item>
+    </div>
+    <div class="myrow" v-if="$props.userId">
+      <va-form>
+        <va-input
+          type="textarea"
+          placeholder="Obrazložite ocjenu"
+          label="Komentar"
+          :rules="[
+            (value) => (value && value.length > 0) || 'Unesite komentar.',
+          ]"
+          immediate-validation
+          v-model="comment"
+        >
+        </va-input>
+      </va-form>
+    </div>
+    <div class="myrow" v-if="$props.userId">
+      <va-button :disabled="comment.length < 1" @click="submit()">
+        <va-icon name="rate_review"></va-icon>&nbsp;Ocjenite</va-button
+      >
+    </div>
     <div class="myrow" v-if="user_ratings.length > 0">
       <va-chip>
         <va-icon name="stars"></va-icon>&nbsp;Ocjena:
@@ -220,26 +262,23 @@ export default {
     </div>
     <span v-if="user_ratings.length > 0">
       <div class="myrow">
-        <va-input placeholder="Unesite pojam za pretragu" v-model="filter" />
-      </div>
-      <div class="myrow">
+        <va-input
+          style="display: inline-block"
+          placeholder="Unesite pojam za pretragu"
+          v-model="filter"
+        />
+        &nbsp;
         <va-checkbox
+          style="display: inline-block"
           label="Traži cijelu riječ"
           v-model="useCustomFilteringFn"
         />
       </div>
-      <div class="myrow" v-if="this.filtered.length > 1">
-        <va-slider
-          type="number"
-          v-model="perPage"
-          :min="1"
-          :max="Math.ceil(this.filtered.length)"
-          label="Broj pojmova na stranici"
-          track-label-visible
-        >
-        </va-slider>
-      </div>
+      <div class="myrow"> 
+      <MyCounter :min_value="1" :max_value="Math.ceil(this.filtered.length)" v-bind:value="perPage" @input="(n) => perPage = n" :some_text="'Broj rezultata na stranici'"></MyCounter> 
+    </div>
       <va-data-table
+         
         :items="user_ratings"
         :filter="filter"
         :columns="columns"
@@ -270,8 +309,10 @@ export default {
         </template>
         <template #bodyAppend>
           <tr>
-            <td colspan="5" class="table-example--pagination">
-              <va-pagination v-model="currentPage" input :pages="pages" />
+            <td colspan="5">
+              <div style="display:inline-block;margin-top: 10px">
+                <va-pagination v-model="currentPage" input :pages="pages" />
+              </div>
             </td>
           </tr>
         </template>
@@ -282,53 +323,8 @@ export default {
       customMessage="Nema ocjena za odabranu zagonetku"
     >
     </NoDataToDisplay>
-    <div class="myrow" v-if="$props.userId">
-      <va-list-item>
-        <va-list-item-section avatar>
-          <va-chip>
-            <va-icon name="star" size="large"></va-icon>&nbsp;
-            {{ value }}
-          </va-chip>
-        </va-list-item-section>
-        <va-list-item-section>
-          <va-list-item-label caption>
-            <va-rating
-              style="display: inline-block"
-              v-model="value"
-              halves
-              hover
-              size="large"
-            />
-          </va-list-item-label>
-        </va-list-item-section>
-      </va-list-item>
-    </div>
-    <div class="myrow" v-if="$props.userId">
-      <va-form>
-        <va-input
-          type="textarea"
-          placeholder="Obrazložite ocjenu"
-          label="Komentar"
-          :rules="[
-            (value) => (value && value.length > 0) || 'Unesite komentar.',
-          ]"
-          immediate-validation
-          v-model="comment"
-        >
-        </va-input>
-      </va-form>
-    </div>
-    <div class="myrow" v-if="$props.userId">
-      <va-button :disabled="comment.length < 1" @click="submit()">
-        <va-icon name="rate_review"></va-icon>&nbsp;Ocjenite</va-button
-      >
-    </div>
   </span>
 </template>
 
-<style>
-.table-example--pagination {
-  text-align: center;
-  text-align: -webkit-center;
-}
+<style scoped>
 </style>

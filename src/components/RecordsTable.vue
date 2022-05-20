@@ -3,10 +3,12 @@ import { usersRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import NoDataToDisplay from "./NoDataToDisplay.vue";
 import LoadingBar from "./LoadingBar.vue";
+import MyCounter from "./MyCounter.vue";
 export default {
   components: {
     NoDataToDisplay,
     LoadingBar,
+    MyCounter
   },
   mounted() {
     const auth = getAuth();
@@ -44,10 +46,10 @@ export default {
       currentPage: 1,
       user: null,
       columns: [
-        { key: "user_display_name", sortable: true },
-        { key: "user_email", sortable: true },
-        { key: "score", sortable: true },
-        { key: "time", sortable: true },
+        { key: "user_display_name", sortable: true,  classes: "mytableforall" },
+        { key: "user_email", sortable: true,  classes: "mytableforall" },
+        { key: "score", sortable: true,  classes: "mytableforall" },
+        { key: "time", sortable: true,  classes: "mytableforall" },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -175,26 +177,23 @@ export default {
   <span v-else>
     <span v-if="user_records.length > 0">
       <div class="myrow">
-        <va-input placeholder="Unesite pojam za pretragu" v-model="filter" />
-      </div>
-      <div class="myrow">
+        <va-input
+          style="display: inline-block"
+          placeholder="Unesite pojam za pretragu"
+          v-model="filter"
+        />
+        &nbsp;
         <va-checkbox
+          style="display: inline-block"
           label="Traži cijelu riječ"
           v-model="useCustomFilteringFn"
         />
       </div>
-      <div class="myrow" v-if="this.filtered.length > 1">
-        <va-slider
-          type="number"
-          v-model="perPage"
-          :min="1"
-          :max="Math.ceil(this.filtered.length)"
-          label="Broj pojmova na stranici"
-          track-label-visible
-        >
-        </va-slider>
-      </div>
+      <div class="myrow"> 
+      <MyCounter :min_value="1" :max_value="Math.ceil(this.filtered.length)" v-bind:value="perPage" @input="(n) => perPage = n" :some_text="'Broj rezultata na stranici'"></MyCounter> 
+    </div>
       <va-data-table
+         
         :items="user_records"
         :filter="filter"
         :columns="columns"
@@ -224,8 +223,10 @@ export default {
         </template>
         <template #bodyAppend>
           <tr>
-            <td colspan="4" class="table-example--pagination">
-              <va-pagination v-model="currentPage" input :pages="pages" />
+            <td colspan="4">
+              <div style="display:inline-block;margin-top: 10px">
+                <va-pagination v-model="currentPage" input :pages="pages" />
+              </div>
             </td>
           </tr>
         </template>
@@ -239,9 +240,5 @@ export default {
   </span>
 </template>
 
-<style>
-.table-example--pagination {
-  text-align: center;
-  text-align: -webkit-center;
-}
+<style scoped>
 </style>

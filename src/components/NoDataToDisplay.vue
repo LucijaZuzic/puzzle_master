@@ -2,8 +2,7 @@
 export default {
   props: ["customMessage"],
   data() {
-    return {
-      customMessage: this.$props.customMessage,
+    return { 
     };
   },
   components: {},
@@ -11,15 +10,12 @@ export default {
 };
 </script>
 
-<template>
+<template> 
   <div class="myrow">
-    <h1 class="display-1">Nema podataka za prikaz</h1>
-  </div>
-  <div class="myrow">
-    <h4 class="display-4">
-      {{ customMessage }}
-    </h4>
+    <span style="font-weight: bold">
+      <va-icon name="folder_off"></va-icon>&nbsp; {{ customMessage }}
+    </span>
   </div>
 </template>
 
-<style></style>
+<style scoped></style>

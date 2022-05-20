@@ -3,11 +3,22 @@ import tinycolor from "tinycolor2/tinycolor";
 import { nonogramsRef, friendsRef } from "../firebase_main.js";
 import { usersRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import MyCounter from './MyCounter.vue';
 
 export default {
-  components: {},
+  components: {
+    MyCounter
+  },
   data() {
-    return {
+    return { 
+      zoom: 100,
+      max_zoom: 200,
+      row_counter_min: 1,
+      row_counter_max: 50,
+      column_counter_min: 1,
+      column_counter_max: 50,
+      color_counter_min: 2,
+      color_counter_max: 50, 
       allow_mouseover: false,
       prev_x: null,
       prev_y: null,
@@ -31,12 +42,28 @@ export default {
       drag: false,
       num_colors: 2,
       wrong_colors: [false, false],
-      colors: ["#FFFFFF", "#000000"],
+      colors: ["#ffffff", "#000000"],
       current_x: null,
       current_y: null,
     };
   },
   methods: {
+    zoom_number() { 
+      if (this.zoom > this.max_zoom) {
+        this.zoom = this.max_zoom
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_in() {
+      this.zoom++;
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_out() {
+      if (this.zoom > 1) {
+        this.zoom--;
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
     invertColor(hex) {
       if (hex.indexOf("#") === 0) {
         hex = hex.slice(1);
@@ -73,6 +100,7 @@ export default {
       let hidden = true;
       let uid = "";
       let me = null;
+      let my_activity = this
       if (this.user) {
         me = this.user.uid;
       }
@@ -108,31 +136,31 @@ export default {
                 .then(() => {
                   if (found == true) {
                     if (hidden == true) {
-                      this.$vaToast.init(
+                      my_activity.$vaToast.init(
                         "Ne možete dodati suradnika jer niste prijatelji."
                       );
                     } else {
                       let duplicate = false;
                       for (let i = 0; i < this.permissions.length; i++) {
-                        if (this.permissions[i] == uid) {
+                        if (my_activity.permissions[i] == uid) {
                           duplicate = true;
                           break;
                         }
                       }
                       if (duplicate == true) {
-                        this.$vaToast.init(
+                        my_activity.$vaToast.init(
                           "Ne možete dodati istog suradnika dvaput."
                         );
                       } else {
-                        this.permissions.push(uid);
-                        this.permissionsUserRecords.push({
+                        my_activity.permissions.push(uid);
+                        my_activity.permissionsUserRecords.push({
                           displayName: displayName,
                           email: email,
                         });
                       }
                     }
                   } else {
-                    this.$vaToast.init(
+                    my_activity.$vaToast.init(
                       "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
                     );
                   }
@@ -158,8 +186,8 @@ export default {
       this.getcol();
       this.getmaxrow();
       this.getmaxcol();
-      this.colorcol();
-      this.colorrow();
+      //this.colorcol();
+      //this.colorrow();
     },
     initialize() {
       this.maxcol = 0;
@@ -346,10 +374,20 @@ export default {
     },
     colorcol() {
       for (let i = 0; i < this.col_colors.length; i++) {
-        for (let j = 0; j < this.col_colors[i].length; j++) {
+        for (let j = 0; j < this.col_colors[i].length; j++) { 
           if (document.getElementById("column" + i + ":" + j)) {
-            document.getElementById("column" + i + ":" + j).style.color =
-              this.colors[this.col_colors[i][j]];
+            if (this.col_colors[i][j]) {
+              console.log(this.col_colors[i][j])
+              document.getElementById("column" + i + ":" + j).style.color =
+                this.colors[this.col_colors[i][j]];
+              document.getElementById("columnbg" + i + ":" + j).style.backgroundColor =
+                this.returnMostReadable(this.colors[this.col_colors[i][j]]);
+            } else {
+              document.getElementById("column" + i + ":" + j).style.color =
+                "#666666"
+              document.getElementById("columnbg" + i + ":" + j).style.backgroundColor =
+                "#666666"
+            }
           }
         }
       }
@@ -390,10 +428,20 @@ export default {
     },
     colorrow() {
       for (let i = 0; i < this.row_colors.length; i++) {
-        for (let j = 0; j < this.row_colors[i].length; j++) {
+        for (let j = 0; j < this.row_colors[i].length; j++) { 
           if (document.getElementById("row" + i + ":" + j)) {
-            document.getElementById("row" + i + ":" + j).style.color =
-              this.colors[this.row_colors[i][j]];
+            if (this.row_colors[i][j]) {
+              console.log(this.row_colors[i][j])
+              document.getElementById("row" + i + ":" + j).style.color =
+                this.colors[this.row_colors[i][j]];
+              document.getElementById("rowbg" + i + ":" + j).style.backgroundColor =
+                this.returnMostReadable(this.colors[this.row_colors[i][j]]);
+            } else {
+              document.getElementById("row" + i + ":" + j).style.color =
+                "#666666"
+              document.getElementById("rowbg" + i + ":" + j).style.backgroundColor =
+                "#666666"
+            }
           }
         }
       }
@@ -427,11 +475,19 @@ export default {
       }
       this.colors = [];
       for (let i = 0; i < maxcolors; i++) {
-        this.colors.push("#000000");
+        let new_color = tinycolor.random();
+        while (this.colors.includes(new_color)) {
+          new_color = tinycolor.random();
+        }
+        this.colors.push(new_color.toHexString());
       }
       for (let i = 0; i < oldcolors.length; i++) {
-        this.colors[i] = oldcolors[i];
+        this.colors[i] = oldcolors[i].toLowerCase();
       }
+    },
+    trigger_click(i) {
+      this.blocked = true;
+      document.getElementById("colorpicker" + i).click();
     },
     trigger_click(i) {
       this.blocked = true;
@@ -439,8 +495,39 @@ export default {
     },
     after_click(i) {
       this.mode = i;
+      let new_color = document.getElementById("colorpicker" + i).value;
+      let found = false;
+      for (let j = 0; j < this.num_colors; j++) {
+        if (i == j) {
+          continue;
+        }
+        if (new_color == this.colors[j]) {
+          found = true;
+          break;
+        }
+      }
+      if (found) {
+        this.$vaToast.init(
+          "Dodali ste dvostruku boju, automatski je izmijenjena."
+        );
+      }
+      while (found) {
+        new_color = tinycolor.random().toHexString();
+        found = false;
+        for (let j = 0; j < this.num_colors; j++) {
+          if (i == j) {
+            continue;
+          }
+          if (new_color == this.colors[j]) {
+            found = true;
+            break;
+          }
+        }
+      }
+      this.colors[i] = new_color;
+      document.getElementById("colorpicker" + i).value = new_color;
       document.getElementById("colorbutton" + i).style.backgroundColor =
-        document.getElementById("colorpicker" + i).value;
+        new_color;
       this.update_colors();
       this.blocked = false;
     },
@@ -636,8 +723,8 @@ export default {
       document.getElementById("colorbutton" + i).style.backgroundColor =
         this.colors[i];
     }
-    this.colorcol();
-    this.colorrow();
+    //this.colorcol();
+    //this.colorrow();
   },
   mounted() {
     const auth = getAuth();
@@ -666,76 +753,58 @@ export default {
 </script>
 
 <template>
-  <body class="mybody">
-    <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="rownum"
-        @update:model-value="initialize()"
-        :min="1"
-        :max="50"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj redaka</span>
-        </template>
-        <!--<template #append>
-                <va-input type="number" v-model="rownum" @update:model-value="initialize()" :min="1" :max="50"/>
-            </template>-->
-      </va-slider>
+  <body class="mybody"> 
+    <div class="myrow"> 
+      <MyCounter :min_value="row_counter_min" :max_value="row_counter_max" v-bind:value="rownum" @input="(n) => rownum = n" :some_text="'Broj redaka'"></MyCounter> 
     </div>
     <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="colnum"
-        @update:model-value="initialize()"
-        :min="1"
-        :max="50"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj stupaca</span>
-        </template>
-        <!--<template #append>
-                <va-input type="number" v-model="colnum" @update:model-value="initialize()" :min="1" :max="50"/>
-            </template>-->
-      </va-slider>
+      <MyCounter :min_value="column_counter_min" :max_value="column_counter_max" v-bind:value="colnum" @input="(n) => colnum = n" :some_text="'Broj stupaca'"></MyCounter>
+    </div> 
+    <div class="myrow" v-if="current_x != null && current_y != null">
+      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
     </div>
-    <div class="myrow">
-      <va-chip v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</va-chip
-      >
+    <div class="myrow"> 
+      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
     </div>
     <div class="myrow" v-if="prev_x != null && prev_y != null && drag">
       <va-chip>
+        <va-icon name="texture"></va-icon> 
+        ({{ prev_x }}, {{ prev_y }})
+        &nbsp; 
         <va-icon name="close" @click="(prev_x = null), (prev_y = null)">
         </va-icon>
-        &nbsp; Početak segmenta: ({{ prev_x }}, {{ prev_y }})
       </va-chip>
     </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table border="2">
-            <tr v-for="column_number in maxrow" v-bind:key="column_number">
+          <table style="border: 5px solid black" id="table-to-zoom"> 
+            <tr v-for="column_number in maxrow" v-bind:key="column_number" style="border: none !important;">
               <td
                 v-if="column_number == 1"
                 :colspan="maxcol"
                 :rowspan="maxrow"
-                style="background-color: #2c82e0"
-              ></td>
-              <td v-for="column_index in colnum" v-bind:key="column_index">
-                <span
-                  class="numbers"
-                  :id="
-                    'column' +
-                    (column_index - 1) +
-                    ':' +
-                    (column_number -
-                      1 -
-                      maxrow +
-                      columns[column_index - 1].length)
-                  "
+                style="background-color: #2c82e0;border-bottom: 5px solid black; border-right: 5px solid black"
+              >
+              </td>
+              <td v-for="column_index in colnum" v-bind:key="column_index" style="border: none !important;"> 
+                <va-chip square
+                  class="numbers" 
+                  v-if="
+                    columns[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]"
+                  :color="colors[
+                    col_colors[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]]"
+
                 >
                   {{
                     columns[column_index - 1][
@@ -745,56 +814,61 @@ export default {
                         columns[column_index - 1].length
                     ]
                   }}
-                </span>
+                </va-chip>
               </td>
-            </tr>
+            </tr> 
             <tr v-if="maxrow == 0">
-              <td></td>
-              <td v-for="column_index in colnum" v-bind:key="column_index">
+              <td 
+                :colspan="maxcol" 
+                style="background-color: #2c82e0;border-bottom: 5px solid black; border-right: 5px solid black"
+              />
+              <td v-for="column_index in (colnum - 1)" v-bind:key="column_index" style="border: none !important;">
                 &nbsp;
               </td>
             </tr>
-            <tr v-for="row_index in rownum" v-bind:key="row_index">
-              <td v-for="row_number in maxcol" v-bind:key="row_number">
-                <span
-                  class="numbers"
-                  :id="
-                    'row' +
-                    (row_index - 1) +
-                    ':' +
-                    (row_number - 1 - maxcol + rows[row_index - 1].length)
-                  "
+            <tr v-for="row_index in rownum" v-bind:key="row_index" style="border: none !important;">
+             <td v-for="row_number in maxcol" v-bind:key="row_number" style="border: none !important;"> 
+                <va-chip square
+                  class="numbers" 
+                  v-if="rows[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]"
+                  :color="colors[row_colors[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]]"
+
                 >
                   {{
                     rows[row_index - 1][
                       row_number - 1 - maxcol + rows[row_index - 1].length
                     ]
                   }}
-                </span>
+                </va-chip>
               </td>
-              <td v-if="maxcol == 0"></td>
+              <td v-if="maxcol == 0" style="border: none !important;"></td>
               <td
                 v-for="column_index in colnum"
                 v-bind:key="column_index"
                 @mouseover="
                   current_x = row_index;
                   current_y = column_index;
-                  increment(row_index - 1, column_index - 1, true)
+                  increment(row_index - 1, column_index - 1, true);
                 "
                 @click="increment(row_index - 1, column_index - 1, false)"
                 :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
+                :class="{upthick: row_index == 1, leftthick: column_index == 1}"
               >
                 <span
                   class="numbers"
                   v-if="prev_x == row_index - 1 && prev_y == column_index - 1"
                 >
-                  <va-icon
+                  <va-icon size="48px"
                     :color="
                       returnMostReadable(
                         colors[solution[row_index - 1][column_index - 1]]
                       )
                     "
-                    name="check_box_outline_blank"
+                    name="texture"
                   >
                   </va-icon>
                 </span>
@@ -806,31 +880,27 @@ export default {
       </va-infinite-scroll>
     </div>
     <div class="myrow">
-      <va-button style="overflow-wrap: anywhere" @click="reset()">
+      <va-button style="overflow-wrap: anywhere" @click="reset()" icon-left="">
         <va-icon name="delete" />
         &nbsp;Izbriši</va-button
       >
     </div>
-    <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="num_colors"
-        @update:model-value="expand_color_list()"
-        :min="2"
-        :max="50"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj boja</span>
-        </template>
-        <!--<template #append>
-                <va-input type="number" v-model="num_colors" @update:model-value="expand_color_list()" :min="2" :max="50"/>
-            </template>-->
-      </va-slider>
+    <div class="myrow"> 
+      <MyCounter :min_value="color_counter_min" :max_value="color_counter_max" v-bind:value="num_colors" @input="(n) => num_colors = n" :some_text="'Broj boja'"></MyCounter> 
     </div>
     <br />
     <div class="myrow">
-      <va-icon v-if="wrong_colors[0] == true" name="error" color="danger">
+      <va-icon
+        style="
+          border-radius: 50%;
+          display: inline-block;
+          position: absolute; 
+          background-color: black;
+        "
+        v-if="mode == 0"
+        name="check_circle"
+        color="success"
+      >
       </va-icon>
       <button
         class="mr-2"
@@ -839,7 +909,7 @@ export default {
           height: 28px;
           display: inline-block;
           background-color: white;
-          border-radius: 50%;
+          border-radius: 50%; margin:10px
         "
         :id="'colorbutton' + 0"
         @click="mode = 0"
@@ -858,6 +928,18 @@ export default {
       >
         <!--<va-icon style="position:relative;left:10px" v-if="wrong_colors[i]==true" name="error" color="danger">
 </va-icon>-->
+        <va-icon
+          style="
+            border-radius: 50%;
+            display: inline-block;
+            position: absolute; 
+            background-color: black;
+          "
+          v-if="mode == i"
+          name="check_circle"
+          color="success"
+        >
+        </va-icon>
         <button
           class="mr-2"
           style="
@@ -865,7 +947,7 @@ export default {
             height: 28px;
             display: inline-block;
             background-color: black;
-            border-radius: 50%;
+            border-radius: 50%;margin:10px
           "
           v-if="wrong_colors[i] == false"
           @click="trigger_click(i)"
@@ -910,8 +992,7 @@ export default {
           if (allow_mouseover) {
             drag = false;
           }
-        "
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+        " 
       >
         <span v-if="allow_mouseover == false">
           <va-icon name="grid_view" />
@@ -929,8 +1010,7 @@ export default {
           if (allow_mouseover) {
             drag = false;
           }
-        "
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+        " 
         :disabled="allow_mouseover"
       >
         <span v-if="drag == false">
@@ -1060,7 +1140,7 @@ export default {
 </template>
 
 <style scoped>
-table {
+table {  
   display: inline-table;
   border: 1px solid black;
   border-collapse: collapse;
@@ -1071,19 +1151,21 @@ tr {
 }
 td {
   border: 1px solid black;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
   text-align: center;
   vertical-align: middle;
   border-collapse: collapse;
 }
 .numbers {
-  font-weight: bold;
-  display: block;
-  position: relative;
-  width: 24px;
-  text-align: center;
+  font-weight: bold;  
+}
+.upthick {
+  border-top: 5px solid black !important; 
+} 
+.leftthick {
+  border-left: 5px solid black !important; 
 }
 </style>

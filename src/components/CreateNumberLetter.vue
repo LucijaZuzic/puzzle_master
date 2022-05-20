@@ -3,15 +3,22 @@ import { ref, uploadBytes } from "firebase/storage";
 import { projectStorage } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
+import MyCounter from './MyCounter.vue';
 import { usersRef } from "../firebase_main.js";
 import { numberLettersRef, friendsRef } from "../firebase_main.js";
 
 export default {
   components: {
-    
+    MyCounter
   },
   data() {
     return {
+      zoom: 100,
+      max_zoom: 200,
+      row_counter_min: 1,
+      row_counter_max: 50,
+      column_counter_min: 1,
+      column_counter_max: 50,
       user: null,
       permissions: [],
       image: null,
@@ -78,12 +85,29 @@ export default {
     };
   },
   methods: {
+    zoom_number() { 
+      if (this.zoom > this.max_zoom) {
+        this.zoom = this.max_zoom
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_in() {
+      this.zoom++;
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
+    zoom_out() {
+      if (this.zoom > 1) {
+        this.zoom--;
+      }
+      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+    },
     checkIfUserExists() {
       let email = this.collaborator;
       let found = false;
       let hidden = true;
       let uid = "";
       let me = null;
+      let my_activity = this
       if (this.user) {
         me = this.user.uid;
       }
@@ -119,31 +143,31 @@ export default {
                 .then(() => {
                   if (found == true) {
                     if (hidden == true) {
-                      this.$vaToast.init(
+                      my_activity.$vaToast.init(
                         "Ne možete dodati suradnika jer niste prijatelji."
                       );
                     } else {
                       let duplicate = false;
                       for (let i = 0; i < this.permissions.length; i++) {
-                        if (this.permissions[i] == uid) {
+                        if (my_activity.permissions[i] == uid) {
                           duplicate = true;
                           break;
                         }
                       }
                       if (duplicate == true) {
-                        this.$vaToast.init(
+                        my_activity.$vaToast.init(
                           "Ne možete dodati istog suradnika dvaput."
                         );
                       } else {
-                        this.permissions.push(uid);
-                        this.permissionsUserRecords.push({
+                        my_activity.permissions.push(uid);
+                        my_activity.permissionsUserRecords.push({
                           displayName: displayName,
                           email: email,
                         });
                       }
                     }
                   } else {
-                    this.$vaToast.init(
+                    my_activity.$vaToast.init(
                       "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
                     );
                   }
@@ -810,62 +834,16 @@ export default {
 </script>
 
 <template>
-  <body class="mybody">
-    
-    <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="rows"
-        :min="1"
-        :max="50"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj redaka</span>
-        </template>
-        <!--<template #append>
-          <va-input type="number" v-model="rows" :min="1" :max="50"/>
-        </template>-->
-      </va-slider>
+  <body class="mybody"> 
+    <div class="myrow"> 
+      <MyCounter :min_value="row_counter_min" :max_value="row_counter_max" v-bind:value="rows" @input="(n) => rows = n" :some_text="'Broj redaka'"></MyCounter> 
     </div>
     <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="columns"
-        :min="1"
-        :max="50"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj stupaca</span>
-        </template>
-        <!--<template #append>
-          <va-input type="number" v-model="columns" :min="1" :max="50"/>
-        </template>-->
-      </va-slider>
+      <MyCounter :min_value="column_counter_min" :max_value="column_counter_max" v-bind:value="columns" @input="(n) => columns = n" :some_text="'Broj stupaca'"></MyCounter> 
     </div>
     <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="num_letters"
-        @update:model-value="update_order = false"
-        :min="1"
-        :max="alphabet.length"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj slova</span>
-        </template>
-        <!--<template #append>
-          <va-input
-            type="num_letters"
-            v-model="num_letters"
-            :min="1"
-            :max="alphabet.length"
-         />
-        </template>-->
-      </va-slider>
-    </div>
+      <MyCounter :min_value="1" :max_value="alphabet.length" v-bind:value="num_letters" @input="(n) => num_letters = n" :some_text="'Broj slova'"></MyCounter> 
+    </div>  
     <div class="myrow">
       <va-tabs v-model="mode">
         <template #tabs>
@@ -1015,15 +993,16 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
-      <va-chip v-if="current_x != null && current_y != null"
-        >({{ current_x }}, {{ current_y }})</va-chip
-      >
+    <div class="myrow" v-if="current_x != null && current_y != null">
+      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
+    </div>
+    <div class="myrow"> 
+      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
     </div>
     <div class="myrow" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table class="numbers_table">
+          <table class="numbers_table" id="table-to-zoom">
             <tr v-for="i in rows" v-bind:key="i">
               <td
                 v-for="j in columns"
@@ -1208,7 +1187,7 @@ export default {
   </body>
 </template>
 
-<style>
+<style scoped>
 .numbers_table {
   display: inline-table;
   border: 1px solid black;

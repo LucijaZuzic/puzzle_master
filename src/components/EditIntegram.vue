@@ -12,11 +12,12 @@ import { usersRef } from "../firebase_main.js";
 import { integramsRef } from "../firebase_main.js";
 
 
+import MyCounter from './MyCounter.vue';
 import LoadingBar from "./LoadingBar.vue";
 
 export default {
   components: {
-    
+    MyCounter,
     LoadingBar,
   },
   data() {
@@ -234,6 +235,7 @@ export default {
       let hidden = true;
       let uid = "";
       let me = null;
+      let my_activity = this
       if (this.user) {
         me = this.user.uid;
       }
@@ -269,31 +271,31 @@ export default {
                 .then(() => {
                   if (found == true) {
                     if (hidden == true) {
-                      this.$vaToast.init(
+                      my_activity.$vaToast.init(
                         "Ne možete dodati suradnika jer niste prijatelji."
                       );
                     } else {
                       let duplicate = false;
                       for (let i = 0; i < this.permissions.length; i++) {
-                        if (this.permissions[i] == uid) {
+                        if (my_activity.permissions[i] == uid) {
                           duplicate = true;
                           break;
                         }
                       }
                       if (duplicate == true) {
-                        this.$vaToast.init(
+                        my_activity.$vaToast.init(
                           "Ne možete dodati istog suradnika dvaput."
                         );
                       } else {
-                        this.permissions.push(uid);
-                        this.permissionsUserRecords.push({
+                        my_activity.permissions.push(uid);
+                        my_activity.permissionsUserRecords.push({
                           displayName: displayName,
                           email: email,
                         });
                       }
                     }
                   } else {
-                    this.$vaToast.init(
+                    my_activity.$vaToast.init(
                       "Ne možete dodati suradnika jer ne postoji korisnik s tom email adresom."
                     );
                   }
@@ -1098,68 +1100,19 @@ export default {
 </script>
 
 <template>
-  <body class="mybody" v-if="!fully_loaded">
-    
+  <body class="mybody" v-if="!fully_loaded"> 
     <LoadingBar></LoadingBar>
   </body>
   <body class="mybody" v-else>
-    
-    <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="numvalues"
-        :min="3"
-        :max="5"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj pojmova</span>
-        </template>
-        <!--<template #append>
-          <va-input type="number" v-model="numvalues" :min="3" :max="5"/>
-        </template>-->
-      </va-slider>
+    <div class="myrow"> 
+      <MyCounter :min_value="3" :max_value="5" v-bind:value="numvalues" @input="(n) => numvalues = n" :some_text="'Broj pojmova'"></MyCounter> 
     </div>
-    <br />
     <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="numcategories"
-        :min="3"
-        :max="5"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj kategorija</span>
-        </template>
-        <!--<template #append>
-          <va-input type="number" v-model="numcategories" :min="3" :max="5"/>
-        </template>-->
-      </va-slider>
-    </div>
-    <br />
+      <MyCounter :min_value="3" :max_value="5" v-bind:value="numcategories" @input="(n) => numcategories = n" some_text="'Broj kategorija'"></MyCounter> 
+    </div> 
     <div class="myrow">
-      <va-slider
-        class="trackMe"
-        v-model="numinstructions"
-        :min="5"
-        :max="10"
-        track-label-visible
-      >
-        <template #label>
-          <span>Broj opisnih uputa</span>
-        </template>
-        <!--<template #append>
-          <va-input
-            type="number"
-            v-model="numinstructions"
-            :min="5"
-            :max="10"
-         />
-        </template>-->
-      </va-slider>
-    </div>
-    <br />
+      <MyCounter :min_value="5" :max_value="10" v-bind:value="numinstructions" @input="(n) => numinstructions = n" :some_text="'Broj opisnih uputa'"></MyCounter> 
+    </div> 
     <div class="myrow" v-for="i in numinstructions" v-bind:key="i">
       <va-form ref="instructionsform">
         <va-input
