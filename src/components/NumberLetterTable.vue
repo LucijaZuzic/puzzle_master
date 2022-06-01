@@ -25,26 +25,23 @@ export default {
     NoDataToDisplay,
   },
   mounted() {
-    if (!this.$props.friend) {
-      const auth = getAuth();
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          // User is signed in, see docs for a list of available properties
-          // https://firebase.google.com/docs/reference/js/firebase.User
-          this.user = user;
-          // ...
-        } else {
-          // User is signed out
-          // ...
-        }
-        return true;
-      });
-    } else {
-      this.user = this.$props.friend;
-    }
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User
+        this.user = user;
+        // ...
+      } else {
+        // User is signed out
+        // ...
+      }
+      return true;
+    });
   },
   data() {
     return {
+      favoriteNumberLetters: [],
       fully_loaded: false,
       value: "all",
       user: null,
@@ -66,30 +63,48 @@ export default {
       perPage: 1,
       currentPage: 1,
       columns: [
-        { key: "rows", sortable: true, classes: "mytableforall" },
-        { key: "columns", sortable: true, classes: "mytableforall" },
-        { key: "letters", sortable: true, classes: "mytableforall" },
-        { key: "rating", sortable: true, classes: "mytableforall" },
-        { key: "title", sortable: true, classes: "mytableforall" },
-        { key: "description", sortable: true, classes: "mytableforall" },
-        { key: "source", sortable: true, classes: "mytableforall" },
-        { key: "is_public", sortable: true, classes: "mytableforall" },
+        { key: "rows", sortable: true, classes: "data_table_overflow" },
+        { key: "columns", sortable: true, classes: "data_table_overflow" },
+        { key: "letters", sortable: true, classes: "data_table_overflow" },
+        { key: "rating", sortable: true, classes: "data_table_overflow" },
+        { key: "title", sortable: true, classes: "data_table_overflow" },
+        { key: "description", sortable: true, classes: "data_table_overflow" },
+        { key: "source", sortable: true, classes: "data_table_overflow" },
+        { key: "is_public", sortable: true, classes: "data_table_overflow" },
         {
           key: "author_display_name",
           sortable: true,
-          classes: "mytableforall",
+          classes: "data_table_overflow",
         },
-        { key: "author_email", sortable: true, classes: "mytableforall" },
-        { key: "time_created", sortable: true, classes: "mytableforall" },
+        { key: "author_email", sortable: true, classes: "data_table_overflow" },
+        { key: "time_created", sortable: true, classes: "data_table_overflow" },
         {
           key: "updater_display_name",
           sortable: true,
-          classes: "mytableforall",
+          classes: "data_table_overflow",
         },
-        { key: "updater_email", sortable: true, classes: "mytableforall" },
-        { key: "last_updated", sortable: true, classes: "mytableforall" },
-        { key: "id", sortable: false, classes: "mytableforall" },
-        { key: "deletePermission", sortable: false, classes: "mytableforall" },
+        {
+          key: "updater_email",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
+        { key: "last_updated", sortable: true, classes: "data_table_overflow" },
+        { key: "id", sortable: false, classes: "data_table_overflow" },
+        {
+          key: "deletePermission",
+          sortable: false,
+          classes: "data_table_overflow",
+        },
+        {
+          key: "editPermission",
+          sortable: false,
+          classes: "data_table_overflow",
+        },
+        {
+          key: "favorite",
+          sortable: false,
+          classes: "data_table_overflow",
+        },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -289,37 +304,152 @@ export default {
                                               id: childSnapshot.id,
                                             };
                                           }
-                                          me.puzzles.push({
-                                            rows: solution.length,
-                                            columns: solution[0].length,
-                                            letters:
-                                              childSnapshot.get("letters")
-                                                .length,
-                                            rating: sum_ratings / num_ratings,
-                                            title: childSnapshot.get("title"),
-                                            description:
-                                              childSnapshot.get("description"),
-                                            source: childSnapshot.get("source"),
-                                            is_public:
-                                              childSnapshot.get("is_public"),
-                                            author_display_name:
-                                              author_display_name,
-                                            author_email: author_email,
-                                            time_created: new Date(
-                                              childSnapshot.get("time_created")
-                                                .seconds * 1000
-                                            ),
-                                            updater_display_name:
-                                              updater_display_name,
-                                            updater_email: updater_email,
-                                            last_updated: new Date(
-                                              childSnapshot.get("last_updated")
-                                                .seconds * 1000
-                                            ),
+                                          let newEditPermission = {
+                                            granted: false,
                                             id: childSnapshot.id,
-                                            deletePermission:
-                                              newDeletePermission,
-                                          });
+                                          };
+                                          if (me.user) {
+                                            newEditPermission = {
+                                              granted:
+                                                childSnapshotAuthor.id ==
+                                                  me.user.uid ||
+                                                childSnapshot
+                                                  .get("permissions")
+                                                  .includes(me.user.email),
+                                              id: childSnapshot.id,
+                                            };
+                                          }
+                                          if (me.user) {
+                                            usersRef
+                                              .get()
+                                              .then(function (
+                                                snapshotCurrentUser
+                                              ) {
+                                                snapshotCurrentUser.forEach(
+                                                  function (
+                                                    childSnapshotCurrentUser
+                                                  ) {
+                                                    if (
+                                                      me.user &&
+                                                      childSnapshotCurrentUser.id ==
+                                                        me.user.uid
+                                                    ) {
+                                                      if (
+                                                        childSnapshotCurrentUser.get(
+                                                          "favoriteNumberLetters"
+                                                        )
+                                                      ) {
+                                                        me.favoriteNumberLetters =
+                                                          childSnapshotCurrentUser.get(
+                                                            "favoriteNumberLetters"
+                                                          );
+                                                      }
+                                                      let favorite = {
+                                                        favorite:
+                                                          me.favoriteNumberLetters.includes(
+                                                            childSnapshot.id
+                                                          ),
+                                                        id: childSnapshot.id,
+                                                      };
+                                                      me.puzzles.push({
+                                                        rows: solution.length,
+                                                        columns:
+                                                          solution[0].length,
+                                                        letters:
+                                                          childSnapshot.get(
+                                                            "letters"
+                                                          ).length,
+                                                        rating:
+                                                          sum_ratings /
+                                                          num_ratings,
+                                                        title:
+                                                          childSnapshot.get(
+                                                            "title"
+                                                          ),
+                                                        description:
+                                                          childSnapshot.get(
+                                                            "description"
+                                                          ),
+                                                        source:
+                                                          childSnapshot.get(
+                                                            "source"
+                                                          ),
+                                                        is_public:
+                                                          childSnapshot.get(
+                                                            "is_public"
+                                                          ),
+                                                        author_display_name:
+                                                          author_display_name,
+                                                        author_email:
+                                                          author_email,
+                                                        time_created: new Date(
+                                                          childSnapshot.get(
+                                                            "time_created"
+                                                          ).seconds * 1000
+                                                        ),
+                                                        updater_display_name:
+                                                          updater_display_name,
+                                                        updater_email:
+                                                          updater_email,
+                                                        last_updated: new Date(
+                                                          childSnapshot.get(
+                                                            "last_updated"
+                                                          ).seconds * 1000
+                                                        ),
+                                                        id: childSnapshot.id,
+                                                        deletePermission:
+                                                          newDeletePermission,
+                                                        editPermission:
+                                                          newEditPermission,
+                                                        favorite: favorite,
+                                                      });
+                                                    }
+                                                  }
+                                                );
+                                              });
+                                          } else {
+                                            me.puzzles.push({
+                                              rows: solution.length,
+                                              columns: solution[0].length,
+                                              letters:
+                                                real_letters.length *
+                                                real_letters[0].length,
+                                              rating: sum_ratings / num_ratings,
+                                              title: childSnapshot.get("title"),
+                                              description:
+                                                childSnapshot.get(
+                                                  "description"
+                                                ),
+                                              source:
+                                                childSnapshot.get("source"),
+                                              is_public:
+                                                childSnapshot.get("is_public"),
+                                              author_display_name:
+                                                author_display_name,
+                                              author_email: author_email,
+                                              time_created: new Date(
+                                                childSnapshot.get(
+                                                  "time_created"
+                                                ).seconds * 1000
+                                              ),
+                                              updater_display_name:
+                                                updater_display_name,
+                                              updater_email: updater_email,
+                                              last_updated: new Date(
+                                                childSnapshot.get(
+                                                  "last_updated"
+                                                ).seconds * 1000
+                                              ),
+                                              id: childSnapshot.id,
+                                              deletePermission:
+                                                newDeletePermission,
+                                              editPermission: newEditPermission,
+                                              favorite: {
+                                                favorite: false,
+                                                id: childSnapshot.id,
+                                              },
+                                            });
+                                          }
                                         });
                                     }
                                   });
@@ -338,6 +468,39 @@ export default {
     },
     sortByOptions() {
       return this.columns.map(({ key }) => key);
+    },
+    add_favorite(id) {
+      this.favoriteNumberLetters.push(id);
+      usersRef
+        .doc(this.user.uid)
+        .set(
+          {
+            favoriteNumberLetters: this.favoriteNumberLetters,
+          },
+          { merge: true }
+        )
+        .then(() => {
+          this.fetch_puzzles();
+          this.$forceUpdate();
+        });
+    },
+    remove_favorite(id) {
+      let index = this.favoriteNumberLetters.indexOf(id);
+      if (index > -1) {
+        this.favoriteNumberLetters.splice(index, 1);
+      }
+      usersRef
+        .doc(this.user.uid)
+        .set(
+          {
+            favoriteNumberLetters: this.favoriteNumberLetters,
+          },
+          { merge: true }
+        )
+        .then(() => {
+          this.fetch_puzzles();
+          this.$forceUpdate();
+        });
     },
     deletePuzzle(id) {
       numberLettersRef
@@ -446,15 +609,15 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
-    <div class="myrow">
+    <div class="my_row">
       <router-link to="/create-number-letter">
         <va-button>
-        <va-icon name="add_circle" />&nbsp;Nova
-        zagonetka</va-button>
+          <va-icon name="add_circle" />&nbsp;Nova zagonetka</va-button
+        >
       </router-link>
     </div>
     <span v-if="puzzles.length > 0">
-      <div class="myrow">
+      <div class="my_row">
         <va-input
           style="display: inline-block"
           placeholder="Unesite pojam za pretragu"
@@ -467,7 +630,7 @@ export default {
           v-model="useCustomFilteringFn"
         />
       </div>
-      <div class="myrow">
+      <div class="my_row">
         <MyCounter
           :min_value="1"
           :max_value="Math.ceil(this.filtered.length)"
@@ -477,7 +640,6 @@ export default {
         ></MyCounter>
       </div>
       <va-data-table
-         
         :items="puzzles"
         :filter="filter"
         :columns="columns"
@@ -497,7 +659,7 @@ export default {
         no-data-html="Nema podataka."
         :filter-method="customFilteringFn"
       >
-        <template #header(id)>Akcije</template>
+        <template #header(id)>Igraj</template>
         <template #header(rows)>Broj redaka</template>
         <template #header(columns)>Broj stupaca</template>
         <template #header(letters)>Broj slova</template>
@@ -513,6 +675,8 @@ export default {
         <template #header(time_created)>Vrijeme kreiranja</template>
         <template #header(last_updated)>Vrijeme zadnje izmjene</template>
         <template #header(deletePermission)>Izbriši</template>
+        <template #header(editPermission)>Uredi</template>
+        <template #header(favorite)>Spremi</template>
         <template #cell(time_created)="{ source: time_created }">
           {{ time_created.toLocaleString() }}
         </template>
@@ -535,11 +699,6 @@ export default {
         </template>
         <template #cell(id)="{ source: id }">
           <router-link
-            v-bind:to="{ name: 'edit_number_letter', params: { id: id } }"
-          >
-            <va-icon name="mode_edit" />
-          </router-link>
-          <router-link
             v-bind:to="{ name: 'solve_number_letter', params: { id: id } }"
           >
             <va-icon name="play_arrow" />
@@ -552,6 +711,29 @@ export default {
             name="delete"
           />
         </template>
+        <template #cell(editPermission)="{ source: editPermission }">
+          <router-link
+            v-if="editPermission.granted == true"
+            v-bind:to="{
+              name: 'edit_number_letter',
+              params: { id: editPermission.id },
+            }"
+          >
+            <va-icon name="mode_edit" />
+          </router-link>
+        </template>
+        <template #cell(favorite)="{ source: favorite }">
+          <va-icon
+            v-if="favorite.favorite != true && user"
+            name="favorite"
+            @click="add_favorite(favorite.id)"
+          />
+          <va-icon
+            v-if="favorite.favorite == true && user"
+            name="heart_broken"
+            @click="remove_favorite(favorite.id)"
+          />
+        </template>
         <template #cell(is_public)="{ source: is_public }">
           <span v-if="is_public">Svi</span>
           <span v-else>Samo suradnici</span>
@@ -559,7 +741,7 @@ export default {
         <template #bodyAppend>
           <tr>
             <td colspan="16">
-              <div style="display:inline-block;margin-top: 10px">
+              <div style="display: inline-block; margin-top: 10px">
                 <va-pagination v-model="currentPage" input :pages="pages" />
               </div>
             </td>
@@ -569,65 +751,108 @@ export default {
     </span>
     <NoDataToDisplay v-else customMessage="Nema zagonetki"></NoDataToDisplay>
     <div
-      class="myrow"
+      class="my_row"
       v-if="!start_time && !end_time && selectMode == 'single'"
     >
+      <div class="my_row" v-if="selectedItemsEmitted.length > 0">
+        <h4 class="display-4">
+          <va-icon size="large" name="extension"></va-icon>
+          &nbsp; Podaci o zagonetci
+        </h4>
+      </div>
       <va-tabs
         v-if="selectedItemsEmitted.length > 0"
         v-model="value"
         style="width: 100%"
       >
         <template #tabs>
-          <va-tab label="Svi rezultati" name="all" />
-          <va-tab label="Rezultati korisnika" v-if="user" name="mine" />
-          <va-tab label="Ocjena" v-if="user" name="rate" />
+          <va-tab name="all"
+            ><va-icon name="browse_gallery" />&nbsp;Svi rezultati</va-tab
+          >
+          <va-tab name="mine"
+            ><va-icon name="schedule" />&nbsp;Rezultati korisnika</va-tab
+          >
+          <va-tab name="rate"
+            ><va-icon name="hotel_class" />&nbsp;Sve ocjene</va-tab
+          >
+          <va-tab name="rate_mine"
+            ><va-icon name="star" />&nbsp;Ocjena korisnika</va-tab
+          >
         </template>
       </va-tabs>
       <span v-for="item in selectedItemsEmitted" :key="item.id">
         <RatingsTable
-          v-if="user && value == 'rate'"
+          v-if="value == 'rate'"
+          :type="'all'"
           :dbRef="numberLettersRatingsRef"
           :puzzleId="selectedItemsEmitted[0].id"
-          :userId="user.uid"
+        >
+        </RatingsTable>
+        <RatingsTable
+          v-if="value == 'rate_mine'"
+          :type="'mine'"
+          :dbRef="numberLettersRatingsRef"
+          :puzzleId="selectedItemsEmitted[0].id"
+          :userId="$props.friend.uid"
         >
         </RatingsTable>
         <RecordsTable
           v-if="value == 'all'"
+          :type="'all'"
           :dbRef="numberLettersRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
         >
         </RecordsTable>
         <RecordsTable
-          v-if="user && value == 'mine'"
+          v-if="value == 'mine'"
+          :type="'mine'"
           :dbRef="numberLettersRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
-          :userId="user.uid"
+          :userId="$props.friend.uid"
         >
         </RecordsTable>
       </span>
     </div>
-    <div class="myrow" v-if="start_time && end_time && selectMode == 'single'">
+    <div class="my_row" v-if="start_time && end_time && selectMode == 'single'">
       <va-tabs
         v-if="selectedItemsEmitted.length > 0"
         v-model="value"
         style="width: 100%"
       >
         <template #tabs>
-          <va-tab label="Svi rezultati" name="all" />
-          <va-tab label="Rezultati korisnika" v-if="user" name="mine" />
-          <va-tab label="Ocjena" v-if="user" name="rate" />
+          <va-tab name="all"
+            ><va-icon name="browse_gallery" />&nbsp;Svi rezultati</va-tab
+          >
+          <va-tab name="mine"
+            ><va-icon name="schedule" />&nbsp;Rezultati korisnika</va-tab
+          >
+          <va-tab name="rate"
+            ><va-icon name="hotel_class" />&nbsp;Sve ocjene</va-tab
+          >
+          <va-tab name="rate_mine"
+            ><va-icon name="star" />&nbsp;Ocjena korisnika</va-tab
+          >
         </template>
       </va-tabs>
       <span v-for="item in selectedItemsEmitted" :key="item.id">
         <RatingsTable
-          v-if="user && value == 'rate'"
+          v-if="value == 'rate'"
+          :type="'all'"
           :dbRef="numberLettersRatingsRef"
           :puzzleId="selectedItemsEmitted[0].id"
-          :userId="user.uid"
+        >
+        </RatingsTable>
+        <RatingsTable
+          v-if="value == 'rate_mine'"
+          :type="'mine'"
+          :dbRef="numberLettersRatingsRef"
+          :puzzleId="selectedItemsEmitted[0].id"
+          :userId="$props.friend.uid"
         >
         </RatingsTable>
         <RecordsTable
           v-if="value == 'all'"
+          :type="'all'"
           :dbRef="numberLettersRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
           :start_time="start_time"
@@ -635,10 +860,11 @@ export default {
         >
         </RecordsTable>
         <RecordsTable
-          v-if="user && value == 'mine'"
+          v-if="value == 'mine'"
+          :type="'mine'"
           :dbRef="numberLettersRecordsRef"
           :puzzleId="selectedItemsEmitted[0].id"
-          :userId="user.uid"
+          :userId="$props.friend.uid"
           :start_time="start_time"
           :end_time="end_time"
         >
@@ -648,5 +874,4 @@ export default {
   </span>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

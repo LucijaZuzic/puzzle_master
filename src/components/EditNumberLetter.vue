@@ -11,7 +11,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usersRef } from "../firebase_main.js";
 import { numberLettersRef } from "../firebase_main.js";
 
-import MyCounter from './MyCounter.vue';
+import MyCounter from "./MyCounter.vue";
 
 import LoadingBar from "./LoadingBar.vue";
 
@@ -102,21 +102,24 @@ export default {
     };
   },
   methods: {
-    zoom_number() { 
+    zoom_number() {
       if (this.zoom > this.max_zoom) {
-        this.zoom = this.max_zoom
+        this.zoom = this.max_zoom;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_in() {
       this.zoom++;
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_out() {
       if (this.zoom > 1) {
         this.zoom--;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     getAuthorUserRecord() {
       let some_id = this.author;
@@ -291,7 +294,7 @@ export default {
       let hidden = true;
       let uid = "";
       let me = null;
-      let my_activity = this
+      let my_activity = this;
       if (this.user) {
         me = this.user.uid;
       }
@@ -818,7 +821,7 @@ export default {
         });
     },
     getPicture() {
-      if (this.image == null) {
+      if (this.image == null || this.image == "") {
         this.imageURL = "";
         this.fully_loaded = true;
         return;
@@ -890,91 +893,104 @@ export default {
           last_updated: datetime,
         })
         .then((docRef) => {
-          if (this.image && this.image.name == undefined) {
-            numberLettersRef
-              .doc(params_id)
-              .update({
-                solution: funct_ref(newsolution),
-                is_special: funct_ref(newspecial),
-                border_top: funct_ref(newtop),
-                border_bottom: funct_ref(newbottom),
-                border_left: funct_ref(newleft),
-                border_right: funct_ref(newright),
-                title: this.title,
-                letters: newletters,
-                description: this.description,
-                author: this.author,
-                image: this.image,
-                updater: this.user.uid,
-                is_public: this.is_public,
-                permissions: this.permissions,
-                source: this.source,
-                time_created: this.time_created,
-                last_updated: datetime,
-              })
-              .then(() => {
-                this.new_async(
-                  this.$vaToast.init(
-                    "Postojeća zagonetka je uspješno izmijenjena."
-                  ),
-                  1000
-                ).then(() => {
-                  this.$router.push("/search-number-letter");
-                });
-              });
-          } else {
-            if (this.oldimage) {
-              let oldRef = ref(projectStorage, this.oldimage);
-              // Delete the file
-              deleteObject(oldRef)
-                .then(() => {
-                  // File deleted successfully
+          if (this.image && this.image != "") {
+            if (this.image.name == undefined) {
+              numberLettersRef
+                .doc(params_id)
+                .update({
+                  solution: funct_ref(newsolution),
+                  is_special: funct_ref(newspecial),
+                  border_top: funct_ref(newtop),
+                  border_bottom: funct_ref(newbottom),
+                  border_left: funct_ref(newleft),
+                  border_right: funct_ref(newright),
+                  title: this.title,
+                  letters: newletters,
+                  description: this.description,
+                  author: this.author,
+                  image: this.image,
+                  updater: this.user.uid,
+                  is_public: this.is_public,
+                  permissions: this.permissions,
+                  source: this.source,
+                  time_created: this.time_created,
+                  last_updated: datetime,
                 })
-                .catch((error) => {
-                  // Uh-oh, an error occurred!
+                .then(() => {
+                  this.new_async(
+                    this.$vaToast.init(
+                      "Postojeća zagonetka je uspješno izmijenjena."
+                    ),
+                    1000
+                  ).then(() => {
+                    this.$router.push("/search-number-letter");
+                  });
+                });
+            } else {
+              if (this.oldimage) {
+                let oldRef = ref(projectStorage, this.oldimage);
+                // Delete the file
+                deleteObject(oldRef)
+                  .then(() => {
+                    // File deleted successfully
+                  })
+                  .catch((error) => {
+                    // Uh-oh, an error occurred!
+                  });
+              }
+              let exstension =
+                this.image.name.split(".")[
+                  this.image.name.split(".").length - 1
+                ];
+              const reference = "numberLetter/" + params_id + "." + exstension;
+              const storageRef = ref(projectStorage, reference);
+              const metadata = {
+                contentType: "image/" + exstension,
+              };
+              // 'file' comes from the Blob or File API
+              uploadBytes(storageRef, this.image, metadata)
+                .then((snapshot) => {})
+                .catch((error) => {})
+                .then(() => {
+                  let imageLocation = reference;
+                  numberLettersRef
+                    .doc(params_id)
+                    .update({
+                      solution: funct_ref(newsolution),
+                      is_special: funct_ref(newspecial),
+                      title: this.title,
+                      letters: newletters,
+                      description: this.description,
+                      author: this.author,
+                      image: imageLocation,
+                      updater: this.user.uid,
+                      is_public: this.is_public,
+                      permissions: this.permissions,
+                      source: this.source,
+                      time_created: this.time_created,
+                      last_updated: datetime,
+                    })
+                    .then(() => {
+                      this.new_async(
+                        this.$vaToast.init(
+                          "Postojeća zagonetka je uspješno izmijenjena."
+                        ),
+                        1000
+                      ).then(() => {
+                        this.$router.push("/search-number-letter");
+                      });
+                    });
                 });
             }
-            let exstension =
-              this.image.name.split(".")[this.image.name.split(".").length - 1];
-            const reference = "numberLetter/" + params_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                numberLettersRef
-                  .doc(params_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    title: this.title,
-                    letters: newletters,
-                    description: this.description,
-                    author: this.author,
-                    image: imageLocation,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: this.permissions,
-                    source: this.source,
-                    time_created: this.time_created,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Postojeća zagonetka je uspješno izmijenjena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-number-letter");
-                    });
-                  });
-              });
+          } else {
+            this.new_async(
+              this.$vaToast.init(
+                "Postojeća zagonetka je uspješno izmijenjena."
+              ),
+              1000
+            ).then(() => {
+              this.$router.push("/search-number-letter");
+            });
           }
         });
     },
@@ -1045,107 +1061,118 @@ export default {
         })
         .then((docRef) => {
           let some_id = docRef.id;
-          if (this.image && this.image.name == undefined) {
-            var old_reference = ref(projectStorage, this.image);
-            let exstension = "";
-            // Get metadata properties
-            getMetadata(old_reference)
-              .then((metadata) => {
-                // Metadata now contains the metadata for 'images/forest.jpg'
-                exstension = metadata.contentType.split("/")[1];
-              })
-              .catch((error) => {
-                // Uh-oh, an error occurred!
-              });
-            const reference = "numberLetter/" + some_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                numberLettersRef
-                  .doc(some_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    border_top: funct_ref(newtop),
-                    border_bottom: funct_ref(newbottom),
-                    border_left: funct_ref(newleft),
-                    border_right: funct_ref(newright),
-                    title: this.title,
-                    letters: newletters,
-                    description: this.description,
-                    author: this.user.uid,
-                    image: this.image,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: newPermissions,
-                    source: this.source,
-                    time_created: datetime,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Nova zagonetka je uspješno spremljena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-number-letter");
+          if (this.image && this.image != "") {
+            if (this.image.name == undefined) {
+              var old_reference = ref(projectStorage, this.image);
+              let exstension = "";
+              // Get metadata properties
+              getMetadata(old_reference)
+                .then((metadata) => {
+                  // Metadata now contains the metadata for 'images/forest.jpg'
+                  exstension = metadata.contentType.split("/")[1];
+                })
+                .catch((error) => {
+                  // Uh-oh, an error occurred!
+                });
+              const reference = "numberLetter/" + some_id + "." + exstension;
+              const storageRef = ref(projectStorage, reference);
+              const metadata = {
+                contentType: "image/" + exstension,
+              };
+              // 'file' comes from the Blob or File API
+              uploadBytes(storageRef, this.image, metadata)
+                .then((snapshot) => {})
+                .catch((error) => {})
+                .then(() => {
+                  let imageLocation = reference;
+                  numberLettersRef
+                    .doc(some_id)
+                    .update({
+                      solution: funct_ref(newsolution),
+                      is_special: funct_ref(newspecial),
+                      border_top: funct_ref(newtop),
+                      border_bottom: funct_ref(newbottom),
+                      border_left: funct_ref(newleft),
+                      border_right: funct_ref(newright),
+                      title: this.title,
+                      letters: newletters,
+                      description: this.description,
+                      author: this.user.uid,
+                      image: this.image,
+                      updater: this.user.uid,
+                      is_public: this.is_public,
+                      permissions: newPermissions,
+                      source: this.source,
+                      time_created: datetime,
+                      last_updated: datetime,
+                    })
+                    .then(() => {
+                      this.new_async(
+                        this.$vaToast.init(
+                          "Nova zagonetka je uspješno spremljena."
+                        ),
+                        1000
+                      ).then(() => {
+                        this.$router.push("/search-number-letter");
+                      });
                     });
-                  });
-              });
+                });
+            } else {
+              let exstension =
+                this.image.name.split(".")[
+                  this.image.name.split(".").length - 1
+                ];
+              const reference = "numberLetter/" + some_id + "." + exstension;
+              const storageRef = ref(projectStorage, reference);
+              const metadata = {
+                contentType: "image/" + exstension,
+              };
+              // 'file' comes from the Blob or File API
+              uploadBytes(storageRef, this.image, metadata)
+                .then((snapshot) => {})
+                .catch((error) => {})
+                .then(() => {
+                  let imageLocation = reference;
+                  numberLettersRef
+                    .doc(some_id)
+                    .update({
+                      solution: funct_ref(newsolution),
+                      is_special: funct_ref(newspecial),
+                      border_top: funct_ref(newtop),
+                      border_bottom: funct_ref(newbottom),
+                      border_left: funct_ref(newleft),
+                      border_right: funct_ref(newright),
+                      title: this.title,
+                      letters: newletters,
+                      description: this.description,
+                      author: this.user.uid,
+                      image: imageLocation,
+                      updater: this.user.uid,
+                      is_public: this.is_public,
+                      permissions: newPermissions,
+                      source: this.source,
+                      time_created: datetime,
+                      last_updated: datetime,
+                    })
+                    .then(() => {
+                      this.new_async(
+                        this.$vaToast.init(
+                          "Nova zagonetka je uspješno spremljena."
+                        ),
+                        1000
+                      ).then(() => {
+                        this.$router.push("/search-number-letter");
+                      });
+                    });
+                });
+            }
           } else {
-            let exstension =
-              this.image.name.split(".")[this.image.name.split(".").length - 1];
-            const reference = "numberLetter/" + some_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                numberLettersRef
-                  .doc(some_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    border_top: funct_ref(newtop),
-                    border_bottom: funct_ref(newbottom),
-                    border_left: funct_ref(newleft),
-                    border_right: funct_ref(newright),
-                    title: this.title,
-                    letters: newletters,
-                    description: this.description,
-                    author: this.user.uid,
-                    image: imageLocation,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: newPermissions,
-                    source: this.source,
-                    time_created: datetime,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Nova zagonetka je uspješno spremljena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-number-letter");
-                    });
-                  });
-              });
+            this.new_async(
+              this.$vaToast.init("Nova zagonetka je uspješno spremljena."),
+              1000
+            ).then(() => {
+              this.$router.push("/search-number-letter");
+            });
           }
         });
     },
@@ -1365,20 +1392,38 @@ export default {
 </script>
 
 <template>
-  <body class="mybody" v-if="!fully_loaded"> 
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="mybody" v-else>
-    <div class="myrow"> 
-      <MyCounter :min_value="row_counter_min" :max_value="row_counter_max" v-bind:value="rows" @input="(n) => rows = n" :some_text="'Broj redaka'"></MyCounter> 
+  <body class="my_body" v-else>
+    <div class="my_row">
+      <MyCounter
+        :min_value="row_counter_min"
+        :max_value="row_counter_max"
+        v-bind:value="rows"
+        @input="(n) => (rows = n)"
+        :some_text="'Broj redaka'"
+      ></MyCounter>
     </div>
-    <div class="myrow">
-      <MyCounter :min_value="column_counter_min" :max_value="column_counter_max" v-bind:value="columns" @input="(n) => columns = n" :some_text="'Broj stupaca'"></MyCounter> 
+    <div class="my_row">
+      <MyCounter
+        :min_value="column_counter_min"
+        :max_value="column_counter_max"
+        v-bind:value="columns"
+        @input="(n) => (columns = n)"
+        :some_text="'Broj stupaca'"
+      ></MyCounter>
     </div>
-    <div class="myrow">
-      <MyCounter :min_value="1" :max_value="alphabet.length" v-bind:value="num_letters" @input="(n) => num_letters = n" :some_text="'Broj slova'"></MyCounter> 
-    </div>  
-    <div class="myrow">
+    <div class="my_row">
+      <MyCounter
+        :min_value="1"
+        :max_value="alphabet.length"
+        v-bind:value="num_letters"
+        @input="(n) => (num_letters = n)"
+        :some_text="'Broj slova'"
+      ></MyCounter>
+    </div>
+    <div class="my_row">
       <va-tabs v-model="mode">
         <template #tabs>
           <va-tab
@@ -1397,16 +1442,16 @@ export default {
               use_option = false;
             "
           >
-            <span style="color: black">Barijera</span>
+             <va-icon color="#000000" name="contrast"></va-icon>&nbsp;Barijera
           </va-tab>
-          <va-tab
+          <va-tab 
             :name="-3"
             @click="
               use_mode = true;
               use_option = false;
             "
           >
-            <span style="color: salmon">Dio rješenja</span>
+            <va-icon color="#FA8072" name="contrast"></va-icon>&nbsp;Dio rješenja 
           </va-tab>
           <va-tab
             :name="-4"
@@ -1451,7 +1496,7 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
           <table style="display: inline-table">
@@ -1497,7 +1542,7 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-tabs v-model="value_to_randomize">
         <template #tabs>
           <va-tab name="letters"> Slova </va-tab>
@@ -1505,7 +1550,7 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-tabs>
         <template #tabs>
           <va-tab @click="randomize_all = !randomize_all">
@@ -1527,16 +1572,30 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow" v-if="current_x != null && current_y != null">
-      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
-    </div> 
-    <div class="myrow"> 
-      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
+    <div class="my_row" v-if="current_x != null && current_y != null">
+      <va-chip
+        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        {{ current_y }})</va-chip
+      >
     </div>
-    <div class="myrow" style="max-height: 500px">
+    <div class="my_row">
+      <MyCounter
+        :min_value="1"
+        :max_value="max_zoom"
+        v-bind:value="zoom"
+        @input="
+          (n) => {
+            zoom = n;
+            zoom_number();
+          }
+        "
+        :some_text="'Povećanje'"
+      ></MyCounter>
+    </div>
+    <div class="my_row" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table class="numbers_table" id="table-to-zoom">
+          <table class="numbers_table" id="table_zoom">
             <tr v-for="i in rows" v-bind:key="i">
               <td
                 v-for="j in columns"
@@ -1575,7 +1634,7 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow" v-if="hasEmpty()">
+    <div class="my_row" v-if="hasEmpty()">
       <va-alert
         style="white-space: pre-wrap"
         color="danger"
@@ -1586,7 +1645,7 @@ export default {
         Neke ćelije nemaju dodijeljen broj slova.
       </va-alert>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="display: inline-block; overflow-wrap: anywhere"
         @click="click_file()"
@@ -1602,13 +1661,13 @@ export default {
         @input="image_uploaded()"
       />
     </div>
-    <div class="myrow" v-if="image">
+    <div class="my_row" v-if="image">
       <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
-    <div class="myrow" v-if="!image">
+    <div class="my_row" v-if="!image">
       <va-alert
         style="white-space: pre-wrap"
-        color="danger"
+        color="warning"
         title="Prazna slika"
         center
         class="mb-4"
@@ -1616,7 +1675,7 @@ export default {
         Niste dodali sliku uz zagonetku.
       </va-alert>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         class="mb-4"
         v-model="title"
@@ -1646,7 +1705,7 @@ export default {
         :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
       />
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
         >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
@@ -1669,7 +1728,7 @@ export default {
         >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
@@ -1681,7 +1740,7 @@ export default {
         <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         style="display: inline-block; margin-left: 10px; margin-top: 10px"
         type="text"
@@ -1703,7 +1762,7 @@ export default {
         </template>
       </va-input>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="
           overflow-wrap: anywhere;
@@ -1723,14 +1782,13 @@ export default {
         &nbsp;{{ permission.displayName }} ({{ permission.email }})
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
         :disabled="
           !(
             !letter_alert &&
             !hasEmpty() &&
-            image &&
             title.length > 0 &&
             description.length > 0 &&
             source.length > 0
@@ -1747,7 +1805,6 @@ export default {
           !(
             !letter_alert &&
             !hasEmpty() &&
-            image &&
             title.length > 0 &&
             description.length > 0 &&
             source.length > 0

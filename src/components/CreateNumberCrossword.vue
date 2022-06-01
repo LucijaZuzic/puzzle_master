@@ -5,11 +5,11 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import { ref, uploadBytes } from "firebase/storage";
 import { projectStorage } from "../firebase_main.js";
-import MyCounter from './MyCounter.vue';
+import MyCounter from "./MyCounter.vue";
 
 export default {
   components: {
-    MyCounter
+    MyCounter,
   },
   data() {
     return {
@@ -44,21 +44,24 @@ export default {
     };
   },
   methods: {
-    zoom_number() { 
+    zoom_number() {
       if (this.zoom > this.max_zoom) {
-        this.zoom = this.max_zoom
+        this.zoom = this.max_zoom;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_in() {
       this.zoom++;
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_out() {
       if (this.zoom > 1) {
         this.zoom--;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     choose_random_type() {
       if (this.randomize_all == true) {
@@ -88,7 +91,7 @@ export default {
       let hidden = true;
       let uid = "";
       let me = null;
-      let my_activity = this
+      let my_activity = this;
       if (this.user) {
         me = this.user.uid;
       }
@@ -445,48 +448,56 @@ export default {
           last_updated: datetime,
         })
         .then((docRef) => {
-          let some_id = docRef.id;
-          let exstension =
-            this.image.name.split(".")[this.image.name.split(".").length - 1];
-          const reference = "numberCrossword/" + some_id + "." + exstension;
-          const storageRef = ref(projectStorage, reference);
-          const metadata = {
-            contentType: "image/" + exstension,
-          };
-          // 'file' comes from the Blob or File API
-          uploadBytes(storageRef, this.image, metadata)
-            .then((snapshot) => {})
-            .catch((error) => {})
-            .then(() => {
-              let imageLocation = reference;
-              numberCrosswordsRef
-                .doc(some_id)
-                .update({
-                  solution: funct_ref(newsolution),
-                  is_special: funct_ref(newspecial),
-                  is_revealed: funct_ref(newrevealed),
-                  title: this.title,
-                  description: this.description,
-                  image: imageLocation,
-                  author: this.user.uid,
-                  updater: this.user.uid,
-                  is_public: this.is_public,
-                  permissions: this.permissions,
-                  source: this.source,
-                  time_created: datetime,
-                  last_updated: datetime,
-                })
-                .then(() => {
-                  this.new_async(
-                    this.$vaToast.init(
-                      "Nova zagonetka je uspješno spremljena."
-                    ),
-                    1000
-                  ).then(() => {
-                    this.$router.push("/search-number-crossword");
+          if (this.image && this.image != "") {
+            let some_id = docRef.id;
+            let exstension =
+              this.image.name.split(".")[this.image.name.split(".").length - 1];
+            const reference = "numberCrossword/" + some_id + "." + exstension;
+            const storageRef = ref(projectStorage, reference);
+            const metadata = {
+              contentType: "image/" + exstension,
+            };
+            // 'file' comes from the Blob or File API
+            uploadBytes(storageRef, this.image, metadata)
+              .catch((error) => {})
+              .then(() => {
+                let imageLocation = reference;
+                numberCrosswordsRef
+                  .doc(some_id)
+                  .update({
+                    solution: funct_ref(newsolution),
+                    is_special: funct_ref(newspecial),
+                    is_revealed: funct_ref(newrevealed),
+                    title: this.title,
+                    description: this.description,
+                    image: imageLocation,
+                    author: this.user.uid,
+                    updater: this.user.uid,
+                    is_public: this.is_public,
+                    permissions: this.permissions,
+                    source: this.source,
+                    time_created: datetime,
+                    last_updated: datetime,
+                  })
+                  .then(() => {
+                    this.new_async(
+                      this.$vaToast.init(
+                        "Nova zagonetka je uspješno spremljena."
+                      ),
+                      1000
+                    ).then(() => {
+                      this.$router.push("/search-number-crossword");
+                    });
                   });
-                });
+              });
+          } else {
+            this.new_async(
+              this.$vaToast.init("Nova zagonetka je uspješno spremljena."),
+              1000
+            ).then(() => {
+              this.$router.push("/search-number-crossword");
             });
+          }
         });
     },
     change_number(i, j) {
@@ -677,14 +688,26 @@ export default {
 </script>
 
 <template>
-  <body class="mybody">
-    <div class="myrow"> 
-      <MyCounter :min_value="row_counter_min" :max_value="row_counter_max" v-bind:value="rows" @input="(n) => rows = n" :some_text="'Broj redaka'"></MyCounter> 
+  <body class="my_body">
+    <div class="my_row">
+      <MyCounter
+        :min_value="row_counter_min"
+        :max_value="row_counter_max"
+        v-bind:value="rows"
+        @input="(n) => (rows = n)"
+        :some_text="'Broj redaka'"
+      ></MyCounter>
     </div>
-    <div class="myrow">
-      <MyCounter :min_value="column_counter_min" :max_value="column_counter_max" v-bind:value="columns" @input="(n) => columns = n" :some_text="'Broj stupaca'"></MyCounter> 
-    </div> 
-    <div class="myrow">
+    <div class="my_row">
+      <MyCounter
+        :min_value="column_counter_min"
+        :max_value="column_counter_max"
+        v-bind:value="columns"
+        @input="(n) => (columns = n)"
+        :some_text="'Broj stupaca'"
+      ></MyCounter>
+    </div>
+    <div class="my_row">
       <va-tabs v-model="mode">
         <template #tabs>
           <va-tab :name="10">
@@ -696,18 +719,18 @@ export default {
             </span>
           </va-tab>
           <va-tab :name="-1">
-            <span style="color: black">Barijera</span>
+             <va-icon color="#000000" name="contrast"></va-icon>&nbsp;Barijera
           </va-tab>
           <va-tab :name="-2">
-            <span style="color: salmon">Dio rješenja</span>
+            <va-icon color="#FA8072" name="contrast"></va-icon>&nbsp;Dio rješenja 
           </va-tab>
           <va-tab :name="-3">
-            <span style="color: #90beee">Pomoć</span>
+            <va-icon color="#90beee" name="contrast"></va-icon>&nbsp;Pomoć
           </va-tab>
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-tabs>
         <template #tabs>
           <va-tab @click="randomize_all = !randomize_all">
@@ -729,16 +752,30 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow" v-if="current_x != null && current_y != null">
-      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
+    <div class="my_row" v-if="current_x != null && current_y != null">
+      <va-chip
+        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        {{ current_y }})</va-chip
+      >
     </div>
-    <div class="myrow"> 
-      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
+    <div class="my_row">
+      <MyCounter
+        :min_value="1"
+        :max_value="max_zoom"
+        v-bind:value="zoom"
+        @input="
+          (n) => {
+            zoom = n;
+            zoom_number();
+          }
+        "
+        :some_text="'Povećanje'"
+      ></MyCounter>
     </div>
-    <div class="myrow" style="max-height: 400px">
+    <div class="my_row" style="max-height: 400px">
       <va-infinite-scroll disabled :load="() => {}">
-        <div style="vertical-align: center;display: inline-block">
-          <table class="numbers_table" id="table-to-zoom">
+        <div style="vertical-align: center; display: inline-block">
+          <table class="numbers_table" id="table_zoom">
             <tr v-for="i in rows" v-bind:key="i">
               <td
                 v-for="j in columns"
@@ -772,7 +809,7 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow" v-if="count_special()">
+    <div class="my_row" v-if="count_special()">
       Rješenje:
       <span v-for="i in rows" v-bind:key="i">
         <span v-for="j in columns" v-bind:key="j">
@@ -790,7 +827,7 @@ export default {
         </span>
       </span>
     </div>
-    <div class="myrow" v-if="warning">
+    <div class="my_row" v-if="warning">
       <va-alert
         color="danger"
         :title="'Nisu unesene sve znamenke'"
@@ -801,7 +838,7 @@ export default {
         brojeva u križaljci.
       </va-alert>
     </div>
-    <div class="myrow" v-if="!warning">
+    <div class="my_row" v-if="!warning">
       <va-tabs v-model="length_to_display">
         <template #tabs>
           <span v-for="(numbers_of_length, i) in numbers_by_len" v-bind:key="i">
@@ -814,7 +851,7 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow" v-if="!warning">
+    <div class="my_row" v-if="!warning">
       <span v-for="(numbers_of_length, i) in numbers_by_len" v-bind:key="i">
         <va-chip
           outline
@@ -838,7 +875,7 @@ export default {
         </va-chip>
       </span>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="display: inline-block; overflow-wrap: anywhere"
         @click="click_file()"
@@ -854,13 +891,13 @@ export default {
         @input="image_uploaded()"
       />
     </div>
-    <div class="myrow" v-if="image">
+    <div class="my_row" v-if="image">
       <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
-    <div class="myrow" v-if="!image">
+    <div class="my_row" v-if="!image">
       <va-alert
         style="white-space: pre-wrap"
-        color="danger"
+        color="warning"
         title="Prazna slika"
         center
         class="mb-4"
@@ -868,7 +905,7 @@ export default {
         Niste dodali sliku uz zagonetku.
       </va-alert>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         class="mb-4"
         v-model="title"
@@ -898,7 +935,7 @@ export default {
         :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
       />
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
@@ -910,7 +947,7 @@ export default {
         <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         style="display: inline-block; margin-left: 10px; margin-top: 10px"
         type="text"
@@ -932,7 +969,7 @@ export default {
         </template>
       </va-input>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="
           overflow-wrap: anywhere;
@@ -952,13 +989,12 @@ export default {
         &nbsp;{{ permission.displayName }} ({{ permission.email }})
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="overflow-wrap: anywhere"
         :disabled="
           !(
             !warning &&
-            image &&
             title.length > 0 &&
             description.length > 0 &&
             source.length > 0

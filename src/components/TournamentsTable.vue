@@ -27,6 +27,7 @@ export default {
     NumberLetterTable,
     LoadingBar,
     MyCounter,
+    NoDataToDisplay,
   },
   mounted() {
     const auth = getAuth();
@@ -67,31 +68,51 @@ export default {
         {
           key: "organizer_display_name",
           sortable: true,
-          classes: "mytableforall",
+          classes: "data_table_overflow",
         },
-        { key: "organizer_email", sortable: true, classes: "mytableforall" },
-        { key: "start_time", sortable: true, classes: "mytableforall" },
-        { key: "end_time", sortable: true, classes: "mytableforall" },
-        { key: "selectedIntegrams", sortable: true, classes: "mytableforall" },
-        { key: "selectedNonograms", sortable: true, classes: "mytableforall" },
+        {
+          key: "organizer_email",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
+        { key: "start_time", sortable: true, classes: "data_table_overflow" },
+        { key: "end_time", sortable: true, classes: "data_table_overflow" },
+        {
+          key: "selectedIntegrams",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
+        {
+          key: "selectedNonograms",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
         {
           key: "selectedNumberCrosswords",
           sortable: true,
-          classes: "mytableforall",
+          classes: "data_table_overflow",
         },
         {
           key: "selectedCryptograms",
           sortable: true,
-          classes: "mytableforall",
+          classes: "data_table_overflow",
         },
         {
           key: "selectedNumberLetters",
           sortable: true,
-          classes: "mytableforall",
+          classes: "data_table_overflow",
         },
-        { key: "selectedInitials", sortable: true, classes: "mytableforall" },
-        { key: "selectedEights", sortable: true, classes: "mytableforall" },
-        { key: "id", sortable: false, classes: "mytableforall" },
+        {
+          key: "selectedInitials",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
+        {
+          key: "selectedEights",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
+        { key: "id", sortable: false, classes: "data_table_overflow" },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -216,263 +237,292 @@ export default {
 </script>
 
 <template>
-  <body class="mybody" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
   <span v-else>
-    <body class="mybody">
-      <div class="myrow">
-        <h1 class="display-1">Turniri</h1>
+    <body class="my_body">
+      <div class="my_row">
+        <h4 class="display-4">
+          <va-icon size="large" name="workspace_premium"> </va-icon>
+          &nbsp; Turniri
+        </h4>
       </div>
-      <div class="myrow">
+      <div class="my_row">
         <va-button>
           <router-link to="/create-tournament">
             <va-icon class="mr-4" name="add_circle" /> Novi turnir
           </router-link>
         </va-button>
       </div>
-      <div class="myrow">
-        <va-input
-          style="display: inline-block"
-          placeholder="Unesite pojam za pretragu"
-          v-model="filter"
-        />
-        &nbsp;
-        <va-checkbox
-          style="display: inline-block"
-          label="Traži cijelu riječ"
-          v-model="useCustomFilteringFn"
-        />
-      </div>
-      <div class="myrow">
-        <MyCounter
-          :min_value="1"
-          :max_value="Math.ceil(this.filtered.length)"
-          v-bind:value="perPage"
-          @input="(n) => (perPage = n)"
-          :some_text="'Broj rezultata na stranici'"
-        ></MyCounter>
-      </div>
-      <va-data-table
-         
-        :items="tournaments"
-        :filter="filter"
-        :columns="columns"
-        :hoverable="true"
-        :per-page="perPage"
-        selectable="selectable"
-        select-mode="single"
-        @selectionChange="
-          selectedItemsEmitted = $event.currentSelectedItems;
-          $emit('selectedNonograms', selectedItemsEmitted);
-        "
-        :current-page="currentPage"
-        v-model:sort-by="sortBy"
-        v-model:sorting-order="sortingOrder"
-        @filtered="filtered = $event.items"
-        no-data-filtered-html="Pretraga nije dala rezultate."
-        no-data-html="Nema podataka."
-        :filter-method="customFilteringFn"
-      >
-        <template #header(organizer_display_name)>Organizator (ime)</template>
-        <template #header(organizer_email)>Organizator (email)</template>
-        <template #header(start_time)>Početak turnira</template>
-        <template #header(end_time)>Kraj turnira</template>
-        <template #header(id)>Izbriši</template>
-        <template #header(selectedIntegrams)>Broj integrama</template>
-        <template #header(selectedNonograms)>Broj nonograma</template>
-        <template #header(selectedNumberCrosswords)
-          >Broj brojevnih križaljki</template
-        >
-        <template #header(selectedCryptograms)>Broj kriptograma</template>
-        <template #header(selectedNumberLetters)
-          >Broj zagonetki tpa "Isti broj - Isto slovo"</template
-        >
-        <template #header(selectedInitials)
-          >Broj inicijalnih osmosmjerki</template
-        >
-        <template #header(selectedEights)>Broj osmosmjerki</template>
-        <template #cell(id)="{ source: id }">
-          <va-icon
-            v-if="id.granted == true"
-            @click="deleteTournament(id.id)"
-            name="delete"
+      <span v-if="tournaments.length > 0">
+        <div class="my_row">
+          <va-input
+            style="display: inline-block"
+            placeholder="Unesite pojam za pretragu"
+            v-model="filter"
           />
-        </template>
-        <template #cell(selectedIntegrams)="{ source: selectedIntegrams }">
-          {{ selectedIntegrams.length }}
-        </template>
-        <template #cell(selectedNonograms)="{ source: selectedNonograms }">
-          {{ selectedNonograms.length }}
-        </template>
-        <template
-          #cell(selectedNumberCrosswords)="{ source: selectedNumberCrosswords }"
+          &nbsp;
+          <va-checkbox
+            style="display: inline-block"
+            label="Traži cijelu riječ"
+            v-model="useCustomFilteringFn"
+          />
+        </div>
+        <div class="my_row">
+          <MyCounter
+            :min_value="1"
+            :max_value="Math.ceil(this.filtered.length)"
+            v-bind:value="perPage"
+            @input="(n) => (perPage = n)"
+            :some_text="'Broj rezultata na stranici'"
+          ></MyCounter>
+        </div>
+        <va-data-table
+          :items="tournaments"
+          :filter="filter"
+          :columns="columns"
+          :hoverable="true"
+          :per-page="perPage"
+          selectable="selectable"
+          select-mode="single"
+          @selectionChange="
+            selectedItemsEmitted = $event.currentSelectedItems;
+            $emit('selectedNonograms', selectedItemsEmitted);
+          "
+          :current-page="currentPage"
+          v-model:sort-by="sortBy"
+          v-model:sorting-order="sortingOrder"
+          @filtered="filtered = $event.items"
+          no-data-filtered-html="Pretraga nije dala rezultate."
+          no-data-html="Nema podataka."
+          :filter-method="customFilteringFn"
         >
-          {{ selectedNumberCrosswords.length }}
-        </template>
-        <template #cell(selectedCryptograms)="{ source: selectedCryptograms }">
-          {{ selectedCryptograms.length }}
-        </template>
-        <template
-          #cell(selectedNumberLetters)="{ source: selectedNumberLetters }"
-        >
-          {{ selectedNumberLetters.length }}
-        </template>
-        <template #cell(selectedInitials)="{ source: selectedInitials }">
-          {{ selectedInitials.length }}
-        </template>
-        <template #cell(selectedEights)="{ source: selectedEights }">
-          {{ selectedEights.length }}
-        </template>
-        <template #bodyAppend>
-          <tr>
-            <td colspan="12">
-              <div style="display: inline-block; margin-top: 10px">
-                <va-pagination v-model="currentPage" input :pages="pages" />
-              </div>
-            </td>
-          </tr>
-        </template>
-      </va-data-table>
-      <div class="myrow">
-        <va-tabs
-          v-if="selectedItemsEmitted.length > 0"
-          v-model="value"
-          style="width: 100%"
-        >
-          <template #tabs>
-            <va-tab label="Integrami" name="integram" />
-            <va-tab label="Nonogrami" name="nonogram" />
-            <va-tab label="Brojevne križaljke" name="numberCrossword" />
-            <va-tab label="Kriptogrami" name="cryptogram" />
-            <va-tab
-              label='Zagonetke tipa "Isti broj - Isto slovo"'
-              name="numberLetter"
+          <template #header(organizer_display_name)>Organizator (ime)</template>
+          <template #header(organizer_email)>Organizator (email)</template>
+          <template #header(start_time)>Početak turnira</template>
+          <template #header(end_time)>Kraj turnira</template>
+          <template #header(id)>Izbriši</template>
+          <template #header(selectedIntegrams)>Broj integrama</template>
+          <template #header(selectedNonograms)>Broj nonograma</template>
+          <template #header(selectedNumberCrosswords)
+            >Broj brojevnih križaljki</template
+          >
+          <template #header(selectedCryptograms)>Broj kriptograma</template>
+          <template #header(selectedNumberLetters)
+            >Broj zagonetki tpa "Isti broj - isto slovo"</template
+          >
+          <template #header(selectedInitials)
+            >Broj inicijalnih osmosmjerki</template
+          >
+          <template #header(selectedEights)>Broj osmosmjerki</template>
+          <template #cell(id)="{ source: id }">
+            <va-icon
+              v-if="id.granted == true"
+              @click="deleteTournament(id.id)"
+              name="delete"
             />
-            <va-tab label="Inicijalne osmosmjerke" name="initial" />
-            <va-tab label="Osmosmjerke" name="eight" />
           </template>
-        </va-tabs>
-      </div>
-      <div class="myrow" v-for="item in selectedItemsEmitted" :key="item.id">
-        <span v-if="value == 'integram' && item.selectedIntegrams.length > 0">
-          <IntegramTable
-            selectMode="single"
-            :puzzleList="item.selectedIntegrams"
-            :start_time="item.start_time"
-            :end_time="item.end_time"
+          <template #cell(selectedIntegrams)="{ source: selectedIntegrams }">
+            {{ selectedIntegrams.length }}
+          </template>
+          <template #cell(selectedNonograms)="{ source: selectedNonograms }">
+            {{ selectedNonograms.length }}
+          </template>
+          <template
+            #cell(selectedNumberCrosswords)="{
+              source: selectedNumberCrosswords,
+            }"
           >
-          </IntegramTable>
-        </span>
-        <span v-if="value == 'integram' && item.selectedIntegrams.length <= 0">
-          <NoDataToDisplay customMessage="Na turniru nema integrama">
-          </NoDataToDisplay>
-        </span>
-        <span v-if="value == 'nonogram' && item.selectedNonograms.length > 0">
-          <NonogramTable
-            selectMode="single"
-            :puzzleList="item.selectedNonograms"
-            :start_time="item.start_time"
-            :end_time="item.end_time"
+            {{ selectedNumberCrosswords.length }}
+          </template>
+          <template
+            #cell(selectedCryptograms)="{ source: selectedCryptograms }"
           >
-          </NonogramTable>
-        </span>
-        <span v-if="value == 'nonogram' && item.selectedNonograms.length <= 0">
-          <NoDataToDisplay customMessage="Na turniru nema nonograma">
-          </NoDataToDisplay>
-        </span>
-        <span
-          v-if="
-            value == 'numberCrossword' &&
-            item.selectedNumberCrosswords.length > 0
-          "
-        >
-          <NumberCrosswordTable
-            selectMode="single"
-            :puzzleList="item.selectedNumberCrosswords"
-            :start_time="item.start_time"
-            :end_time="item.end_time"
+            {{ selectedCryptograms.length }}
+          </template>
+          <template
+            #cell(selectedNumberLetters)="{ source: selectedNumberLetters }"
           >
-          </NumberCrosswordTable>
-        </span>
-        <span
-          v-if="
-            value == 'numberCrossword' &&
-            item.selectedNumberCrosswords.length <= 0
-          "
-        >
-          <NoDataToDisplay customMessage="Na turniru nema brojevnih križaljki">
-          </NoDataToDisplay>
-        </span>
-        <span
-          v-if="value == 'cryptogram' && item.selectedCryptograms.length > 0"
-        >
-          <CryptogramTable
-            selectMode="single"
-            :puzzleList="item.selectedCryptograms"
-            :start_time="item.start_time"
-            :end_time="item.end_time"
+            {{ selectedNumberLetters.length }}
+          </template>
+          <template #cell(selectedInitials)="{ source: selectedInitials }">
+            {{ selectedInitials.length }}
+          </template>
+          <template #cell(selectedEights)="{ source: selectedEights }">
+            {{ selectedEights.length }}
+          </template>
+          <template #bodyAppend>
+            <tr>
+              <td colspan="12">
+                <div style="display: inline-block; margin-top: 10px">
+                  <va-pagination v-model="currentPage" input :pages="pages" />
+                </div>
+              </td>
+            </tr>
+          </template>
+        </va-data-table>
+        <div class="my_row">
+          <va-tabs
+            v-if="selectedItemsEmitted.length > 0"
+            v-model="value"
+            style="width: 100%"
           >
-          </CryptogramTable>
-        </span>
-        <span
-          v-if="value == 'cryptogram' && item.selectedCryptograms.length <= 0"
-        >
-          <NoDataToDisplay customMessage="Na turniru nema kriptograma">
-          </NoDataToDisplay>
-        </span>
-        <span
-          v-if="
-            value == 'numberLetter' && item.selectedNumberLetters.length > 0
-          "
-        >
-          <NumberLetterTable
-            selectMode="single"
-            :puzzleList="item.selectedNumberLetters"
-            :start_time="item.start_time"
-            :end_time="item.end_time"
+            <template #tabs>
+              <va-tab name="integram"
+                ><va-icon name="rule_folder"></va-icon>Integrami</va-tab
+              >
+              <va-tab name="nonogram"
+                ><va-icon name="draw"></va-icon>Nonogrami</va-tab
+              >
+              <va-tab name="numberCrossword"
+                ><va-icon name="format_list_numbered"></va-icon>Brojevne
+                križaljke</va-tab
+              >
+              <va-tab name="cryptogram"
+                ><va-icon name="multiple_stop"></va-icon>Kriptogrami</va-tab
+              >
+              <va-tab name="numberLetter"
+                ><va-icon name="sync_alt"></va-icon>Isti broj - isto
+                slovo</va-tab
+              >
+              <va-tab name="initial"
+                ><va-icon name="text_rotation_none"></va-icon>Inicijalne
+                osmosmjerke</va-tab
+              >
+              <va-tab name="eight"
+                ><va-icon name="pattern"></va-icon>Osmosmjerke</va-tab
+              >
+            </template>
+          </va-tabs>
+        </div>
+        <div class="my_row" v-for="item in selectedItemsEmitted" :key="item.id">
+          <span v-if="value == 'integram' && item.selectedIntegrams.length > 0">
+            <IntegramTable
+              selectMode="single"
+              :puzzleList="item.selectedIntegrams"
+              :start_time="item.start_time"
+              :end_time="item.end_time"
+            >
+            </IntegramTable>
+          </span>
+          <span
+            v-if="value == 'integram' && item.selectedIntegrams.length <= 0"
           >
-          </NumberLetterTable>
-        </span>
-        <span
-          v-if="
-            value == 'numberLetter' && item.selectedNumberLetters.length <= 0
-          "
-        >
-          <NoDataToDisplay
-            customMessage='Na turniru nema zagonetki tipa "Isti broj - Isto slovo'
+            <NoDataToDisplay customMessage="Na turniru nema integrama">
+            </NoDataToDisplay>
+          </span>
+          <span v-if="value == 'nonogram' && item.selectedNonograms.length > 0">
+            <NonogramTable
+              selectMode="single"
+              :puzzleList="item.selectedNonograms"
+              :start_time="item.start_time"
+              :end_time="item.end_time"
+            >
+            </NonogramTable>
+          </span>
+          <span
+            v-if="value == 'nonogram' && item.selectedNonograms.length <= 0"
           >
-          </NoDataToDisplay>
-        </span>
-        <span v-if="value == 'initial' && item.selectedInitials.length > 0">
-          <InitialTable
-            selectMode="single"
-            :puzzleList="item.selectedInitials"
-            :start_time="item.start_time"
-            :end_time="item.end_time"
+            <NoDataToDisplay customMessage="Na turniru nema nonograma">
+            </NoDataToDisplay>
+          </span>
+          <span
+            v-if="
+              value == 'numberCrossword' &&
+              item.selectedNumberCrosswords.length > 0
+            "
           >
-          </InitialTable>
-        </span>
-        <span v-if="value == 'initial' && item.selectedInitials.length <= 0">
-          <NoDataToDisplay
-            customMessage="Na turniru nema inicijalnih osmosmjerki"
+            <NumberCrosswordTable
+              selectMode="single"
+              :puzzleList="item.selectedNumberCrosswords"
+              :start_time="item.start_time"
+              :end_time="item.end_time"
+            >
+            </NumberCrosswordTable>
+          </span>
+          <span
+            v-if="
+              value == 'numberCrossword' &&
+              item.selectedNumberCrosswords.length <= 0
+            "
           >
-          </NoDataToDisplay>
-        </span>
-        <span v-if="value == 'eight' && item.selectedEights.length > 0">
-          <EightTable
-            selectMode="single"
-            :puzzleList="item.selectedEights"
-            :start_time="item.start_time"
-            :end_time="item.end_time"
+            <NoDataToDisplay
+              customMessage="Na turniru nema brojevnih križaljki"
+            >
+            </NoDataToDisplay>
+          </span>
+          <span
+            v-if="value == 'cryptogram' && item.selectedCryptograms.length > 0"
           >
-          </EightTable>
-        </span>
-        <span v-if="value == 'eight' && item.selectedEights.length <= 0">
-          <NoDataToDisplay customMessage="Na turniru nema osmosmjerki">
-          </NoDataToDisplay>
-        </span>
-      </div>
+            <CryptogramTable
+              selectMode="single"
+              :puzzleList="item.selectedCryptograms"
+              :start_time="item.start_time"
+              :end_time="item.end_time"
+            >
+            </CryptogramTable>
+          </span>
+          <span
+            v-if="value == 'cryptogram' && item.selectedCryptograms.length <= 0"
+          >
+            <NoDataToDisplay customMessage="Na turniru nema kriptograma">
+            </NoDataToDisplay>
+          </span>
+          <span
+            v-if="
+              value == 'numberLetter' && item.selectedNumberLetters.length > 0
+            "
+          >
+            <NumberLetterTable
+              selectMode="single"
+              :puzzleList="item.selectedNumberLetters"
+              :start_time="item.start_time"
+              :end_time="item.end_time"
+            >
+            </NumberLetterTable>
+          </span>
+          <span
+            v-if="
+              value == 'numberLetter' && item.selectedNumberLetters.length <= 0
+            "
+          >
+            <NoDataToDisplay
+              customMessage='Na turniru nema zagonetki tipa "Isti broj - isto slovo'
+            >
+            </NoDataToDisplay>
+          </span>
+          <span v-if="value == 'initial' && item.selectedInitials.length > 0">
+            <InitialTable
+              selectMode="single"
+              :puzzleList="item.selectedInitials"
+              :start_time="item.start_time"
+              :end_time="item.end_time"
+            >
+            </InitialTable>
+          </span>
+          <span v-if="value == 'initial' && item.selectedInitials.length <= 0">
+            <NoDataToDisplay
+              customMessage="Na turniru nema inicijalnih osmosmjerki"
+            >
+            </NoDataToDisplay>
+          </span>
+          <span v-if="value == 'eight' && item.selectedEights.length > 0">
+            <EightTable
+              selectMode="single"
+              :puzzleList="item.selectedEights"
+              :start_time="item.start_time"
+              :end_time="item.end_time"
+            >
+            </EightTable>
+          </span>
+          <span v-if="value == 'eight' && item.selectedEights.length <= 0">
+            <NoDataToDisplay customMessage="Na turniru nema osmosmjerki">
+            </NoDataToDisplay>
+          </span>
+        </div>
+      </span>
+      <NoDataToDisplay v-else customMessage="Nema turnira"></NoDataToDisplay>
     </body>
   </span>
 </template>

@@ -8,7 +8,7 @@ export default {
   components: {
     NoDataToDisplay,
     LoadingBar,
-    MyCounter
+    MyCounter,
   },
   mounted() {
     const auth = getAuth();
@@ -19,15 +19,16 @@ export default {
         this.user = user;
         // ...
       } else {
-        // User is signed ouvt
+        // User is signed out
         // ...
       }
       return true;
     });
   },
-  props: ["dbRef", "puzzleId", "userId", "start_time", "end_time"],
+  props: ["dbRef", "puzzleId", "userId", "start_time", "end_time", "type"],
   data() {
     return {
+      user: null,
       fully_loaded: false,
       user_records: [],
       selectedItemsEmitted: [],
@@ -44,12 +45,15 @@ export default {
       sortingOrder: "asc",
       perPage: 1,
       currentPage: 1,
-      user: null,
       columns: [
-        { key: "user_display_name", sortable: true,  classes: "mytableforall" },
-        { key: "user_email", sortable: true,  classes: "mytableforall" },
-        { key: "score", sortable: true,  classes: "mytableforall" },
-        { key: "time", sortable: true,  classes: "mytableforall" },
+        {
+          key: "user_display_name",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
+        { key: "user_email", sortable: true, classes: "data_table_overflow" },
+        { key: "score", sortable: true, classes: "data_table_overflow" },
+        { key: "time", sortable: true, classes: "data_table_overflow" },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -94,7 +98,14 @@ export default {
             if (me.$props.puzzleId && idPuzzle != me.$props.puzzleId) {
               match = false;
             }
-            if (me.$props.userId && idUser != me.$props.userId) {
+            if (!me.$props.userId && me.$props.type == "mine") {
+              match = false;
+            }
+            if (
+              me.$props.userId &&
+              me.$props.type == "mine" &&
+              idUser != me.$props.userId
+            ) {
               match = false;
             }
             if (
@@ -176,7 +187,7 @@ export default {
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
     <span v-if="user_records.length > 0">
-      <div class="myrow">
+      <div class="my_row">
         <va-input
           style="display: inline-block"
           placeholder="Unesite pojam za pretragu"
@@ -189,11 +200,16 @@ export default {
           v-model="useCustomFilteringFn"
         />
       </div>
-      <div class="myrow"> 
-      <MyCounter :min_value="1" :max_value="Math.ceil(this.filtered.length)" v-bind:value="perPage" @input="(n) => perPage = n" :some_text="'Broj rezultata na stranici'"></MyCounter> 
-    </div>
+      <div class="my_row">
+        <MyCounter
+          :min_value="1"
+          :max_value="Math.ceil(this.filtered.length)"
+          v-bind:value="perPage"
+          @input="(n) => (perPage = n)"
+          :some_text="'Broj rezultata na stranici'"
+        ></MyCounter>
+      </div>
       <va-data-table
-         
         :items="user_records"
         :filter="filter"
         :columns="columns"
@@ -224,7 +240,7 @@ export default {
         <template #bodyAppend>
           <tr>
             <td colspan="4">
-              <div style="display:inline-block;margin-top: 10px">
+              <div style="display: inline-block; margin-top: 10px">
                 <va-pagination v-model="currentPage" input :pages="pages" />
               </div>
             </td>
@@ -233,12 +249,16 @@ export default {
       </va-data-table>
     </span>
     <NoDataToDisplay
-      v-if="user_records.length <= 0"
-      customMessage="Nema rekorda koji zadovoljavaju kriterije"
+      v-if="user_records.length <= 0 && $props.type == 'mine'"
+      customMessage="Nema rekorda korisnika za zagonetku"
+    >
+    </NoDataToDisplay>
+    <NoDataToDisplay
+      v-if="user_records.length <= 0 && $props.type == 'all'"
+      customMessage="Nema rekorda za zagonetku"
     >
     </NoDataToDisplay>
   </span>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

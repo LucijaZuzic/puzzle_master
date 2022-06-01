@@ -1,23 +1,43 @@
 <script>
-
 import NumberCrosswordTable from "./NumberCrosswordTable.vue";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 export default {
+  mounted() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User
+        this.user = user;
+        // ...
+      } else {
+        // User is signed out
+        // ...
+      }
+      return true;
+    });
+  },
+  data() {
+    return {
+      user: null,
+    };
+  },
   components: {
-    
     NumberCrosswordTable,
   },
 };
 </script>
 
 <template>
-  <body class="mybody">
-    
-    <div class="myrow">
-       <h1 class="display-1">Brojevne križaljke</h1>
+  <body class="my_body">
+    <div class="my_row">
+      <h4 class="display-4">
+        <va-icon size="large" name="format_list_numbered"></va-icon>
+        &nbsp; Brojevne križaljke
+      </h4>
     </div>
-    <div class="myrow">
-      <NumberCrosswordTable selectMode="single"></NumberCrosswordTable>
-    </div>
+    <NumberCrosswordTable selectMode="single" :friend="user">
+    </NumberCrosswordTable>
   </body>
 </template>
 

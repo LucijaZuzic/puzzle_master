@@ -2,11 +2,8 @@
 import { ui, uiConfig } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-
 export default {
-  components: {
-    
-  },
+  components: {},
   methods: {
     delay(operation, delay) {
       return new Promise((resolve) => {
@@ -42,15 +39,14 @@ export default {
 </script>
 
 <template>
-  <body class="mybody">
-    
-    <div class="myrow">
-       <h1 class="display-1">Prijava</h1>
+  <body class="my_body">
+    <div class="my_row">
+      <h4 class="display-4">Prijava</h4>
     </div>
     <section id="firebaseui-auth-container"></section>
-    <h2 id="signed_in" visible="false" hidden="true" class="display-2">
+    <h4 id="signed_in" visible="false" hidden="true" class="display-4">
       Već ste prijavljeni
-    </h2>
+    </h4>
   </body>
 </template>
 

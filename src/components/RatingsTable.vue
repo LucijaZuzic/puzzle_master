@@ -8,7 +8,7 @@ export default {
   components: {
     NoDataToDisplay,
     LoadingBar,
-    MyCounter
+    MyCounter,
   },
   mounted() {
     const auth = getAuth();
@@ -19,15 +19,16 @@ export default {
         this.user = user;
         // ...
       } else {
-        // User is signed ouvt
+        // User is signed out
         // ...
       }
       return true;
     });
   },
-  props: ["dbRef", "puzzleId", "userId"],
+  props: ["dbRef", "puzzleId", "userId", "type"],
   data() {
     return {
+      user: null,
       fully_loaded: false,
       already_rated: false,
       documentRated: "",
@@ -49,11 +50,15 @@ export default {
       perPage: 1,
       currentPage: 1,
       columns: [
-        { key: "user_display_name", sortable: true,  classes: "mytableforall" },
-        { key: "user_email", sortable: true,  classes: "mytableforall" },
-        { key: "rating", sortable: true,  classes: "mytableforall" },
-        { key: "comment", sortable: true,  classes: "mytableforall" },
-        { key: "time", sortable: true,  classes: "mytableforall" },
+        {
+          key: "user_display_name",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
+        { key: "user_email", sortable: true, classes: "data_table_overflow" },
+        { key: "rating", sortable: true, classes: "data_table_overflow" },
+        { key: "comment", sortable: true, classes: "data_table_overflow" },
+        { key: "time", sortable: true, classes: "data_table_overflow" },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -96,8 +101,8 @@ export default {
             let idUser = childSnapshot.get("user");
             let idRating = childSnapshot.id;
             if (
-              me.$props.userId &&
-              me.$props.userId == idUser &&
+              me.user &&
+              me.user.uid == idUser &&
               me.$props.puzzleId &&
               idPuzzle == me.$props.puzzleId
             ) {
@@ -109,6 +114,16 @@ export default {
             if (me.$props.puzzleId && idPuzzle != me.$props.puzzleId) {
               match = false;
             }
+            if (!me.$props.userId && me.$props.type == "mine") {
+              match = false;
+            }
+            if (
+              me.$props.userId &&
+              me.$props.type == "mine" &&
+              idUser != me.$props.userId
+            ) {
+              match = false;
+            }
             if (match == true) {
               usersRef.get(idUser).then(function (snapshotUser) {
                 snapshotUser.forEach(function (childSnapshotUser) {
@@ -118,7 +133,10 @@ export default {
                     let user_display_name = "Skriveno";
                     let user_email = "skriveno";
                     let visibility_user = childSnapshotUser.get("visible");
-                    if (visibility_user == true || me.user.uid == idUser) {
+                    if (
+                      visibility_user == true ||
+                      (me.user && me.user.uid == idUser)
+                    ) {
                       user_display_name = childSnapshotUser.get("displayName");
                       user_email = childSnapshotUser.get("email");
                     }
@@ -129,10 +147,8 @@ export default {
                           let id1 = childSnapshotFriend.get("user1");
                           let id2 = childSnapshotFriend.get("user2");
                           if (
-                            (me.user.uid &&
-                              id1 == me.user.uid &&
-                              id2 == idUser) ||
-                            (me.user.uid && id2 == me.user.uid && id1 == idUser)
+                            (me.user && id1 == me.user.uid && id2 == idUser) ||
+                            (me.user && id2 == me.user.uid && id1 == idUser)
                           ) {
                             user_display_name =
                               childSnapshotFriend.get("displayName");
@@ -165,7 +181,7 @@ export default {
         this.$props.dbRef
           .add({
             puzzleID: this.$props.puzzleId,
-            user: this.$props.userId,
+            user: this.user.uid,
             rating: this.value,
             comment: this.comment,
             time: datetime,
@@ -180,7 +196,7 @@ export default {
           .doc(this.documentRated)
           .update({
             puzzleID: this.$props.puzzleId,
-            user: this.$props.userId,
+            user: this.user.uid,
             rating: this.value,
             comment: this.comment,
             time: datetime,
@@ -214,7 +230,7 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
-    <div class="myrow" v-if="$props.userId">
+    <div class="my_row" v-if="user">
       <va-list-item>
         <va-list-item-section avatar>
           <va-chip>
@@ -224,17 +240,12 @@ export default {
         </va-list-item-section>
         <va-list-item-section>
           <va-list-item-label caption>
-            <va-rating 
-              v-model="value"
-              halves
-              hover
-              size="large"
-            />
+            <va-rating v-model="value" halves hover size="large" />
           </va-list-item-label>
         </va-list-item-section>
       </va-list-item>
     </div>
-    <div class="myrow" v-if="$props.userId">
+    <div class="my_row" v-if="user">
       <va-form>
         <va-input
           type="textarea"
@@ -249,19 +260,19 @@ export default {
         </va-input>
       </va-form>
     </div>
-    <div class="myrow" v-if="$props.userId">
+    <div class="my_row" v-if="user">
       <va-button :disabled="comment.length < 1" @click="submit()">
         <va-icon name="rate_review"></va-icon>&nbsp;Ocjenite</va-button
       >
     </div>
-    <div class="myrow" v-if="user_ratings.length > 0">
+    <div class="my_row" v-if="user_ratings.length > 0">
       <va-chip>
         <va-icon name="stars"></va-icon>&nbsp;Ocjena:
         {{ sum_ratings / user_ratings.length }}
       </va-chip>
     </div>
     <span v-if="user_ratings.length > 0">
-      <div class="myrow">
+      <div class="my_row">
         <va-input
           style="display: inline-block"
           placeholder="Unesite pojam za pretragu"
@@ -274,11 +285,16 @@ export default {
           v-model="useCustomFilteringFn"
         />
       </div>
-      <div class="myrow"> 
-      <MyCounter :min_value="1" :max_value="Math.ceil(this.filtered.length)" v-bind:value="perPage" @input="(n) => perPage = n" :some_text="'Broj rezultata na stranici'"></MyCounter> 
-    </div>
+      <div class="my_row">
+        <MyCounter
+          :min_value="1"
+          :max_value="Math.ceil(this.filtered.length)"
+          v-bind:value="perPage"
+          @input="(n) => (perPage = n)"
+          :some_text="'Broj rezultata na stranici'"
+        ></MyCounter>
+      </div>
       <va-data-table
-         
         :items="user_ratings"
         :filter="filter"
         :columns="columns"
@@ -310,7 +326,7 @@ export default {
         <template #bodyAppend>
           <tr>
             <td colspan="5">
-              <div style="display:inline-block;margin-top: 10px">
+              <div style="display: inline-block; margin-top: 10px">
                 <va-pagination v-model="currentPage" input :pages="pages" />
               </div>
             </td>
@@ -319,12 +335,16 @@ export default {
       </va-data-table>
     </span>
     <NoDataToDisplay
-      v-if="user_ratings.length <= 0"
+      v-if="user_ratings.length <= 0 && $props.type == 'mine'"
+      customMessage="Nema ocjena korisnika za odabranu zagonetku"
+    >
+    </NoDataToDisplay>
+    <NoDataToDisplay
+      v-if="user_ratings.length <= 0 && $props.type == 'all'"
       customMessage="Nema ocjena za odabranu zagonetku"
     >
     </NoDataToDisplay>
   </span>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

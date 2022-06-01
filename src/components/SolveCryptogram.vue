@@ -5,12 +5,12 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usersRef, friendsRef } from "../firebase_main.js";
 import { cryptogramsRef } from "../firebase_main.js";
 
-
+import MyCounter from "./MyCounter.vue";
 import LoadingBar from "./LoadingBar.vue";
 
 export default {
   components: {
-    
+    MyCounter,
     LoadingBar,
   },
   data() {
@@ -98,21 +98,24 @@ export default {
     };
   },
   methods: {
-    zoom_number() { 
+    zoom_number() {
       if (this.zoom > this.max_zoom) {
-        this.zoom = this.max_zoom
+        this.zoom = this.max_zoom;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_in() {
       this.zoom++;
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_out() {
       if (this.zoom > 1) {
         this.zoom--;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     check_duplicated(x, y) {
       for (let i = 0; i < this.values.length; i++) {
@@ -857,7 +860,7 @@ export default {
       this.$forceUpdate();
     },
     getPicture() {
-      if (this.image == null) {
+      if (this.image == null || this.image == "") {
         this.imageURL = "";
         this.fully_loaded = true;
         return;
@@ -924,7 +927,7 @@ export default {
         this.user = user;
         // ...
       } else {
-        // User is signed ouvt
+        // User is signed out
         // ...
         this.$refs.no_user_dialog.show();
       }
@@ -937,13 +940,11 @@ export default {
 </script>
 
 <template>
-  <body class="mybody" v-if="!fully_loaded">
-    
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="mybody" v-else>
-    
-    <div class="myrow">
+  <body class="my_body" v-else>
+    <div class="my_row">
       <span style="float: left; overflow-wrap: anywhere">
         <va-button
           @click="
@@ -968,12 +969,12 @@ export default {
         "
         outline
       >
-        {{ format(time_elapsed) }}
+        <va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}
       </va-chip>
     </div>
-    <div class="myrow" style="max-height: 200px">
+    <div class="my_row" style="max-height: 200px">
       <va-infinite-scroll disabled :load="() => {}">
-        <div class="myrow" v-for="i in num_letters" v-bind:key="i">
+        <div class="my_row" v-for="i in num_letters" v-bind:key="i">
           <va-chip> {{ i - 1 }}. slovo</va-chip>
           <br />
           <br />
@@ -1053,7 +1054,7 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-tabs v-model="option_number">
         <template #tabs>
           <va-tab name="-1"> Bez opcije </va-tab>
@@ -1063,16 +1064,30 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow" v-if="current_x != null && current_y != null">
-      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
+    <div class="my_row" v-if="current_x != null && current_y != null">
+      <va-chip
+        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        {{ current_y }})</va-chip
+      >
     </div>
-    <div class="myrow"> 
-      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
+    <div class="my_row">
+      <MyCounter
+        :min_value="1"
+        :max_value="max_zoom"
+        v-bind:value="zoom"
+        @input="
+          (n) => {
+            zoom = n;
+            zoom_number();
+          }
+        "
+        :some_text="'Povećanje'"
+      ></MyCounter>
     </div>
-    <div class="myrow" style="max-height: 500px">
+    <div class="my_row" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
-        <div class="myrow">
-          <table class="numbers_table" id="table-to-zoom">
+        <div class="my_row">
+          <table class="numbers_table" id="table_zoom">
             <tr v-for="i in rows" v-bind:key="i">
               <td
                 v-for="j in columns"
@@ -1132,7 +1147,7 @@ export default {
                 <div v-else class="unnumbered">
                   <va-form ref="unnumberedform">
                     <va-input
-                      class="mb-4"
+                      class="mb-4, unnumbered-input"
                       @update:model-value="check_letter()"
                       v-model="unnumbered_text[i - 1][j - 1]"
                       outline
@@ -1141,6 +1156,7 @@ export default {
                       style="
                         padding-bottom: none;
                         max-width: 100px;
+                        background-color: #fdefef;
                         display: inline-block;
                       "
                       immediate-validation
@@ -1222,13 +1238,13 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow" v-if="image">
+    <div class="my_row" v-if="image">
       <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
-    <div class="myrow" v-if="!image">
+    <div class="my_row" v-if="!image">
       <va-alert
         style="white-space: pre-wrap"
-        color="danger"
+        color="warning"
         title="Prazna slika"
         center
         class="mb-4"
@@ -1236,7 +1252,7 @@ export default {
         Niste dodali sliku uz zagonetku.
       </va-alert>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-card>
         <va-card-title>Naslov zagonetke</va-card-title>
         <va-card-content>
@@ -1244,7 +1260,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-card>
         <va-card-title>Opis zagonetke</va-card-title>
         <va-card-content>
@@ -1252,7 +1268,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-card>
         <va-card-title>Izvor zagonetke</va-card-title>
         <va-card-content>
@@ -1260,7 +1276,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
         >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
@@ -1283,7 +1299,7 @@ export default {
         >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         @click="$refs.show_solution_modal.show()"
         style="overflow-wrap: anywhere"
@@ -1334,10 +1350,10 @@ export default {
 }
 .numbers_table td {
   border: 1px solid black;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
+  min-height: 100px;
   text-align: center;
   vertical-align: middle;
   border-collapse: collapse;
@@ -1349,10 +1365,22 @@ export default {
   background-color: salmon;
 }
 .unnumbered {
-  min-width: 60px;
-  background-color: orange !important;
+  min-width: 100px;
+  background-color: #fdefef !important;
 }
 .wrong {
   color: #de1041;
+}
+[success = false]{
+  background-color: purple !important;
+  border-color: purple !important;
+}
+[error = true]{
+  background-color: purple !important;
+  border-color: purple !important;
+}
+[invalid = true]{
+  background-color: purple !important;
+  border-color: purple !important;
 }
 </style>

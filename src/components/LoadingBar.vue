@@ -10,12 +10,12 @@ export default {
 
 <template>
   <div
-    class="myrow"
+    class="my_row"
     style="display: flex; justify-content: center; align-items: center"
   >
     <va-progress-circle indeterminate :thickness="0.6" size="large">
     </va-progress-circle>
-     <h1 class="display-1">&nbsp;Učitavanje</h1>
+    <h4 class="display-4">&nbsp;Učitavanje</h4>
   </div>
 </template>
 

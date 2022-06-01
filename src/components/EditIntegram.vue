@@ -11,8 +11,7 @@ import { projectStorage, friendsRef } from "../firebase_main.js";
 import { usersRef } from "../firebase_main.js";
 import { integramsRef } from "../firebase_main.js";
 
-
-import MyCounter from './MyCounter.vue';
+import MyCounter from "./MyCounter.vue";
 import LoadingBar from "./LoadingBar.vue";
 
 export default {
@@ -235,7 +234,7 @@ export default {
       let hidden = true;
       let uid = "";
       let me = null;
-      let my_activity = this
+      let my_activity = this;
       if (this.user) {
         me = this.user.uid;
       }
@@ -1100,20 +1099,38 @@ export default {
 </script>
 
 <template>
-  <body class="mybody" v-if="!fully_loaded"> 
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="mybody" v-else>
-    <div class="myrow"> 
-      <MyCounter :min_value="3" :max_value="5" v-bind:value="numvalues" @input="(n) => numvalues = n" :some_text="'Broj pojmova'"></MyCounter> 
+  <body class="my_body" v-else>
+    <div class="my_row">
+      <MyCounter
+        :min_value="3"
+        :max_value="5"
+        v-bind:value="numvalues"
+        @input="(n) => (numvalues = n)"
+        :some_text="'Broj pojmova'"
+      ></MyCounter>
     </div>
-    <div class="myrow">
-      <MyCounter :min_value="3" :max_value="5" v-bind:value="numcategories" @input="(n) => numcategories = n" some_text="'Broj kategorija'"></MyCounter> 
-    </div> 
-    <div class="myrow">
-      <MyCounter :min_value="5" :max_value="10" v-bind:value="numinstructions" @input="(n) => numinstructions = n" :some_text="'Broj opisnih uputa'"></MyCounter> 
-    </div> 
-    <div class="myrow" v-for="i in numinstructions" v-bind:key="i">
+    <div class="my_row">
+      <MyCounter
+        :min_value="3"
+        :max_value="5"
+        v-bind:value="numcategories"
+        @input="(n) => (numcategories = n)"
+        some_text="Broj kategorija"
+      ></MyCounter>
+    </div>
+    <div class="my_row">
+      <MyCounter
+        :min_value="5"
+        :max_value="10"
+        v-bind:value="numinstructions"
+        @input="(n) => (numinstructions = n)"
+        :some_text="'Broj opisnih uputa'"
+      ></MyCounter>
+    </div>
+    <div class="my_row" v-for="i in numinstructions" v-bind:key="i">
       <va-form ref="instructionsform">
         <va-input
           v-model="instructions[i - 1]"
@@ -1143,7 +1160,7 @@ export default {
     </div>
     <br />
     <br />
-    <div class="myrow">
+    <div class="my_row">
       <va-tabs v-model="category_to_display">
         <template #tabs>
           <span v-for="i in numcategories" v-bind:key="i">
@@ -1154,7 +1171,7 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <span
         v-for="j in numcategories"
         v-bind:key="j"
@@ -1213,7 +1230,7 @@ export default {
               />
             </va-form>
             <va-divider></va-divider>
-            <div class="myrow" v-for="k in numvalues" v-bind:key="k">
+            <div class="my_row" v-for="k in numvalues" v-bind:key="k">
               <va-form ref="valuesform">
                 <span v-if="is_image[j - 1] == true">
                   <va-chip
@@ -1296,7 +1313,7 @@ export default {
     </div>
     <span v-for="i in numcategories" v-bind:key="i">
       <div
-        class="myrow"
+        class="my_row"
         v-if="is_image[i - 1] == true && i == category_to_display"
       >
         <va-card :color="colors_for_number[i - 1]">
@@ -1355,7 +1372,7 @@ export default {
         </va-card>
       </div>
     </span>
-    <div class="myrow" v-if="alert">
+    <div class="my_row" v-if="alert">
       <va-alert
         style="white-space: pre-wrap"
         color="danger"
@@ -1367,7 +1384,7 @@ export default {
         jedinstvene.
       </va-alert>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         class="mb-4"
         v-model="title"
@@ -1397,7 +1414,7 @@ export default {
         :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
       />
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
         >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
@@ -1420,7 +1437,7 @@ export default {
         >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
@@ -1432,7 +1449,7 @@ export default {
         <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         style="display: inline-block; margin-left: 10px; margin-top: 10px"
         type="text"
@@ -1454,7 +1471,7 @@ export default {
         </template>
       </va-input>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="
           overflow-wrap: anywhere;
@@ -1474,7 +1491,7 @@ export default {
         &nbsp;{{ permission.displayName }} ({{ permission.email }})
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         :disabled="
           !(

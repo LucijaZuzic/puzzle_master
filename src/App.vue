@@ -7,13 +7,11 @@ export default {
 };
 </script>
 <template>
-  <div style="background-color: gray;">
-  <div style="background-color: white;display: inline-block;max-width: 1000px; min-width: 1000px">
-        <Navbar></Navbar>
-        <div style="display: inline-block; max-width: 700px; min-width: 700px">
-          <router-view></router-view>
-        </div>
-  </div>
+  <div style="background-color: #f4f8fa">
+    <Navbar></Navbar>
+    <div style="display: inline-block; background-color: white; width: 80%">
+      <router-view></router-view>
+    </div>
   </div>
 </template>
 
@@ -26,13 +24,14 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  overflow-wrap: none !important;
+  overflow-wrap: anywhere !important;
 }
-.mybody {
+.my_body {
   background-color: white !important;
   display: block;
+  overflow-wrap: anywhere !important;
 }
-.myrow {
+.my_row {
   width: 100%;
   display: inline-block;
   padding: 20px;
@@ -44,14 +43,17 @@ a:active {
   text-decoration: none;
   color: inherit;
 }
-#table-to-zoom {
+#table_zoom {
   transform-origin: top left;
   float: left;
 }
-.mytableforall {
+.data_table_overflow {
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   max-width: 200px;
+}
+h4 {
+  font-size: 3vw;
 }
 </style>

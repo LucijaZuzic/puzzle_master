@@ -1,19 +1,52 @@
 <script>
 import NoDataToDisplay from "./NoDataToDisplay.vue";
+import ProfilePuzzle from "./ProfilePuzzle.vue";
 
-import { getAuth, OAuthCredential, onAuthStateChanged } from "firebase/auth";
-import ProfileNonogram from "./ProfileNonogram.vue";
+import {
+  integramsRatingsRef,
+  integramsRecordsRef,
+  integramsRef,
+} from "../firebase_main.js";
+import {
+  nonogramsRatingsRef,
+  nonogramsRecordsRef,
+  nonogramsRef,
+} from "../firebase_main.js";
+import {
+  eightsRatingsRef,
+  eightsRecordsRef,
+  eightsRef,
+} from "../firebase_main.js";
+import {
+  initialsRatingsRef,
+  initialsRecordsRef,
+  initialsRef,
+} from "../firebase_main.js";
+import {
+  numberCrosswordsRatingsRef,
+  numberCrosswordsRecordsRef,
+  numberCrosswordsRef,
+} from "../firebase_main.js";
+import {
+  numberLettersRecordsRef,
+  numberLettersRatingsRef,
+  numberLettersRef,
+} from "../firebase_main.js";
+import {
+  cryptogramsRecordsRef,
+  cryptogramsRatingsRef,
+  cryptogramsRef,
+} from "../firebase_main.js";
+
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
 import { usersRef, friendsRef, friendRequestsRef } from "../firebase_main.js";
-import ProfileInitial from "./ProfileInitial.vue";
-import ProfileIntegram from "./ProfileIntegram.vue";
-import ProfileNumberLetter from "./ProfileNumberLetter.vue";
-import ProfileEight from "./ProfileEight.vue";
-import ProfileNumberCrossword from "./ProfileNumberCrossword.vue";
-import ProfileCryptogram from "./ProfileCryptogram.vue";
+
 import FriendRequestsReceivedTable from "./FriendRequestsReceivedTable.vue";
 import FriendRequestsSentTable from "./FriendRequestsSentTable.vue";
 import FriendsTable from "./FriendsTable.vue";
 import LoadingBar from "./LoadingBar.vue";
+
 export default {
   methods: {
     checkStatus() {
@@ -160,6 +193,27 @@ export default {
   data() {
     return {
       fully_loaded: false,
+      integramsRatingsRef: integramsRatingsRef,
+      integramsRecordsRef: integramsRecordsRef,
+      integramsRef: integramsRef,
+      cryptogramsRatingsRef: cryptogramsRatingsRef,
+      cryptogramsRecordsRef: cryptogramsRecordsRef,
+      cryptogramsRef: cryptogramsRef,
+      nonogramsRatingsRef: nonogramsRatingsRef,
+      nonogramsRecordsRef: nonogramsRecordsRef,
+      nonogramsRef: nonogramsRef,
+      numberLettersRatingsRef: numberLettersRatingsRef,
+      numberLettersRecordsRef: numberLettersRecordsRef,
+      numberLettersRef: numberLettersRef,
+      numberCrosswordsRatingsRef: numberCrosswordsRatingsRef,
+      numberCrosswordsRecordsRef: numberCrosswordsRecordsRef,
+      numberCrosswordsRef: numberCrosswordsRef,
+      eightsRatingsRef: eightsRatingsRef,
+      eightsRecordsRef: eightsRecordsRef,
+      eightsRef: eightsRef,
+      initialsRatingsRef: initialsRatingsRef,
+      initialsRecordsRef: initialsRecordsRef,
+      initialsRef: initialsRef,
       areFriends: false,
       requestSent: false,
       user: { email: "", displayName: "", uid: "" },
@@ -169,14 +223,7 @@ export default {
     };
   },
   components: {
-    
-    ProfileNonogram,
-    ProfileInitial,
-    ProfileIntegram,
-    ProfileNumberCrossword,
-    ProfileNumberLetter,
-    ProfileCryptogram,
-    ProfileEight,
+    ProfilePuzzle,
     NoDataToDisplay,
     FriendsTable,
     FriendRequestsSentTable,
@@ -187,68 +234,83 @@ export default {
 </script>
 
 <template>
-  <body class="mybody" v-if="!fully_loaded">
-    
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="mybody" v-else>
-    
+  <body class="my_body" v-else>
     <span
       v-if="friend.email != '' || friend.displayName != '' || friend.uid != ''"
     >
       <span v-if="user.email != friend.email">
-        <div class="myrow">
-           <h1 class="display-1">
-            Profil korisnika
-          </h1>
-          <h2 class="display-2">
-            {{ friend.displayName }} ({{ friend.email }})
-          </h2>
+        <div class="my_row">
+          <h4 class="display-4">
+            <va-icon name="account_box"></va-icon>&nbsp; Profil korisnika
+          </h4>
         </div>
-        <div class="myrow">
+        <div class="my_row">
+          <h4 class="display-4">
+            <va-icon name="person"></va-icon>&nbsp;
+            {{ friend.displayName }}
+          </h4>
+        </div>
+        <div class="my_row">
+          <span>
+            <va-icon name="email"></va-icon>&nbsp;
+            {{ friend.email }}
+          </span>
+        </div>
+        <div class="my_row" v-if="user.uid != ''">
           <va-button>
-            <va-icon
-              v-if="areFriends"
-              @click="removeFriend(user.uid, friend.uid)"
-              name="person_remove"
-              size="large"
-            >
-            </va-icon>
-            <va-icon
-              v-if="!areFriends && !requestSent"
-              @click="sendFriendRequest(user.uid, friend.uid)"
-              name="person_add"
-              size="large"
-            >
-            </va-icon>
-            <va-icon
-              v-if="!areFriends && requestSent"
-              name="person_add_disabled"
-              size="large"
-            >
-            </va-icon>
+            <span v-if="areFriends">
+              <va-icon
+                @click="removeFriend(user.uid, friend.uid)"
+                name="person_remove"
+                size="large"
+              >
+              </va-icon>
+              &nbsp; Prekini prijateljstvo
+            </span>
+            <span v-if="!areFriends && !requestSent">
+              <va-icon
+                @click="sendFriendRequest(user.uid, friend.uid)"
+                name="person_add"
+                size="large"
+              >
+              </va-icon>
+              &nbsp; Pošalji zahtjev za prijateljstvo
+            </span>
+            <span v-if="!areFriends && requestSent">
+              <va-icon name="person_add_disabled" size="large"> </va-icon>
+              &nbsp; Već je poslan zahtjev za prijateljstvo
+            </span>
           </va-button>
         </div>
       </span>
       <span v-else>
-        <div class="myrow">
-           <h1 class="display-1">
-            Moj profil
-          </h1>
-          <h2 class="display-2">
-            {{ friend.displayName }}
-          </h2>
-          <h3 class="display-3">
-            ({{ friend.email }})
-          </h3>
+        <div class="my_row">
+          <h4 class="display-4">
+            <va-icon name="account_box"></va-icon>&nbsp; Moj profil
+          </h4>
         </div>
-        <div class="myrow">
+        <div class="my_row">
+          <h4 class="display-4">
+            <va-icon name="person"></va-icon>&nbsp;
+            {{ friend.displayName }}
+          </h4>
+        </div>
+        <div class="my_row">
+          <span>
+            <va-icon name="email"></va-icon>&nbsp;
+            {{ friend.email }}
+          </span>
+        </div>
+        <div class="my_row">
           <va-button
             @click="
               friend.visible = !friend.visible;
               $forceUpdate();
             "
-            style="margin-left: 10px; margin-top: 10px;display:inline-block"
+            style="margin-left: 10px; margin-top: 10px; display: inline-block"
           >
             <span v-if="friend.visible == true">
               <va-icon name="lock_open" />
@@ -256,54 +318,125 @@ export default {
             >
             <span v-else><va-icon name="lock" /> &nbsp;Privatno</span>
           </va-button>
-          <va-button @click="setVisibility()"
-          style="margin-left: 10px; margin-top: 10px;display:inline-block"
+          <va-button
+            @click="setVisibility()"
+            style="margin-left: 10px; margin-top: 10px; display: inline-block"
           >
-            <va-icon name="verified_user"></va-icon>&nbsp; Izmjeni vidljivost profila
+            <va-icon name="settings"></va-icon>&nbsp; Izmjeni vidljivost profila
           </va-button>
         </div>
       </span>
       <span v-if="user.email == friend.email || friend.visible || areFriends">
         <va-tabs v-model="value" style="width: 100%">
           <template #tabs>
-            <va-tab label="Integrami" name="integram" />
-            <va-tab label="Nonogrami" name="nonogram" />
-            <va-tab label="Brojevne križaljke" name="numberCrossword" />
-            <va-tab label="Kriptogrami" name="cryptogram" />
-            <va-tab label="Isti broj - Isto slovo" name="numberLetter" />
-            <va-tab label="Inicijalne osmosmjerke" name="initial" />
-            <va-tab label="Osmosmjerke" name="eight" />
+            <va-tab name="integram"
+              ><va-icon name="rule_folder"></va-icon>Integrami</va-tab
+            >
+            <va-tab name="nonogram"
+              ><va-icon name="draw"></va-icon>Nonogrami</va-tab
+            >
+            <va-tab name="numberCrossword"
+              ><va-icon name="format_list_numbered"></va-icon>Brojevne
+              križaljke</va-tab
+            >
+            <va-tab name="cryptogram"
+              ><va-icon name="multiple_stop"></va-icon>Kriptogrami</va-tab
+            >
+            <va-tab name="numberLetter"
+              ><va-icon name="sync_alt"></va-icon>Isti broj - isto slovo</va-tab
+            >
+            <va-tab name="initial"
+              ><va-icon name="text_rotation_none"></va-icon>Inicijalne
+              osmosmjerke</va-tab
+            >
+            <va-tab name="eight"
+              ><va-icon name="pattern"></va-icon>Osmosmjerke</va-tab
+            >
           </template>
         </va-tabs>
-        <ProfileIntegram :friend="friend" v-if="value == 'integram'">
-        </ProfileIntegram>
-        <ProfileNonogram :friend="friend" v-if="value == 'nonogram'">
-        </ProfileNonogram>
-        <ProfileNumberCrossword
+        <ProfilePuzzle
+          component_name="IntegramTable"
           :friend="friend"
+          text_to_get="favoriteIntegrams"
+          text="integram"
+          v-if="value == 'integram'"
+          :dbRatingsRef="integramsRatingsRef"
+          :dbRecordsRef="integramsRecordsRef"
+          :dbRef="integramsRef"
+        ></ProfilePuzzle>
+        <ProfilePuzzle
+          component_name="NonogramTable"
+          :friend="friend"
+          text_to_get="favoriteNonograms"
+          text="nonogram"
+          v-if="value == 'nonogram'"
+          :dbRatingsRef="nonogramsRatingsRef"
+          :dbRecordsRef="nonogramsRecordsRef"
+          :dbRef="nonogramsRef"
+        ></ProfilePuzzle>
+        <ProfilePuzzle
+          component_name="NumberCrosswordTable"
+          :friend="friend"
+          text_to_get="favoriteNumberCrosswords"
+          text="brojevna križaljka"
           v-if="value == 'numberCrossword'"
-        >
-        </ProfileNumberCrossword>
-        <ProfileCryptogram :friend="friend" v-if="value == 'cryptogram'">
-        </ProfileCryptogram>
-        <ProfileNumberLetter :friend="friend" v-if="value == 'numberLetter'">
-        </ProfileNumberLetter>
-        <ProfileInitial :friend="friend" v-if="value == 'initial'">
-        </ProfileInitial>
-        <ProfileEight :friend="friend" v-if="value == 'eight'"></ProfileEight>
+          :dbRatingsRef="numberCrosswordsRatingsRef"
+          :dbRecordsRef="numberCrosswordsRecordsRef"
+          :dbRef="numberCrosswordsRef"
+        ></ProfilePuzzle>
+        <ProfilePuzzle
+          component_name="CryptogramTable"
+          :friend="friend"
+          text_to_get="favoriteCryptograms"
+          text="kriptogram"
+          v-if="value == 'cryptogram'"
+          :dbRatingsRef="cryptogramsRatingsRef"
+          :dbRecordsRef="cryptogramsRecordsRef"
+          :dbRef="cryptogramsRef"
+        ></ProfilePuzzle>
+        <ProfilePuzzle
+          component_name="NumberLetterTable"
+          :friend="friend"
+          text_to_get="favoriteNumberLetters"
+          text="isto broj - isto slovo"
+          v-if="value == 'numberLetter'"
+          :dbRatingsRef="numberLettersRatingsRef"
+          :dbRecordsRef="numberLettersRecordsRef"
+          :dbRef="numberLettersRef"
+        ></ProfilePuzzle>
+        <ProfilePuzzle
+          component_name="InitialTable"
+          :friend="friend"
+          text_to_get="favoriteInitials"
+          text="inicijalna osmosjerka"
+          v-if="value == 'initial'"
+          :dbRatingsRef="initialsRef"
+          :dbRecordsRef="initialsRecordsRef"
+          :dbRef="initialsRef"
+        ></ProfilePuzzle>
+        <ProfilePuzzle
+          component_name="EightTable"
+          :friend="friend"
+          text_to_get="favoriteEights"
+          text="osmosmjerka"
+          v-if="value == 'eight'"
+          :dbRatingsRef="eightsRatingsRef"
+          :dbRecordsRef="eightsRecordsRef"
+          :dbRef="eightsRef"
+        ></ProfilePuzzle>
         <va-tabs v-model="friendOption" style="width: 100%">
           <template #tabs>
-            <va-tab label="Prijatelji" name="friend" />
-            <va-tab
-              label="Primljeni zahtjevi za prijateljstvo"
-              name="received"
-              v-if="user.email == friend.email"
-            />
-            <va-tab
-              label="Poslani zahtjevi za prijateljstvo"
-              name="sent"
-              v-if="user.email == friend.email"
-            />
+            <va-tab name="friend"
+              ><va-icon name="person_add"></va-icon>&nbsp; Prijatelji</va-tab
+            >
+            <va-tab name="received"
+              ><va-icon name="inbox"></va-icon>&nbsp; Primljeni zahtjevi za
+              prijateljstvo</va-tab
+            >
+            <va-tab name="sent"
+              ><va-icon name="outgoing_mail"></va-icon>&nbsp; Poslani zahtjevi
+              za prijateljstvo</va-tab
+            >
           </template>
         </va-tabs>
         <FriendsTable :userId="friend.uid" v-if="friendOption == 'friend'">

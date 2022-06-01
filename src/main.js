@@ -141,7 +141,7 @@ const routes = [
   {
     path: "/profile/:email",
     component: FriendProfile,
-    name: "profile"
+    name: "profile",
   },
 
   {
@@ -179,7 +179,11 @@ const routes = [
     component: CreateNumberLetter,
     name: "create_number_letter",
   },
-  { path: "/search-number-letter", component: SearchNumberLetter, name: "search_number_letter" },
+  {
+    path: "/search-number-letter",
+    component: SearchNumberLetter,
+    name: "search_number_letter",
+  },
   {
     path: "/edit-numberletter/:id",
     component: EditNumberLetter,

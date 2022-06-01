@@ -1,10 +1,6 @@
 <script>
-
-
 export default {
-  components: {
-    
-  },
+  components: {},
   data() {
     return {};
   },
@@ -12,12 +8,11 @@ export default {
 </script>
 
 <template>
-  <body class="mybody">
-    
-    <div class="myrow">
-       <h1 class="display-1">404</h1>
+  <body class="my_body">
+    <div class="my_row">
+      <h4 class="display-4">404</h4>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <h4 class="display-4">Datoteka nije pronađena</h4>
     </div>
   </body>

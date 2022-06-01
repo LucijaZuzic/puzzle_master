@@ -7,7 +7,7 @@ export default {
   components: {
     NoDataToDisplay,
     LoadingBar,
-    MyCounter
+    MyCounter,
   },
   props: ["userId"],
   data() {
@@ -29,10 +29,14 @@ export default {
       perPage: 1,
       currentPage: 1,
       columns: [
-        { key: "user_display_name", sortable: true,  classes: "mytableforall" },
-        { key: "user_email", sortable: true,  classes: "mytableforall" },
-        { key: "time", sortable: true,  classes: "mytableforall" },
-        { key: "user_id", sortable: false,  classes: "mytableforall" },
+        {
+          key: "user_display_name",
+          sortable: true,
+          classes: "data_table_overflow",
+        },
+        { key: "user_email", sortable: true, classes: "data_table_overflow" },
+        { key: "time", sortable: true, classes: "data_table_overflow" },
+        { key: "user_id", sortable: false, classes: "data_table_overflow" },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -157,7 +161,7 @@ export default {
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
     <span v-if="friends.length > 0">
-      <div class="myrow">
+      <div class="my_row">
         <va-input
           style="display: inline-block"
           placeholder="Unesite pojam za pretragu"
@@ -170,11 +174,16 @@ export default {
           v-model="useCustomFilteringFn"
         />
       </div>
-      <div class="myrow"> 
-      <MyCounter :min_value="1" :max_value="Math.ceil(this.filtered.length)" v-bind:value="perPage" @input="(n) => perPage = n" :some_text="'Broj rezultata na stranici'"></MyCounter> 
-    </div>
+      <div class="my_row">
+        <MyCounter
+          :min_value="1"
+          :max_value="Math.ceil(this.filtered.length)"
+          v-bind:value="perPage"
+          @input="(n) => (perPage = n)"
+          :some_text="'Broj rezultata na stranici'"
+        ></MyCounter>
+      </div>
       <va-data-table
-         
         :items="friends"
         :filter="filter"
         :columns="columns"
@@ -212,7 +221,7 @@ export default {
         <template #bodyAppend>
           <tr>
             <td colspan="4">
-              <div style="display:inline-block;margin-top: 10px">
+              <div style="display: inline-block; margin-top: 10px">
                 <va-pagination v-model="currentPage" input :pages="pages" />
               </div>
             </td>
@@ -228,5 +237,4 @@ export default {
   </span>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

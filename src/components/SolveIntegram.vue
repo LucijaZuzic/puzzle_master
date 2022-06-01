@@ -6,12 +6,10 @@ import { usersRef } from "../firebase_main.js";
 import { integramsRecordsRef, friendsRef } from "../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-
 import LoadingBar from "./LoadingBar.vue";
 
 export default {
   components: {
-    
     LoadingBar,
   },
   data() {
@@ -1259,13 +1257,11 @@ export default {
 </script>
 
 <template>
-  <body class="mybody" v-if="!fully_loaded">
-    
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="mybody" v-else>
-    
-    <div class="myrow">
+  <body class="my_body" v-else>
+    <div class="my_row">
       <span style="float: left; overflow-wrap: anywhere">
         <va-button
           @click="show_error = !show_error"
@@ -1290,7 +1286,7 @@ export default {
         "
         outline
       >
-        {{ format(time_elapsed) }}
+        <va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}
       </va-chip>
     </div>
     <div v-for="i in numinstructions" v-bind:key="i">
@@ -1304,7 +1300,7 @@ export default {
     </div>
     <br />
     <br />
-    <div class="myrow" v-if="alert">
+    <div class="my_row" v-if="alert">
       <va-alert
         style="white-space: pre-wrap"
         color="danger"
@@ -1316,9 +1312,9 @@ export default {
       </va-alert>
     </div>
     <br />
-    <div class="myrow" style="max-height: 650px">
+    <div class="my_row" style="max-height: 650px">
       <va-infinite-scroll disabled :load="() => {}">
-        <div class="myrow">
+        <div class="my_row">
           <table class="integram_solve">
             <tr>
               <td>&nbsp;</td>
@@ -1543,7 +1539,7 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-tabs v-model="mode">
         <template #tabs>
           <va-tab name="-1"> ? </va-tab>
@@ -1552,13 +1548,13 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button @click="clear_values()">
         <va-icon name="delete" />
         &nbsp;Izbriši</va-button
       >
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-tabs v-model="category_to_display">
         <template #tabs>
           <span v-for="i in numcategories" v-bind:key="i">
@@ -1569,7 +1565,7 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <span
         v-for="j in numcategories"
         v-bind:key="j"
@@ -1600,7 +1596,7 @@ export default {
           </va-card-title>
           <va-card-content style="background-color: white">
             <br />
-            <div class="myrow">
+            <div class="my_row">
               <va-chip :color="colors_for_number[j - 1]">
                 {{ category_names[j - 1] }}
               </va-chip>
@@ -1608,7 +1604,7 @@ export default {
             <va-divider></va-divider>
             <span v-for="k in numvalues" v-bind:key="k">
               <div
-                class="myrow"
+                class="my_row"
                 v-if="my_solution[order[0][k - 1]][j - 1] != ''"
               >
                 <va-chip
@@ -1662,7 +1658,7 @@ export default {
                   </span>
                 </va-chip>
               </div>
-              <div class="myrow" v-else>
+              <div class="my_row" v-else>
                 <va-chip color="warning">?</va-chip>
               </div>
             </span>
@@ -1672,7 +1668,7 @@ export default {
     </div>
     <span v-for="i in numcategories" v-bind:key="i">
       <div
-        class="myrow"
+        class="my_row"
         v-if="
           too_long[i - 1] == true &&
           is_image[i - 1] == false &&
@@ -1720,7 +1716,7 @@ export default {
         </va-card>
       </div>
       <div
-        class="myrow"
+        class="my_row"
         v-if="is_image[i - 1] == true && i == category_to_display"
       >
         <va-card :color="colors_for_number[i - 1]">
@@ -1777,7 +1773,7 @@ export default {
         </va-card>
       </div>
     </span>
-    <div class="myrow">
+    <div class="my_row">
       <va-card>
         <va-card-title>Naslov zagonetke</va-card-title>
         <va-card-content>
@@ -1785,7 +1781,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-card>
         <va-card-title>Opis zagonetke</va-card-title>
         <va-card-content>
@@ -1793,7 +1789,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-card>
         <va-card-title>Izvor zagonetke</va-card-title>
         <va-card-content>
@@ -1801,7 +1797,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
         >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
@@ -1824,7 +1820,7 @@ export default {
         >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         @click="$refs.show_solution_modal.show()"
         style="overflow-wrap: anywhere"

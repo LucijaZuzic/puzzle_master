@@ -1,5 +1,4 @@
 <script>
-
 import { tournamentsRef } from "../firebase_main.js";
 import IntegramTable from "./IntegramTable.vue";
 import NonogramTable from "./NonogramTable.vue";
@@ -176,7 +175,6 @@ export default {
     this.checkTime();
   },
   components: {
-    
     IntegramTable,
     NonogramTable,
     NumberCrosswordTable,
@@ -189,39 +187,49 @@ export default {
 </script>
 
 <template>
-  <body class="mybody">
-    
-    <div class="myrow">
-       <h1 class="display-1">Novi turnir</h1>
+  <body class="my_body">
+    <div class="my_row">
+      <h4 class="display-4">
+        <va-icon size="large" name="edit_calendar"></va-icon>&nbsp;Novi turnir
+      </h4>
     </div>
-    <div class="myrow">
-      <h2 class="display-2">Odabir vremena</h2>
+    <div class="my_row">
+      <h4 class="display-4">
+        <va-icon size="large" name="hourglass_top"></va-icon>&nbsp;Početak
+        turnira
+      </h4>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-time-input
         v-model="start_time"
         @update:model-value="writeTimeToStart()"
       />
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-date-input
         v-model="start_date"
         @update:model-value="writeDateToStart()"
       />
     </div>
-    <div class="myrow">
+    <div class="my_row">
+      <h4 class="display-4">
+        <va-icon size="large" name="hourglass_bottom"></va-icon>&nbsp;Kraj
+        turnira
+      </h4>
+    </div>
+    <div class="my_row">
       <va-time-input
         v-model="end_time"
         @update:model-value="writeTimeToEnd()"
       />
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-date-input
         v-model="end_date"
         @update:model-value="writeDateToEnd()"
       />
     </div>
-    <div class="myrow" v-if="!is_correct_time">
+    <div class="my_row" v-if="!is_correct_time">
       <va-alert
         style="white-space: pre-wrap"
         color="danger"
@@ -232,18 +240,36 @@ export default {
         {{ time_alert }}
       </va-alert>
     </div>
-    <div class="myrow">
-      <h2 class="display-2">Odabir zagonetki</h2>
+    <div class="my_row">
+      <h4 class="display-4">
+        <va-icon size="large" name="extension"> </va-icon>&nbsp;Odabir zagonetki
+      </h4>
     </div>
     <va-tabs v-model="value" style="width: 100%">
       <template #tabs>
-        <va-tab label="Integrami" name="integram" />
-        <va-tab label="Nonogrami" name="nonogram" />
-        <va-tab label="Brojevne križaljke" name="numberCrossword" />
-        <va-tab label="Kriptogrami" name="cryptogram" />
-        <va-tab label="Isti broj - Isto slovo" name="numberLetter" />
-        <va-tab label="Inicijalne osmosmjerke" name="initial" />
-        <va-tab label="Osmosmjerke" name="eight" />
+        <va-tab name="integram"
+          ><va-icon name="rule_folder"></va-icon>Integrami</va-tab
+        >
+        <va-tab name="nonogram"
+          ><va-icon name="draw"></va-icon>Nonogrami</va-tab
+        >
+        <va-tab name="numberCrossword"
+          ><va-icon name="format_list_numbered"></va-icon>Brojevne
+          križaljke</va-tab
+        >
+        <va-tab name="cryptogram"
+          ><va-icon name="multiple_stop"></va-icon>Kriptogrami</va-tab
+        >
+        <va-tab name="numberLetter"
+          ><va-icon name="sync_alt"></va-icon>Isti broj - isto slovo</va-tab
+        >
+        <va-tab name="initial"
+          ><va-icon name="text_rotation_none"></va-icon>Inicijalne
+          osmosmjerke</va-tab
+        >
+        <va-tab name="eight"
+          ><va-icon name="pattern"></va-icon>Osmosmjerke</va-tab
+        >
       </template>
     </va-tabs>
     <IntegramTable
@@ -296,7 +322,7 @@ export default {
     </EightTable>
 
     <div
-      class="myrow"
+      class="my_row"
       v-if="
         !(
           selectedIntegrams.length > 0 ||
@@ -314,22 +340,26 @@ export default {
         center
         class="mb-4"
       >
-        Odaberite barem jednu zagoentku da biste organizirali turnir.
+        Odaberite barem jednu zagonetku da biste organizirali turnir.
       </va-alert>
     </div>
-    <va-button
-      v-if="
-        user &&
-        is_correct_time &&
-        (selectedIntegrams.length > 0 ||
-          selectedNonograms.length > 0 ||
-          selectedNumberCrosswords.length > 0 ||
-          selectedCryptograms.length > 0 ||
-          selectedInitials.length > 0)
-      "
-      @click="store()"
-      >Spremi turnir</va-button
-    >
+    <div class="my_row">
+      <va-button
+        :disabled="
+          !user ||
+          !is_correct_time ||
+          !(
+            selectedIntegrams.length > 0 ||
+            selectedNonograms.length > 0 ||
+            selectedNumberCrosswords.length > 0 ||
+            selectedCryptograms.length > 0 ||
+            selectedInitials.length > 0
+          )
+        "
+        @click="store()"
+        ><va-icon name="add_circle"></va-icon>&nbsp;Spremi turnir</va-button
+      >
+    </div>
   </body>
 </template>
 

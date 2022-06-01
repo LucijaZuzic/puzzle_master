@@ -5,12 +5,12 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { ref, getDownloadURL } from "firebase/storage";
 import { projectStorage } from "../firebase_main.js";
 
-
+import MyCounter from "./MyCounter.vue";
 import LoadingBar from "./LoadingBar.vue";
 
 export default {
   components: {
-    
+    MyCounter,
     LoadingBar,
   },
   data() {
@@ -90,24 +90,27 @@ export default {
     };
   },
   methods: {
-    zoom_number() { 
+    zoom_number() {
       if (this.zoom > this.max_zoom) {
-        this.zoom = this.max_zoom
+        this.zoom = this.max_zoom;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_in() {
       this.zoom++;
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_out() {
       if (this.zoom > 1) {
         this.zoom--;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     getPicture() {
-      if (this.image == null) {
+      if (this.image == null || this.image == "") {
         this.imageURL = "";
         this.fully_loaded = true;
         return;
@@ -842,12 +845,11 @@ export default {
 </script>
 
 <template>
-  <body class="mybody" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="mybody" v-else>
-    
-    <div class="myrow">
+  <body class="my_body" v-else>
+    <div class="my_row">
       <span style="float: left; overflow-wrap: anywhere">
         <va-button
           @click="show_error = !show_error"
@@ -869,25 +871,39 @@ export default {
         "
         outline
       >
-        {{ format(time_elapsed) }}
+        <va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button style="overflow-wrap: anywhere" @click="reset()">
         <va-icon name="delete" />
         &nbsp;Izbriši</va-button
       >
     </div>
-    <div class="myrow" v-if="current_x != null && current_y != null">
-      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
+    <div class="my_row" v-if="current_x != null && current_y != null">
+      <va-chip
+        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        {{ current_y }})</va-chip
+      >
     </div>
-    <div class="myrow"> 
-      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
+    <div class="my_row">
+      <MyCounter
+        :min_value="1"
+        :max_value="max_zoom"
+        v-bind:value="zoom"
+        @input="
+          (n) => {
+            zoom = n;
+            zoom_number();
+          }
+        "
+        :some_text="'Povećanje'"
+      ></MyCounter>
     </div>
-    <div class="myrow" style="max-height: 400px">
+    <div class="my_row" style="max-height: 400px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table class="words_table" id="table-to-zoom">
+          <table class="words_table" id="table_zoom">
             <tr v-for="i in rows" v-bind:key="i">
               <td
                 v-for="j in columns"
@@ -913,7 +929,7 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow" v-if="count_special()">
+    <div class="my_row" v-if="count_special()">
       Rješenje:
       <span v-for="i in rows" v-bind:key="i">
         <span v-for="j in columns" v-bind:key="j">
@@ -945,7 +961,7 @@ export default {
       </span>
     </div>
     <div
-      class="myrow"
+      class="my_row"
       v-if="
         words_by_dir[0].length +
           words_by_dir[1].length +
@@ -978,7 +994,7 @@ export default {
       </va-tabs>
     </div>
     <div
-      class="myrow"
+      class="my_row"
       v-if="
         words_by_dir[0].length +
           words_by_dir[1].length +
@@ -1031,13 +1047,13 @@ export default {
         </va-chip>
       </span>
     </div>
-    <div class="myrow" v-if="image">
+    <div class="my_row" v-if="image">
       <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
-    <div class="myrow" v-if="!image">
+    <div class="my_row" v-if="!image">
       <va-alert
         style="white-space: pre-wrap"
-        color="danger"
+        color="warning"
         title="Prazna slika"
         center
         class="mb-4"
@@ -1045,7 +1061,7 @@ export default {
         Niste dodali sliku uz zagonetku.
       </va-alert>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Naslov zagonetke</va-card-title>
         <va-card-content>
@@ -1053,7 +1069,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Opis zagonetke</va-card-title>
         <va-card-content>
@@ -1061,7 +1077,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-card style="overflow-wrap: anywhere">
         <va-card-title>Izvor zagonetke</va-card-title>
         <va-card-content>
@@ -1069,7 +1085,7 @@ export default {
         </va-card-content>
       </va-card>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
         >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
@@ -1092,7 +1108,7 @@ export default {
         >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         @click="$refs.show_solution_modal.show()"
         style="overflow-wrap: anywhere"

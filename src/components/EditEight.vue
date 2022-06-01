@@ -10,8 +10,7 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { projectStorage } from "../firebase_main.js";
-import MyCounter from './MyCounter.vue';
-
+import MyCounter from "./MyCounter.vue";
 
 import LoadingBar from "./LoadingBar.vue";
 
@@ -22,6 +21,7 @@ export default {
   },
   data() {
     return {
+      place_special: false,
       zoom: 100,
       max_zoom: 200,
       row_counter_min: 1,
@@ -97,21 +97,24 @@ export default {
     };
   },
   methods: {
-    zoom_number() { 
+    zoom_number() {
       if (this.zoom > this.max_zoom) {
-        this.zoom = this.max_zoom
+        this.zoom = this.max_zoom;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_in() {
       this.zoom++;
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     zoom_out() {
       if (this.zoom > 1) {
         this.zoom--;
       }
-      document.getElementById("table-to-zoom").style.transform  = "scale(" + this.zoom / 100 +")";
+      document.getElementById("table_zoom").style.transform =
+        "scale(" + this.zoom / 100 + ")";
     },
     image_uploaded() {
       this.image = document.getElementById("fileinput").files[0];
@@ -121,7 +124,7 @@ export default {
       document.getElementById("fileinput").click();
     },
     getPicture() {
-      if (this.image == null) {
+      if (this.image == null || this.image == "") {
         this.imageURL = "";
         this.fully_loaded = true;
         return;
@@ -314,7 +317,7 @@ export default {
       let hidden = true;
       let uid = "";
       let me = null;
-      let my_activity = this
+      let my_activity = this;
       if (this.user) {
         me = this.user.uid;
       }
@@ -450,6 +453,7 @@ export default {
             old_words[i][j][2],
             dirs[0],
             dirs[1],
+            false,
             false
           );
         }
@@ -473,7 +477,27 @@ export default {
       this.solution = new_values;
       this.words_by_dir = [[], [], [], [], [], [], [], []];
     },
-
+    reset_keep_special() {
+      let new_special = [];
+      let new_values = [];
+      for (let i = 0; i < this.rows; i++) {
+        let special_row = [];
+        let solution_row = [];
+        for (let j = 0; j < this.columns; j++) {
+          special_row.push(1);
+          if (this.is_special[i][j] == 1) {
+            solution_row.push(this.solution[i][j]);
+          } else {
+            solution_row.push("");
+          }
+        }
+        new_special.push(special_row);
+        new_values.push(solution_row);
+      }
+      this.is_special = new_special;
+      this.solution = new_values;
+      this.words_by_dir = [[], [], [], [], [], [], [], []];
+    },
     count_special() {
       for (let i = 0; i < this.is_special.length; i++) {
         for (let j = 0; j < this.is_special[i].length; j++) {
@@ -640,6 +664,52 @@ export default {
       }
       return false;
     },
+    check_dir_part_of_solution(x, y, new_word, dirx, diry, show_warning) {
+      for (
+        let letter_number = 0;
+        letter_number < new_word.length;
+        letter_number++
+      ) {
+        let x_new = x + letter_number * dirx;
+        let y_new = y + letter_number * diry;
+        if (x_new < 0 || x_new >= this.columns) {
+          if (show_warning) {
+            this.$vaToast.init(
+              "Dio rješenja ne može započeti na odabranom polju jer u odabranom smjeru nema dovoljno polja."
+            );
+          }
+          return false;
+        }
+        if (y_new < 0 || y_new >= this.rows) {
+          if (show_warning) {
+            this.$vaToast.init(
+              "Dio rješenja ne može započeti na odabranom polju jer u odabranom smjeru nema dovoljno polja."
+            );
+          }
+          return false;
+        }
+        if (this.is_special[y_new][x_new] == 0) {
+          if (show_warning) {
+            this.$vaToast.init(
+              "Dio rješenja ne može započeti na odabranom polju jer u odabranom smjeru neka polja nisu dio rješenja."
+            );
+          }
+          return false;
+        }
+        if (
+          this.solution[y_new][x_new] != "" &&
+          this.solution[y_new][x_new] != new_word[letter_number]
+        ) {
+          if (show_warning) {
+            this.$vaToast.init(
+              "Dio rješenja ne može započeti na odabranom polju jer su u odabranom smjeru neka polja već popunjena."
+            );
+          }
+          return false;
+        }
+      }
+      return true;
+    },
     check_dir(x, y, new_word, dirx, diry, show_warning) {
       for (
         let letter_number = 0;
@@ -729,6 +799,18 @@ export default {
       this.words_by_dir[this.get_dir(dirx, diry)].push([x, y, new_word]);
       this.words_by_dir[this.get_dir(dirx, diry)].sort(this.sortFunction);
     },
+    add_word_part_of_solution(x, y, new_word, dirx, diry) {
+      for (
+        let letter_number = 0;
+        letter_number < new_word.length;
+        letter_number++
+      ) {
+        let x_new = x + letter_number * dirx;
+        let y_new = y + letter_number * diry;
+        this.solution[y_new][x_new] = new_word[letter_number];
+        this.is_special[y_new][x_new] = 1;
+      }
+    },
     sortFunction(a, b) {
       if (a[2] === b[2]) {
         if (a[1] === b[1]) {
@@ -744,22 +826,33 @@ export default {
         return a[2] < b[2] ? -1 : 1;
       }
     },
-    place_word(x, y, new_word, dirx, diry, show_warning) {
+    place_word(x, y, new_word, dirx, diry, special_place, show_warning) {
       if (!new_word) {
+        if (special_place && this.is_special[y][x] == 1) {
+          this.solution[y][x] = "";
+        }
         return;
       }
       if (new_word.length == 0) {
+        if (special_place && this.is_special[y][x] == 1) {
+          this.solution[y][x] = "";
+        }
         return;
       }
-      if (dirx == -2 || diry == -2) {
-        if (this.is_special[y][x] == 0) {
-          return;
+      if (special_place) {
+        if (
+          this.check_dir_part_of_solution(
+            x,
+            y,
+            new_word,
+            dirx,
+            diry,
+            show_warning
+          ) == true
+        ) {
+          this.add_word_part_of_solution(x, y, new_word, dirx, diry);
+          this.check_full();
         }
-        if (new_word.length > 1) {
-          this.$vaToast.init("Dio rješenja se dodaje samo slovo po slovo.");
-          return;
-        }
-        this.solution[y][x] = new_word[0];
         this.$forceUpdate();
         return;
       }
@@ -767,24 +860,16 @@ export default {
         //if (this.check_start(x, y, show_warning) == false) {
         if (this.check_dir(x, y, new_word, dirx, diry, show_warning) == true) {
           this.add_word(x, y, new_word, dirx, diry);
-          let number_of_words = 0;
-          let number_of_dirs = 0;
-          for (let i = 0; i < this.words_by_dir.length; i++) {
-            if (this.words_by_dir[i].length != 0) {
-              number_of_words += this.words_by_dir[i].length;
-              number_of_dirs++;
-            }
-          }
           this.check_full();
         }
         //}
       }
       this.$forceUpdate();
     },
-    remove_word(i, j) {
-      this.words_by_dir[i].splice(j, 1);
+    remove_word(dir, index) {
+      this.words_by_dir[dir].splice(index, 1);
       let old_words = this.words_by_dir;
-      this.reset();
+      this.reset_keep_special();
       for (let i = 0; i < old_words.length; i++) {
         for (let j = 0; j < old_words[i].length; j++) {
           let dirs = this.get_dirxy(i);
@@ -849,101 +934,114 @@ export default {
           last_updated: datetime,
         })
         .then((docRef) => {
-          if (this.image && this.image.name == undefined) {
-            eightsRef
-              .doc(params_id)
-              .update({
-                solution: funct_ref(newsolution),
-                is_special: funct_ref(newspecial),
-                dir1: funct_ref(this.words_by_dir[0]),
-                dir2: funct_ref(this.words_by_dir[1]),
-                dir3: funct_ref(this.words_by_dir[2]),
-                dir4: funct_ref(this.words_by_dir[3]),
-                dir5: funct_ref(this.words_by_dir[4]),
-                dir6: funct_ref(this.words_by_dir[5]),
-                dir7: funct_ref(this.words_by_dir[6]),
-                dir8: funct_ref(this.words_by_dir[7]),
-                title: this.title,
-                description: this.description,
-                image: this.image,
-                author: this.author,
-                updater: this.user.uid,
-                is_public: this.is_public,
-                permissions: this.permissions,
-                source: this.source,
-                time_created: this.time_created,
-                last_updated: datetime,
-              })
-              .then(() => {
-                this.new_async(
-                  this.$vaToast.init(
-                    "Postojeća zagonetka je uspješno izmijenjena."
-                  ),
-                  1000
-                ).then(() => {
-                  this.$router.push("/search-eight");
-                });
-              });
-          } else {
-            if (this.oldimage) {
-              let oldRef = ref(projectStorage, this.oldimage);
-              // Delete the file
-              deleteObject(oldRef)
-                .then(() => {
-                  // File deleted successfully
+          if (this.image && this.image != "") {
+            if (this.image.name == undefined) {
+              eightsRef
+                .doc(params_id)
+                .update({
+                  solution: funct_ref(newsolution),
+                  is_special: funct_ref(newspecial),
+                  dir1: funct_ref(this.words_by_dir[0]),
+                  dir2: funct_ref(this.words_by_dir[1]),
+                  dir3: funct_ref(this.words_by_dir[2]),
+                  dir4: funct_ref(this.words_by_dir[3]),
+                  dir5: funct_ref(this.words_by_dir[4]),
+                  dir6: funct_ref(this.words_by_dir[5]),
+                  dir7: funct_ref(this.words_by_dir[6]),
+                  dir8: funct_ref(this.words_by_dir[7]),
+                  title: this.title,
+                  description: this.description,
+                  image: this.image,
+                  author: this.author,
+                  updater: this.user.uid,
+                  is_public: this.is_public,
+                  permissions: this.permissions,
+                  source: this.source,
+                  time_created: this.time_created,
+                  last_updated: datetime,
                 })
-                .catch((error) => {
-                  // Uh-oh, an error occurred!
+                .then(() => {
+                  this.new_async(
+                    this.$vaToast.init(
+                      "Postojeća zagonetka je uspješno izmijenjena."
+                    ),
+                    1000
+                  ).then(() => {
+                    this.$router.push("/search-eight");
+                  });
+                });
+            } else {
+              if (this.oldimage) {
+                let oldRef = ref(projectStorage, this.oldimage);
+                // Delete the file
+                deleteObject(oldRef)
+                  .then(() => {
+                    // File deleted successfully
+                  })
+                  .catch((error) => {
+                    // Uh-oh, an error occurred!
+                  });
+              }
+              let exstension =
+                this.image.name.split(".")[
+                  this.image.name.split(".").length - 1
+                ];
+              const reference = "eight/" + params_id + "." + exstension;
+              const storageRef = ref(projectStorage, reference);
+              const metadata = {
+                contentType: "image/" + exstension,
+              };
+              // 'file' comes from the Blob or File API
+              uploadBytes(storageRef, this.image, metadata)
+                .then((snapshot) => {})
+                .catch((error) => {})
+                .then(() => {
+                  let imageLocation = reference;
+                  eightsRef
+                    .doc(params_id)
+                    .update({
+                      solution: funct_ref(newsolution),
+                      is_special: funct_ref(newspecial),
+                      dir1: funct_ref(this.words_by_dir[0]),
+                      dir2: funct_ref(this.words_by_dir[1]),
+                      dir3: funct_ref(this.words_by_dir[2]),
+                      dir4: funct_ref(this.words_by_dir[3]),
+                      dir5: funct_ref(this.words_by_dir[4]),
+                      dir6: funct_ref(this.words_by_dir[5]),
+                      dir7: funct_ref(this.words_by_dir[6]),
+                      dir8: funct_ref(this.words_by_dir[7]),
+                      title: this.title,
+                      description: this.description,
+                      image: imageLocation,
+                      author: this.author,
+                      updater: this.user.uid,
+                      is_public: this.is_public,
+                      permissions: this.permissions,
+                      source: this.source,
+                      time_created: this.time_created,
+                      last_updated: datetime,
+                    })
+                    .then(() => {
+                      this.new_async(
+                        this.$vaToast.init(
+                          "Postojeća zagonetka je uspješno izmijenjena."
+                        ),
+                        1000
+                      ).then(() => {
+                        this.$router.push("/search-eight");
+                      });
+                    });
                 });
             }
-            let exstension =
-              this.image.name.split(".")[this.image.name.split(".").length - 1];
-            const reference = "eight/" + params_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                eightsRef
-                  .doc(params_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    dir1: funct_ref(this.words_by_dir[0]),
-                    dir2: funct_ref(this.words_by_dir[1]),
-                    dir3: funct_ref(this.words_by_dir[2]),
-                    dir4: funct_ref(this.words_by_dir[3]),
-                    dir5: funct_ref(this.words_by_dir[4]),
-                    dir6: funct_ref(this.words_by_dir[5]),
-                    dir7: funct_ref(this.words_by_dir[6]),
-                    dir8: funct_ref(this.words_by_dir[7]),
-                    title: this.title,
-                    description: this.description,
-                    image: imageLocation,
-                    author: this.author,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: this.permissions,
-                    source: this.source,
-                    time_created: this.time_created,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Postojeća zagonetka je uspješno izmijenjena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-eight");
-                    });
-                  });
-              });
+          } else {
+            this.new_async(
+              this.$vaToast.init(
+                "Postojeća zagonetka je uspješno izmijenjena."
+              ),
+              1000
+            ).then(() => {
+              this.$router.push("/search-eight");
+            });
           }
         });
     },
@@ -1001,120 +1099,131 @@ export default {
         })
         .then((docRef) => {
           let some_id = docRef.id;
-          if (this.image && this.image.name == undefined) {
-            var old_reference = ref(projectStorage, this.image);
-            let exstension = "";
-            // Get metadata properties
-            getMetadata(old_reference)
-              .then((metadata) => {
-                // Metadata now contains the metadata for 'images/forest.jpg'
-                exstension = metadata.contentType.split("/")[1];
-              })
-              .catch((error) => {
-                // Uh-oh, an error occurred!
-              });
-            const reference = "eight/" + some_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                eightsRef
-                  .doc(some_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    dir1: funct_ref(this.words_by_dir[0]),
-                    dir2: funct_ref(this.words_by_dir[1]),
-                    dir3: funct_ref(this.words_by_dir[2]),
-                    dir4: funct_ref(this.words_by_dir[3]),
-                    dir5: funct_ref(this.words_by_dir[4]),
-                    dir6: funct_ref(this.words_by_dir[5]),
-                    dir7: funct_ref(this.words_by_dir[6]),
-                    dir8: funct_ref(this.words_by_dir[7]),
-                    title: this.title,
-                    description: this.description,
-                    image: imageLocation,
-                    author: this.user.uid,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: newPermissions,
-                    source: this.source,
-                    time_created: datetime,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Nova zagonetka je uspješno spremljena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-eight");
+          if (this.image && this.image != "") {
+            if (this.image.name == undefined) {
+              var old_reference = ref(projectStorage, this.image);
+              let exstension = "";
+              // Get metadata properties
+              getMetadata(old_reference)
+                .then((metadata) => {
+                  // Metadata now contains the metadata for 'images/forest.jpg'
+                  exstension = metadata.contentType.split("/")[1];
+                })
+                .catch((error) => {
+                  // Uh-oh, an error occurred!
+                });
+              const reference = "eight/" + some_id + "." + exstension;
+              const storageRef = ref(projectStorage, reference);
+              const metadata = {
+                contentType: "image/" + exstension,
+              };
+              // 'file' comes from the Blob or File API
+              uploadBytes(storageRef, this.image, metadata)
+                .then((snapshot) => {})
+                .catch((error) => {})
+                .then(() => {
+                  let imageLocation = reference;
+                  eightsRef
+                    .doc(some_id)
+                    .update({
+                      solution: funct_ref(newsolution),
+                      is_special: funct_ref(newspecial),
+                      dir1: funct_ref(this.words_by_dir[0]),
+                      dir2: funct_ref(this.words_by_dir[1]),
+                      dir3: funct_ref(this.words_by_dir[2]),
+                      dir4: funct_ref(this.words_by_dir[3]),
+                      dir5: funct_ref(this.words_by_dir[4]),
+                      dir6: funct_ref(this.words_by_dir[5]),
+                      dir7: funct_ref(this.words_by_dir[6]),
+                      dir8: funct_ref(this.words_by_dir[7]),
+                      title: this.title,
+                      description: this.description,
+                      image: imageLocation,
+                      author: this.user.uid,
+                      updater: this.user.uid,
+                      is_public: this.is_public,
+                      permissions: newPermissions,
+                      source: this.source,
+                      time_created: datetime,
+                      last_updated: datetime,
+                    })
+                    .then(() => {
+                      this.new_async(
+                        this.$vaToast.init(
+                          "Nova zagonetka je uspješno spremljena."
+                        ),
+                        1000
+                      ).then(() => {
+                        this.$router.push("/search-eight");
+                      });
                     });
-                  });
-              });
+                });
+            } else {
+              let exstension =
+                this.image.name.split(".")[
+                  this.image.name.split(".").length - 1
+                ];
+              const reference = "eight/" + some_id + "." + exstension;
+              const storageRef = ref(projectStorage, reference);
+              const metadata = {
+                contentType: "image/" + exstension,
+              };
+              // 'file' comes from the Blob or File API
+              uploadBytes(storageRef, this.image, metadata)
+                .then((snapshot) => {})
+                .catch((error) => {})
+                .then(() => {
+                  let imageLocation = reference;
+                  eightsRef
+                    .doc(some_id)
+                    .update({
+                      solution: funct_ref(newsolution),
+                      is_special: funct_ref(newspecial),
+                      dir1: funct_ref(this.words_by_dir[0]),
+                      dir2: funct_ref(this.words_by_dir[1]),
+                      dir3: funct_ref(this.words_by_dir[2]),
+                      dir4: funct_ref(this.words_by_dir[3]),
+                      dir5: funct_ref(this.words_by_dir[4]),
+                      dir6: funct_ref(this.words_by_dir[5]),
+                      dir7: funct_ref(this.words_by_dir[6]),
+                      dir8: funct_ref(this.words_by_dir[7]),
+                      title: this.title,
+                      description: this.description,
+                      image: imageLocation,
+                      author: this.user.uid,
+                      updater: this.user.uid,
+                      is_public: this.is_public,
+                      permissions: newPermissions,
+                      source: this.source,
+                      time_created: datetime,
+                      last_updated: datetime,
+                    })
+                    .then(() => {
+                      this.new_async(
+                        this.$vaToast.init(
+                          "Nova zagonetka je uspješno spremljena."
+                        ),
+                        1000
+                      ).then(() => {
+                        this.$router.push("/search-eight");
+                      });
+                    });
+                });
+            }
           } else {
-            let exstension =
-              this.image.name.split(".")[this.image.name.split(".").length - 1];
-            const reference = "eight/" + some_id + "." + exstension;
-            const storageRef = ref(projectStorage, reference);
-            const metadata = {
-              contentType: "image/" + exstension,
-            };
-            // 'file' comes from the Blob or File API
-            uploadBytes(storageRef, this.image, metadata)
-              .then((snapshot) => {})
-              .catch((error) => {})
-              .then(() => {
-                let imageLocation = reference;
-                eightsRef
-                  .doc(some_id)
-                  .update({
-                    solution: funct_ref(newsolution),
-                    is_special: funct_ref(newspecial),
-                    dir1: funct_ref(this.words_by_dir[0]),
-                    dir2: funct_ref(this.words_by_dir[1]),
-                    dir3: funct_ref(this.words_by_dir[2]),
-                    dir4: funct_ref(this.words_by_dir[3]),
-                    dir5: funct_ref(this.words_by_dir[4]),
-                    dir6: funct_ref(this.words_by_dir[5]),
-                    dir7: funct_ref(this.words_by_dir[6]),
-                    dir8: funct_ref(this.words_by_dir[7]),
-                    title: this.title,
-                    description: this.description,
-                    image: imageLocation,
-                    author: this.user.uid,
-                    updater: this.user.uid,
-                    is_public: this.is_public,
-                    permissions: newPermissions,
-                    source: this.source,
-                    time_created: datetime,
-                    last_updated: datetime,
-                  })
-                  .then(() => {
-                    this.new_async(
-                      this.$vaToast.init(
-                        "Nova zagonetka je uspješno spremljena."
-                      ),
-                      1000
-                    ).then(() => {
-                      this.$router.push("/search-eight");
-                    });
-                  });
-              });
+            this.new_async(
+              this.$vaToast.init("Nova zagonetka je uspješno spremljena."),
+              1000
+            ).then(() => {
+              this.$router.push("/search-eight");
+            });
           }
         });
     },
     remove_dir(i) {
-      this.words_by_dir[i] = [];
+      this.words_by_dir[dir] = [];
       let old_words = this.words_by_dir;
-      this.reset();
+      this.reset_keep_special();
       for (let i = 0; i < old_words.length; i++) {
         for (let j = 0; j < old_words[i].length; j++) {
           let dirs = this.get_dirxy(i);
@@ -1255,18 +1364,30 @@ export default {
 };
 </script>
 
-<template> 
-  <body class="mybody" v-if="!fully_loaded"> 
+<template>
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="mybody" v-else> 
-    <div class="myrow"> 
-      <MyCounter :min_value="row_counter_min" :max_value="row_counter_max" v-bind:value="rows" @input="(n) => rows = n" :some_text="'Broj redaka'"></MyCounter> 
+  <body class="my_body" v-else>
+    <div class="my_row">
+      <MyCounter
+        :min_value="row_counter_min"
+        :max_value="row_counter_max"
+        v-bind:value="rows"
+        @input="(n) => (rows = n)"
+        :some_text="'Broj redaka'"
+      ></MyCounter>
     </div>
-    <div class="myrow">
-      <MyCounter :min_value="column_counter_min" :max_value="column_counter_max" v-bind:value="columns" @input="(n) => columns = n" :some_text="'Broj stupaca'"></MyCounter>
-    </div> 
-    <div class="myrow">
+    <div class="my_row">
+      <MyCounter
+        :min_value="column_counter_min"
+        :max_value="column_counter_max"
+        v-bind:value="columns"
+        @input="(n) => (columns = n)"
+        :some_text="'Broj stupaca'"
+      ></MyCounter>
+    </div>
+    <div class="my_row">
       <va-tabs v-model="current_dir">
         <template #tabs>
           <va-tab
@@ -1341,21 +1462,16 @@ export default {
           >
             &#8600;
           </va-tab>
-          <va-tab
-            name="-1"
-            @click="
-              mode_x = -2;
-              mode_y = -2;
-            "
-          >
-            <span style="color: salmon">Dio rješenja</span>
-          </va-tab>
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-tabs>
         <template #tabs>
+          <va-tab style="background-color: salmon" @click="place_special = !place_special">
+            <span v-if="place_special"><va-icon color="#FA8072" name="contrast"></va-icon>&nbsp;Dio rješenja</span>
+            <span v-else><va-icon color="#000000" name="contrast"></va-icon>&nbsp;Dio osmosmjerke</span>
+          </va-tab>
           <va-tab @click="word += 'Ǆ'"> Ǆ </va-tab>
           <va-tab @click="word += 'Ǉ'"> Ǉ </va-tab>
           <va-tab @click="word += 'Ǌ'"> Ǌ </va-tab>
@@ -1366,7 +1482,7 @@ export default {
         </template>
       </va-tabs>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         immediate-validation
         :rules="[(value) => word_warning == '' || 'Nedozvoljena slova.']"
@@ -1378,21 +1494,46 @@ export default {
         @update:model-value="check_word()"
       />
     </div>
-    <div class="myrow" v-if="current_x != null && current_y != null">
-      <va-chip><va-icon name="my_location"/>&nbsp;({{ current_x }}, {{ current_y }})</va-chip>
+    <div class="my_row" v-if="current_x != null && current_y != null">
+      <va-chip
+        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        {{ current_y }})</va-chip
+      >
     </div>
-    <div class="myrow"> 
-      <va-icon name="search" style="display: inline-block"></va-icon><va-input style="display: inline-block" outline v-model="zoom" :min="1" :max="max_zoom" @update:model-value="zoom_number()" type="number"/><va-icon name="restart_alt" style="display: inline-block" @click="zoom=100;zoom_number()"></va-icon>
+    <div class="my_row">
+      <MyCounter
+        :min_value="1"
+        :max_value="max_zoom"
+        v-bind:value="zoom"
+        @input="
+          (n) => {
+            zoom = n;
+            zoom_number();
+          }
+        "
+        :some_text="'Povećanje'"
+      ></MyCounter>
     </div>
-    <div class="myrow" style="max-height: 400px">
+    <div class="my_row" style="max-height: 400px">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table class="words_table" id="table-to-zoom">
+          <table class="words_table" id="table_zoom">
             <tr v-for="i in rows" v-bind:key="i">
               <td
                 v-for="j in columns"
                 v-bind:key="j"
-                @click="place_word(j - 1, i - 1, word, mode_x, mode_y, true)"
+                style="cursor: pointer"
+                @click="
+                  place_word(
+                    j - 1,
+                    i - 1,
+                    word,
+                    mode_x,
+                    mode_y,
+                    place_special,
+                    true
+                  )
+                "
                 @mouseover="
                   current_x = i;
                   current_y = j;
@@ -1406,7 +1547,7 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-alert
         v-if="warning"
         color="danger"
@@ -1418,7 +1559,7 @@ export default {
         budu definirana.
       </va-alert>
     </div>
-    <div class="myrow" v-if="count_special()">
+    <div class="my_row" v-if="count_special()">
       Rješenje:
       <span v-for="i in rows" v-bind:key="i">
         <span v-for="j in columns" v-bind:key="j">
@@ -1437,7 +1578,7 @@ export default {
       </span>
     </div>
     <div
-      class="myrow"
+      class="my_row"
       v-if="
         words_by_dir[0].length +
           words_by_dir[1].length +
@@ -1470,7 +1611,7 @@ export default {
       </va-tabs>
     </div>
     <div
-      class="myrow"
+      class="my_row"
       v-if="
         words_by_dir[0].length +
           words_by_dir[1].length +
@@ -1515,7 +1656,7 @@ export default {
         </va-chip>
       </span>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="display: inline-block; overflow-wrap: anywhere"
         @click="click_file()"
@@ -1531,13 +1672,13 @@ export default {
         @input="image_uploaded()"
       />
     </div>
-    <div class="myrow" v-if="image">
+    <div class="my_row" v-if="image">
       <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
     </div>
-    <div class="myrow" v-if="!image">
+    <div class="my_row" v-if="!image">
       <va-alert
         style="white-space: pre-wrap"
-        color="danger"
+        color="warning"
         title="Prazna slika"
         center
         class="mb-4"
@@ -1545,7 +1686,7 @@ export default {
         Niste dodali sliku uz zagonetku.
       </va-alert>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         class="mb-4"
         v-model="title"
@@ -1575,7 +1716,7 @@ export default {
         :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
       />
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
         >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
@@ -1598,7 +1739,7 @@ export default {
         >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="overflow-wrap: anywhere"
         @click="is_public = !is_public"
@@ -1610,7 +1751,7 @@ export default {
         <span v-else><va-icon name="public" /> &nbsp;Svi</span>
       </va-button>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-input
         style="display: inline-block; margin-left: 10px; margin-top: 10px"
         type="text"
@@ -1632,7 +1773,7 @@ export default {
         </template>
       </va-input>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-chip
         style="
           overflow-wrap: anywhere;
@@ -1652,13 +1793,12 @@ export default {
         &nbsp;{{ permission.displayName }} ({{ permission.email }})
       </va-chip>
     </div>
-    <div class="myrow">
+    <div class="my_row">
       <va-button
         style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
         :disabled="
           !(
             !warning &&
-            image &&
             title.length > 0 &&
             description.length > 0 &&
             source.length > 0
@@ -1674,7 +1814,6 @@ export default {
         :disabled="
           !(
             !warning &&
-            image &&
             title.length > 0 &&
             description.length > 0 &&
             source.length > 0
