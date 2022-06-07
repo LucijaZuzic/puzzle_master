@@ -1,5 +1,5 @@
 <script>
-import Navbar from "./components/Navbar.vue";
+import Navbar from "./components/Utility/Navbar.vue";
 export default {
   components: {
     Navbar,
@@ -9,26 +9,22 @@ export default {
 <template>
   <div style="background-color: #f4f8fa">
     <Navbar></Navbar>
-    <div style="display: inline-block; background-color: white; width: 80%">
+    <va-card style="margin: 20px;padding: 20px;display: inline-block; width: 80%">
       <router-view></router-view>
-    </div>
+    </va-card>
   </div>
 </template>
 
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;1,700&display=swap");
 @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
-#app {
-  font-family: Arial, Helvetica, sans-serif !important;
+#app { 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+  text-align: center;  
   overflow-wrap: anywhere !important;
 }
-.my_body {
-  background-color: white !important;
-  display: block;
+.my_body {  
   overflow-wrap: anywhere !important;
 }
 .my_row {
@@ -52,8 +48,5 @@ a:active {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   max-width: 200px;
-}
-h4 {
-  font-size: 3vw;
-}
+} 
 </style>
