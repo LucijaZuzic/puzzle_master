@@ -179,7 +179,8 @@ export default {
           :min_value="1"
           :max_value="Math.ceil(this.filtered.length)"
           v-bind:value="perPage"
-          @input="(n) => (perPage = n)" :is_page_number="true"
+          @input="(n) => (perPage = n)"
+          :is_page_number="true"
           :some_text="'Broj rezultata na stranici'"
         ></MyCounter>
       </div>

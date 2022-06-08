@@ -1,5 +1,4 @@
 <template>
-  <!--<div  style="white-space: nowrap;">-->
   <span v-if="!is_zoom">
     <span>
       {{ some_text }}
@@ -20,8 +19,8 @@
               $emit('input', value);
             "
           >
-            <span v-if="!is_page_number">{{min_value}}</span>
-            <va-icon v-else size="small" name="compress"></va-icon> 
+            <span v-if="!is_page_number">{{ min_value }}</span>
+            <va-icon v-else size="small" name="compress"></va-icon>
           </va-button>
           <va-button
             size="small"
@@ -36,16 +35,14 @@
               $emit('input', value);
             "
           >
-            <va-icon v-if="!is_page_number" size="small" name="arrow_left"></va-icon>
+            <va-icon
+              v-if="!is_page_number"
+              size="small"
+              name="arrow_left"
+            ></va-icon>
             <va-icon v-else size="small" name="unfold_less"></va-icon>
           </va-button>
           <input
-            style="
-              border: none;
-              width: 25px;
-              vertical-align: middle;
-              text-align: center;
-            "
             @input="
               value = Math.max(min_value, Math.min(value, max_value));
               $emit('input', value);
@@ -53,7 +50,8 @@
             v-model="value"
             :min="min_value"
             :max="max_value"
-            type="number" />
+            type="number"
+          />
           <va-button
             size="small"
             outline
@@ -66,8 +64,12 @@
               value = Math.max(min_value, Math.min(value, max_value));
               $emit('input', value);
             "
-          > 
-            <va-icon v-if="!is_page_number" size="small" name="arrow_right"></va-icon>
+          >
+            <va-icon
+              v-if="!is_page_number"
+              size="small"
+              name="arrow_right"
+            ></va-icon>
             <va-icon v-else size="small" name="unfold_more"></va-icon>
           </va-button>
           <va-button
@@ -83,8 +85,8 @@
               $emit('input', value);
             "
           >
-            <span v-if="!is_page_number">{{max_value}}</span>
-            <va-icon v-else size="small" name="expand"></va-icon> 
+            <span v-if="!is_page_number">{{ max_value }}</span>
+            <va-icon v-else size="small" name="expand"></va-icon>
           </va-button>
         </span>
       </va-chip>
@@ -142,12 +144,6 @@
             -
           </va-button>
           <input
-            style="
-              border: none;
-              width: 25px;
-              vertical-align: middle;
-              text-align: center;
-            "
             @input="
               value = Math.max(min_value, Math.min(value, max_value));
               $emit('input', value);
@@ -156,7 +152,7 @@
             :min="min_value"
             :max="max_value"
             type="number"
-          />% 
+          />%
           <va-button
             size="small"
             outline
@@ -197,7 +193,14 @@
 <script>
 export default {
   emits: ["input"],
-  props: ["value", "some_text", "max_value", "min_value", "is_page_number", "is_zoom"],
+  props: [
+    "value",
+    "some_text",
+    "max_value",
+    "min_value",
+    "is_page_number",
+    "is_zoom",
+  ],
   components: {},
   data() {
     return {};
@@ -216,5 +219,12 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type="number"] {
   -moz-appearance: textfield;
+  border: none;
+  background-color: transparent;
+  width: 25px;
+  vertical-align: middle;
+  text-align: center;
+  font-weight: bold;
+  color: #767c88;
 }
 </style>

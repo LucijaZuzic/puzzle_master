@@ -1,6 +1,9 @@
 <script>
 import { ref, getDownloadURL } from "firebase/storage";
-import { numberLettersRecordsRef, projectStorage } from "../../firebase_main.js";
+import {
+  numberLettersRecordsRef,
+  projectStorage,
+} from "../../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usersRef, friendsRef } from "../../firebase_main.js";
 import { numberLettersRef } from "../../firebase_main.js";
@@ -684,48 +687,63 @@ export default {
 </script>
 
 <template>
-   <body class="my_body" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
-   </body>
-   <body class="my_body" v-else>
-    <div class="my_row">
-      <span style="float: left; overflow-wrap: anywhere">
-        <va-button
-          @click="
-            show_error = !show_error;
-            $forceUpdate();
-          "
-          style="margin-left: 10px; margin-top: 10px"
-        >
-          <span v-if="show_error == false">
-            <va-icon name="report_off" />
-            &nbsp;Ne prikazuj greške</span
-          >
-          <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
-        </va-button>
-      </span>
-      <va-chip
-        style="
-          float: right;
-          overflow-wrap: anywhere;
-          margin-left: 10px;
-          margin-top: 10px;
-        "
-        outline
-      >
-        <va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}
-      </va-chip>
-    </div>
+  </body>
+  <body class="my_body" v-else>
+    <va-card>
+      <div class="my_row">
+        <h4 class="display-4">
+          <va-icon size="large" name="sync_alt"></va-icon>
+          &nbsp;Riješi zagonetku tipa Ist broj - isto slovo
+        </h4>
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab disabled
+              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+            >
+            <va-tab @click="$refs.description.show()"
+              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+            </va-tab>
+            <va-tab
+              @click="
+                show_error = !show_error;
+                $forceUpdate();
+              "
+            >
+              <span v-if="show_error == false">
+                <va-icon name="report_off" />
+                &nbsp;Ne prikazuj greške</span
+              >
+              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+            </va-tab>
+            <va-tab @click="$refs.show_solution_modal.show()">
+              <va-icon name="help" />
+              &nbsp;Otkrij sva polja
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+    </va-card>
+    <br /><br />  
+    <va-card>
+      <h4 class="display-4">Slova</h4>
+      <va-divider></va-divider> 
     <div class="my_row">
       <va-infinite-scroll disabled :load="() => {}">
         <div>
-          <table style="display: inline-table" id="table_zoom">
+          <table style="display: inline-table">
             <tr>
-              <td v-for="i in num_letters" v-bind:key="i"> 
+              <td v-for="i in num_letters" v-bind:key="i">
                 <va-form ref="lettersform">
                   <va-input
-                    maxlength="2" 
-                    class="mb-4"
+                    maxlength="2"
+                    
                     @click="mode = i - 1"
                     @update:model-value="check_letter()"
                     v-model="values[i - 1]"
@@ -782,9 +800,14 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
+    </va-card>
+    <br /><br />  
+    <va-card>
+      <h4 class="display-4">Zagonetka</h4>
+      <va-divider></va-divider> 
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -799,13 +822,14 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'" :is_zoom="true"
+        :some_text="'Povećanje'"
+        :is_zoom="true"
       ></MyCounter>
     </div>
     <div class="my_row" style="max-height: 500px">
       <va-infinite-scroll disabled :load="() => {}">
         <div class="my_row">
-          <table class="numbers_table">
+          <table class="numbers_table" id="table_zoom">
             <tr v-for="i in rows" v-bind:key="i">
               <td
                 v-for="j in columns"
@@ -846,76 +870,84 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="my_row" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
-    </div>
-    <div class="my_row" v-if="!image">
-      <va-alert
-        style="white-space: pre-wrap"
-        color="warning"
-        title="Prazna slika"
-        center
-        class="mb-4"
-      >
-        Niste dodali sliku uz zagonetku.
-      </va-alert>
-    </div>
-    <div class="my_row">
-      <va-card>
-        <va-card-title>Naslov zagonetke</va-card-title>
-        <va-card-content>
+  </va-card>
+  <br /><br />
+    <va-card>
+      <h4 class="display-4">Podaci o zagonetci</h4>
+      <va-divider></va-divider>
+      <div class="my_row" v-if="image">
+        <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
+      </div>
+      <div class="my_row" v-if="!image">
+        <va-alert
+          style="white-space: pre-wrap"
+          color="warning"
+          title="Prazna slika"
+          center
+          
+        >
+          Niste dodali sliku uz zagonetku.
+        </va-alert>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Naslov
+        </h6>
+        <p style="text-align: start">
           {{ title }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card>
-        <va-card-title>Opis zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Opis
+        </h6>
+        <p style="text-align: start">
           {{ description }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card>
-        <va-card-title>Izvor zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Izvor
+        </h6>
+        <p style="text-align: start">
           {{ source }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
-          authorUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
-      </va-chip>
-      <br />
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
-          updaterUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        @click="$refs.show_solution_modal.show()"
-        style="overflow-wrap: anywhere"
-      >
-        <va-icon name="help" />
-        &nbsp;Otkrij sva polja</va-button
-      >
-    </div>
+        </p>
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Autor zagonetke: {{ authorUserRecord.displayName }}
+          <router-link :to="'/profile/' + authorUserRecord.email"
+            >({{ authorUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
+        >
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
+          <router-link :to="'/profile/' + updaterUserRecord.email"
+            >({{ updaterUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
+        >
+      </div>
+    </va-card>
   </body>
   <va-modal
     :mobile-fullscreen="false"

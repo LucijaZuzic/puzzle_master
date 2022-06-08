@@ -39,7 +39,7 @@ export default {
 </script>
 
 <template>
-   <body class="my_body">
+  <body class="my_body">
     <div class="my_row">
       <h4 class="display-4">Prijava</h4>
     </div>
@@ -47,7 +47,7 @@ export default {
     <h4 id="signed_in" visible="false" hidden="true" class="display-4">
       Već ste prijavljeni
     </h4>
-   </body>
+  </body>
 </template>
 
 <style scoped></style>

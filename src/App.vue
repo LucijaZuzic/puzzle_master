@@ -7,9 +7,17 @@ export default {
 };
 </script>
 <template>
-  <div style="background-color: #f4f8fa">
+  <div style="background-color: white">
     <Navbar></Navbar>
-    <va-card style="margin: 20px;padding: 20px;display: inline-block; width: 80%">
+    <va-card
+      style="
+        background-color: #f4f8fa;
+        margin: 20px;
+        padding: 20px;
+        display: inline-block;
+        width: 80%;
+      "
+    >
       <router-view></router-view>
     </va-card>
   </div>
@@ -18,13 +26,13 @@ export default {
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;1,700&display=swap");
 @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
-#app { 
+#app {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;  
+  text-align: center;
   overflow-wrap: anywhere !important;
 }
-.my_body {  
+.my_body {
   overflow-wrap: anywhere !important;
 }
 .my_row {
@@ -48,5 +56,5 @@ a:active {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   max-width: 200px;
-} 
+}
 </style>

@@ -40,7 +40,11 @@ import {
 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-import { usersRef, friendsRef, friendRequestsRef } from "../../firebase_main.js";
+import {
+  usersRef,
+  friendsRef,
+  friendRequestsRef,
+} from "../../firebase_main.js";
 
 import FriendRequestsReceivedTable from "./Friends/FriendRequestsReceivedTable.vue";
 import FriendRequestsSentTable from "./Friends/FriendRequestsSentTable.vue";
@@ -234,10 +238,10 @@ export default {
 </script>
 
 <template>
-   <body class="my_body" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
-   </body>
-   <body class="my_body" v-else>
+  </body>
+  <body class="my_body" v-else>
     <span
       v-if="friend.email != '' || friend.displayName != '' || friend.uid != ''"
     >
@@ -465,7 +469,7 @@ export default {
       >
       </NoDataToDisplay>
     </span>
-   </body>
+  </body>
 </template>
 
 <style scoped></style>

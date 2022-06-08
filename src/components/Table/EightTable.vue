@@ -10,7 +10,7 @@ import { ref, listAll, deleteObject, getMetadata } from "firebase/storage";
 import LoadingBar from "../Utility/LoadingBar.vue";
 import MyCounter from "../Utility/MyCounter.vue";
 import NoDataToDisplay from "../Utility/NoDataToDisplay.vue";
-import EightInfo from "../Info/EightInfo.vue"; 
+import EightInfo from "../Info/EightInfo.vue";
 
 export default {
   emits: ["selectedEights"],
@@ -21,7 +21,7 @@ export default {
     LoadingBar,
     MyCounter,
     NoDataToDisplay,
-    EightInfo
+    EightInfo,
   },
   mounted() {
     const auth = getAuth();
@@ -598,18 +598,31 @@ export default {
 </script>
 
 <template>
-  <LoadingBar v-if="!fully_loaded"></LoadingBar>
-  <span v-else>
+  <va-card>
     <div class="my_row">
-      <span style="float: left; overflow-wrap: anywhere">
-        <va-icon color="info" name="info" @click="$refs.description.show()"></va-icon> 
-      </span> 
-      <router-link to="/create-eight">
-        <va-button>
-          <va-icon name="add_circle" />&nbsp;Nova zagonetka</va-button
-        >
-      </router-link>
+      <va-tabs>
+        <template #tabs>
+          <va-tab>
+            <va-icon name="info" @click="$refs.description.show()"></va-icon>
+            &nbsp;Pomoć
+          </va-tab>
+          <va-tab>
+            <router-link
+              to="/create-eight"
+              style="float: right; overflow-wrap: anywhere"
+            >
+              <va-icon name="add_circle" />&nbsp;Nova zagonetka
+            </router-link>
+          </va-tab>
+        </template>
+      </va-tabs>
     </div>
+  </va-card>
+  <br />
+  <br />
+  <va-card style="padding: 20px">
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else> 
     <span v-if="puzzles.length > 0">
       <div class="my_row">
         <va-input
@@ -629,7 +642,8 @@ export default {
           :min_value="1"
           :max_value="Math.ceil(this.filtered.length)"
           v-bind:value="perPage"
-          @input="(n) => (perPage = n)" :is_page_number="true"
+          @input="(n) => (perPage = n)"
+          :is_page_number="true"
           :some_text="'Broj rezultata na stranici'"
         ></MyCounter>
       </div>
@@ -863,9 +877,10 @@ export default {
       </span>
     </div>
   </span>
+  </va-card> 
   <va-modal
     :mobile-fullscreen="false"
-    ref="description" 
+    ref="description"
     hide-default-actions
     stateful
   >

@@ -410,32 +410,41 @@ export default {
       this.selected_number_x = prev_x;
       this.selected_number_y = prev_y;
       this.number_orientation = prev_o;
-      this.add_revealed();
+      this.add_revealed(); 
     },
     place_number(reset, x, y) {
       if (this.victory) {
-        return;
+        return false;
       }
       if (!this.selected_number) {
-        return;
+        return false;
       }
       if (this.values[x][y] == -1) {
         if (!reset) {
           this.$vaToast.init("Broj ne može započeti na barijeri.");
         }
-        return;
+        return false;
       }
       if (
-        !reset &&
         this.number_positions[this.selected_number_x][
           this.selected_number_y
         ][0] != -1
       ) {
-        if (!reset) {
-          this.remove_number();
-          //this.$vaToast.init("Broj je već postavljen.")
+        // this.$vaToast.init("Broj je već postavljen.")
+        // return false;
+        let old_x =
+          this.number_positions[this.selected_number_x][
+            this.selected_number_y
+          ][0];
+        let old_y =
+          this.number_positions[this.selected_number_x][
+            this.selected_number_y
+          ][1];
+        this.remove_number();
+        if (this.place_number(reset, x, y) == false) {
+          this.place_number(reset, old_x, old_y);
         }
-        return;
+        return true;
       }
       if (this.number_orientation == true) {
         if (x == 0 || this.values[x - 1][y] == -1) {
@@ -478,12 +487,20 @@ export default {
                   "Broj nije postavljen okomito jer se već upisane znamenke ne podudaraju."
                 );
               }
+              return false;
             } else {
               if (!reset) {
-                this.$vaToast.init(
-                  "Broj nije postavljen okomito jer nema dovoljno slobodnih mjesta."
-                );
+                if (end - x + 1 > this.selected_number.length) {
+                  this.$vaToast.init(
+                    "Broj nije postavljen okomito jer ima previše slobodnih mjesta."
+                  );
+                } else {
+                  this.$vaToast.init(
+                    "Broj nije postavljen okomito jer ima premalo slobodnih mjesta."
+                  );
+                }
               }
+              return false;
             }
           }
         } else {
@@ -492,6 +509,7 @@ export default {
               "Broj nije postavljen okomito jer prethodni element stupca nije barijera niti početak stupca."
             );
           }
+          return false;
         }
       } else {
         if (y == 0 || this.values[x][y - 1] == -1) {
@@ -534,12 +552,20 @@ export default {
                   "Broj nije postavljen vodoravno jer se već upisane znamenke ne podudaraju."
                 );
               }
+              return false;
             } else {
               if (!reset) {
-                this.$vaToast.init(
-                  "Broj nije postavljen vodoravno jer nema dovoljno slobodnih mjesta."
-                );
+                if (end - y + 1 > this.selected_number.length) {
+                  this.$vaToast.init(
+                    "Broj nije postavljen vodoravno jer ima previše slobodnih mjesta."
+                  );
+                } else {
+                  this.$vaToast.init(
+                    "Broj nije postavljen vodoravno jer ima premalo slobodnih mjesta."
+                  );
+                }
               }
+              return false;
             }
           }
         } else {
@@ -548,8 +574,10 @@ export default {
               "Broj nije postavljen vodoravno jer prethodni element reda nije barijera niti početak reda."
             );
           }
+          return false;
         }
       }
+      return true;
     },
     delay(operation, delay) {
       return new Promise((resolve) => {
@@ -817,49 +845,56 @@ export default {
 </script>
 
 <template>
-    <body class="my_body" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
-   </body>
-   <body class="my_body" v-else>
-    <div class="my_row">
-      <span style="float: left; overflow-wrap: anywhere">
-        <va-button
-          @click="number_orientation = !number_orientation"
-          style="margin-left: 10px; margin-top: 10px"
-        >
-          <span v-if="number_orientation == false">
-            <va-icon name="arrow_forward" />
-            &nbsp;Vodoravno</span
-          >
-          <span v-else><va-icon name="arrow_downward" /> &nbsp;Okomito</span>
-        </va-button>
-        &nbsp;
-        <va-button
-          @click="show_error = !show_error"
-          style="margin-left: 10px; margin-top: 10px"
-        >
-          <span v-if="show_error == false">
-            <va-icon name="report_off" />
-            &nbsp;Ne prikazuj greške</span
-          >
-          <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
-        </va-button>
-      </span>
-      <va-chip
-        style="
-          float: right;
-          overflow-wrap: anywhere;
-          margin-left: 10px;
-          margin-top: 10px;
-        "
-        outline
-      >
-        <va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}
-      </va-chip>
-    </div>
+  </body>
+  <body class="my_body" v-else>
+    <va-card>
+      <div class="my_row">
+        <h4 class="display-4">
+          <va-icon size="large" name="format_list_numbered"></va-icon>
+          &nbsp;Riješi brojevnu križaljku
+        </h4>
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab disabled
+              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+            >
+            <va-tab @click="$refs.description.show()"
+              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+            </va-tab>
+            <va-tab
+              @click="
+                show_error = !show_error;
+                $forceUpdate();
+              "
+            >
+              <span v-if="show_error == false">
+                <va-icon name="report_off" />
+                &nbsp;Ne prikazuj greške</span
+              >
+              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+            </va-tab>
+            <va-tab @click="$refs.show_solution_modal.show()">
+              <va-icon name="help" />
+              &nbsp;Otkrij sva polja
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+    </va-card>
+    <br /><br />  
+    <va-card>
+      <h4 class="display-4">Zagonetka</h4>
+      <va-divider></va-divider> 
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -874,7 +909,8 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'" :is_zoom="true"
+        :some_text="'Povećanje'"
+        :is_zoom="true"
       ></MyCounter>
     </div>
     <div class="my_row" style="max-height: 400px">
@@ -920,8 +956,13 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="my_row" v-if="count_special()">
-      Rješenje:
+    </va-card> 
+    <span v-if="count_special()">
+    <br /><br />  </span>
+    <va-card v-if="count_special()">
+      <h4 class="display-4">Rješenje</h4>
+      <va-divider></va-divider> 
+    <div class="my_row" > 
       <span v-for="i in rows" v-bind:key="i">
         <span v-for="j in columns" v-bind:key="j">
           <va-chip
@@ -938,7 +979,13 @@ export default {
         </span>
       </span>
     </div>
-    <div class="my_row" v-if="!warning">
+    </va-card>
+      <span v-if="!warning">
+    <br /><br />  </span>
+    <va-card v-if="!warning">
+      <h4 class="display-4">Brojevi po duljini</h4>
+      <va-divider></va-divider>  
+    <div class="my_row">
       <va-tabs v-model="length_to_display">
         <template #tabs>
           <span v-for="(numbers_of_length, i) in numbers_by_len" v-bind:key="i">
@@ -963,7 +1010,7 @@ export default {
               {{ i + 1 }}
             </va-chip>
             &nbsp;
-            <va-icon @click="remove_dir(i)" name="delete" />
+            <va-icon @click="remove_dir(i);" name="delete" />
             <br />
             <br />
             <div style="max-height: 200px">
@@ -1000,77 +1047,85 @@ export default {
         </va-chip>
       </span>
     </div>
-    <div class="my_row" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
-    </div>
-    <div class="my_row" v-if="!image">
-      <va-alert
-        style="white-space: pre-wrap"
-        color="warning"
-        title="Prazna slika"
-        center
-        class="mb-4"
-      >
-        Niste dodali sliku uz zagonetku.
-      </va-alert>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Naslov zagonetke</va-card-title>
-        <va-card-content>
+    </va-card>
+  <br /><br />
+    <va-card>
+      <h4 class="display-4">Podaci o zagonetci</h4>
+      <va-divider></va-divider>
+      <div class="my_row" v-if="image">
+        <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
+      </div>
+      <div class="my_row" v-if="!image">
+        <va-alert
+          style="white-space: pre-wrap"
+          color="warning"
+          title="Prazna slika"
+          center
+          
+        >
+          Niste dodali sliku uz zagonetku.
+        </va-alert>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Naslov
+        </h6>
+        <p style="text-align: start">
           {{ title }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Opis zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Opis
+        </h6>
+        <p style="text-align: start">
           {{ description }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Izvor zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Izvor
+        </h6>
+        <p style="text-align: start">
           {{ source }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
-          authorUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
-      </va-chip>
-      <br />
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
-          updaterUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        @click="$refs.show_solution_modal.show()"
-        style="overflow-wrap: anywhere"
-      >
-        <va-icon name="help" />
-        &nbsp;Otkrij sva polja</va-button
-      >
-    </div>
-   </body>
+        </p>
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Autor zagonetke: {{ authorUserRecord.displayName }}
+          <router-link :to="'/profile/' + authorUserRecord.email"
+            >({{ authorUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
+        >
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
+          <router-link :to="'/profile/' + updaterUserRecord.email"
+            >({{ updaterUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
+        >
+      </div>
+    </va-card>
+  </body>
   <va-modal
     :mobile-fullscreen="false"
     ref="show_error"

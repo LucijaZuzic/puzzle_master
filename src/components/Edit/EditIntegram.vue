@@ -22,6 +22,12 @@ export default {
   },
   data() {
     return {
+      category_counter_min: 1,
+      category_counter_max: 5,
+      value_counter_min: 1,
+      value_counter_max: 5,
+      instruction_counter_min: 5,
+      instruction_coutner_max: 10,
       category_to_display: 1,
       value_to_display: 1,
       urls: [],
@@ -1060,6 +1066,27 @@ export default {
   },
   beforeUpdate() {
     this.initialize();
+    if (this.$refs.valuesform) {
+      for (let i = 0; i < this.$refs.valuesform.length; i++) {
+        if (this.$refs.valuesform[i]) {
+          this.$refs.valuesform[i].validate();
+        }
+      }
+    }
+    if (this.$refs.namesform) {
+      for (let i = 0; i < this.$refs.namesform.length; i++) {
+        if (this.$refs.namesform[i]) {
+          this.$refs.namesform[i].validate();
+        }
+      }
+    }
+    if (this.$refs.instructionsform) {
+      for (let i = 0; i < this.$refs.instructionsform.length; i++) {
+        if (this.$refs.instructionsform[i]) {
+          this.$refs.instructionsform[i].validate();
+        }
+      }
+    }
   },
   beforeMount() {
     this.initialize();
@@ -1068,7 +1095,28 @@ export default {
     } else {
       this.change_instructions();
       this.initialize();
-      this.getPicture(); 
+      this.getPicture();
+    }
+    if (this.$refs.valuesform) {
+      for (let i = 0; i < this.$refs.valuesform.length; i++) {
+        if (this.$refs.valuesform[i]) {
+          this.$refs.valuesform[i].validate();
+        }
+      }
+    }
+    if (this.$refs.namesform) {
+      for (let i = 0; i < this.$refs.namesform.length; i++) {
+        if (this.$refs.namesform[i]) {
+          this.$refs.namesform[i].validate();
+        }
+      }
+    }
+    if (this.$refs.instructionsform) {
+      for (let i = 0; i < this.$refs.instructionsform.length; i++) {
+        if (this.$refs.instructionsform[i]) {
+          this.$refs.instructionsform[i].validate();
+        }
+      }
     }
   },
   created() {
@@ -1106,173 +1154,210 @@ export default {
 </script>
 
 <template>
-   <body class="my_body" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
-   </body>
-   <body class="my_body" v-else>
-    <div class="my_row">
-      <MyCounter
-        :min_value="3"
-        :max_value="5"
-        v-bind:value="numvalues"
-        @input="(n) => (numvalues = n)"
-        :some_text="'Broj pojmova'"
-      ></MyCounter>
-    </div>
-    <div class="my_row">
-      <MyCounter
-        :min_value="3"
-        :max_value="5"
-        v-bind:value="numcategories"
-        @input="(n) => (numcategories = n)"
-        some_text="Broj kategorija"
-      ></MyCounter>
-    </div>
-    <div class="my_row">
-      <MyCounter
-        :min_value="5"
-        :max_value="10"
-        v-bind:value="numinstructions"
-        @input="(n) => (numinstructions = n)"
-        :some_text="'Broj opisnih uputa'"
-      ></MyCounter>
-    </div>
-    <div class="my_row" v-for="i in numinstructions" v-bind:key="i">
-      <va-form ref="instructionsform">
-        <va-input
-          v-model="instructions[i - 1]"
-          type="text"
-          :label="i + '. uputa'"
-          @update:model-value="check_same()"
-          immediate-validation
-          :rules="[
-            (value) => {
-              if (is_duplicate_instruction(i - 1) == false) {
-                if (value == '') {
-                  return 'Uputa nema tekst.';
-                } else {
-                  return true;
-                }
-              } else {
-                if (value == '') {
-                  return 'Uputa nema tekst i nije jedinstvena.';
-                } else {
-                  return 'Uputa nije jedinstvena.';
-                }
-              }
-            },
-          ]"
-        />
-      </va-form>
-    </div>
+  </body>
+  <body class="my_body" v-else>
+    <va-card>
+      <div class="my_row">
+        <h4 class="display-4">
+          <va-icon size="large" name="rule_folder"></va-icon>
+          &nbsp;Stvori integram
+        </h4>
+      </div>
+    </va-card>
     <br />
     <br />
-    <div class="my_row">
-      <va-tabs v-model="category_to_display">
-        <template #tabs>
-          <span v-for="i in numcategories" v-bind:key="i">
-            <va-tab :name="i">
-              <span> {{ i }}. kategorija</span>
+    <va-card>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab>
+              <va-icon name="info" @click="$refs.description.show()"></va-icon>
+              &nbsp;Pomoć
             </va-tab>
-          </span>
-        </template>
-      </va-tabs>
-    </div>
-    <div class="my_row">
-      <span
-        v-for="j in numcategories"
-        v-bind:key="j"
-        :color="colors_for_number[j - 1]"
-        style="margin-bottom: 20px"
-      >
-        <va-card
-          v-if="j == category_to_display"
-          :color="colors_for_number[j - 1]"
-        >
-          <va-card-title>
-            <va-chip
-              :color="colors_for_number[j - 1]"
-              style="overflow-wrap: anywhere"
-            >
-              {{ j }}. kategorija&nbsp;
-              <span
-                @click="
-                  clear_category(j - 1);
-                  is_image[j - 1] = !is_image[j - 1];
-                  clear_category(j - 1);
-                  $forceUpdate();
-                "
+            <va-tab v-if="edit">
+              <router-link
+                v-bind:to="{ name: 'solve_integram', params: { id: $route.params.id } }"
               >
-                <va-icon v-if="is_image[j - 1] == false" name="title" />
-                <va-icon v-else name="photo" />
-              </span>
-            </va-chip>
-          </va-card-title>
-          <va-card-content style="background-color: white">
-            <br />
-            <va-form ref="namesform">
-              <va-input
-                :label="'Naslov ' + j + '. kategorije'"
-                type="text"
-                v-model="category_names[j - 1]"
-                immediate-validation
-                @update:model-value="check_same()"
-                :rules="[
-                  (value) => {
-                    if (is_duplicate_name(j - 1) == false) {
-                      if (value == '') {
-                        return 'Kategorija nema naslov.';
-                      } else {
-                        return true;
-                      }
-                    } else {
-                      if (value == '') {
-                        return 'Kategorija nema naslov i nije jedinstvena.';
-                      } else {
-                        return 'Kategorija nije jedinstvena.';
-                      }
-                    }
-                  },
-                ]"
+                <va-icon name="play_arrow"></va-icon>
+                &nbsp;Igraj
+              </router-link> 
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+    </va-card>
+    <br />
+    <br />
+    <va-card>
+      <h4 class="display-4">Dimenzije</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <div style="display: inline-block">
+          <MyCounter
+            :min_value="value_counter_min"
+            :max_value="value_counter_max"
+            v-bind:value="numvalues"
+            @input="(n) => ((numvalues = n), $forceUpdate())"
+            :some_text="'Broj pojmova'"
+          ></MyCounter>
+        </div>
+        <div style="margin-left: 10px; display: inline-block">
+          <MyCounter
+            :min_value="category_counter_min"
+            :max_value="category_counter_max"
+            v-bind:value="numcategories"
+            @input="(n) => ((numcategories = n), $forceUpdate())"
+            :some_text="'Broj kategorija'"
+          ></MyCounter>
+        </div>
+        <div style="margin-left: 10px; display: inline-block">
+          <MyCounter
+            :min_value="instruction_counter_min"
+            :max_value="instruction_coutner_max"
+            v-bind:value="numinstructions"
+            @input="(n) => ((numinstructions = n), $forceUpdate())"
+            :some_text="'Broj opisnih uputa'"
+          ></MyCounter>
+        </div>
+      </div>
+    </va-card>
+    <br />
+    <br />
+    <va-card>
+      <h4 class="display-4">Upute</h4>
+      <va-divider></va-divider>
+      <div class="my_row" v-for="i in numinstructions" v-bind:key="i">
+        <va-form ref="instructionsform">
+          <va-input
+            v-model="instructions[i - 1]"
+            type="text"
+            :label="i + '. uputa'"
+            @update:model-value="check_same();$forceUpdate()"
+            immediate-validation
+            :rules="[
+              (value) => {
+                if (is_duplicate_instruction(i - 1) == false) {
+                  if (value == '') {
+                    return 'Uputa nema tekst.';
+                  } else {
+                    return true;
+                  }
+                } else {
+                  if (value == '') {
+                    return 'Uputa nema tekst i nije jedinstvena.';
+                  } else {
+                    return 'Uputa nije jedinstvena.';
+                  }
+                }
+              },
+            ]"
+          />
+        </va-form>
+      </div>
+    </va-card>
+    <br />
+    <br />
+    <span
+      v-for="j in numcategories"
+      v-bind:key="j"
+      :color="colors_for_number[j - 1]"
+      style="margin-bottom: 20px"
+    >
+      <va-card
+        v-if="j == category_to_display"
+        :color="colors_for_number[j - 1]"
+      >
+        <h4 class="display-4">
+          <va-chip
+            :color="colors_for_number[j - 1]"
+            class="display-4"
+            style="overflow-wrap: anywhere"
+          >
+            {{ j }}. kategorija&nbsp;
+            <span
+              @click="
+                clear_category(j - 1);
+                is_image[j - 1] = !is_image[j - 1];
+                clear_category(j - 1);
+                $forceUpdate();
+              "
+            >
+              <va-icon
+                size="large"
+                v-if="is_image[j - 1] == false"
+                name="title"
               />
-            </va-form>
-            <va-divider></va-divider>
-            <div class="my_row" v-for="k in numvalues" v-bind:key="k">
-              <va-form ref="valuesform">
-                <span v-if="is_image[j - 1] == true">
-                  <va-chip
-                    :color="colors_for_number[j - 1]"
-                    style="display: inline-block; overflow-wrap: anywhere"
-                    @click="click_file(k - 1, j - 1)"
+              <va-icon size="large" v-else name="photo" />
+            </span>
+          </va-chip>
+        </h4>
+        <va-card-content style="background-color: white">
+          <br />
+          <va-form ref="namesform">
+            <va-input
+              :label="'Naslov ' + j + '. kategorije'"
+              type="text"
+              v-model="category_names[j - 1]"
+              immediate-validation
+              @update:model-value="check_same();$forceUpdate()"
+              :rules="[
+                (value) => {
+                  if (is_duplicate_name(j - 1) == false) {
+                    if (value == '') {
+                      return 'Kategorija nema naslov.';
+                    } else {
+                      return true;
+                    }
+                  } else {
+                    if (value == '') {
+                      return 'Kategorija nema naslov i nije jedinstvena.';
+                    } else {
+                      return 'Kategorija nije jedinstvena.';
+                    }
+                  }
+                },
+              ]"
+            />
+          </va-form>
+          <va-divider></va-divider>
+          <div class="my_row" v-for="k in numvalues" v-bind:key="k">
+              <span v-if="is_image[j - 1] == true">
+                <va-chip
+                  :color="colors_for_number[j - 1]"
+                  style="display: inline-block; overflow-wrap: anywhere"
+                  @click="click_file(k - 1, j - 1);$forceUpdate()"
+                >
+                  <span
+                    v-if="
+                      this.category_values[k - 1][j - 1] != '' &&
+                      this.category_values[k - 1][j - 1] != [] &&
+                      this.category_values[k - 1][j - 1].name != undefined
+                    "
                   >
-                    <span
-                      v-if="
-                        this.category_values[k - 1][j - 1] != '' &&
-                        this.category_values[k - 1][j - 1] != [] &&
-                        this.category_values[k - 1][j - 1].name != undefined
-                      "
-                    >
-                      {{ this.category_values[k - 1][j - 1].name }}
-                    </span>
-                    <span
-                      v-if="
-                        this.category_values[k - 1][j - 1] != '' &&
-                        this.category_values[k - 1][j - 1] != [] &&
-                        this.category_values[k - 1][j - 1].name == undefined
-                      "
-                    >
-                      {{ this.category_values[k - 1][j - 1] }}
-                    </span>
-                    <span
-                      v-if="
-                        this.category_values[k - 1][j - 1] == '' ||
-                        this.category_values[k - 1][j - 1] == []
-                      "
-                    >
-                      <va-icon name="photo" />
-                      &nbsp;Odaberi sliku</span
-                    >
-                  </va-chip>
+                    {{ this.category_values[k - 1][j - 1].name }}
+                  </span>
+                  <span
+                    v-if="
+                      this.category_values[k - 1][j - 1] != '' &&
+                      this.category_values[k - 1][j - 1] != [] &&
+                      this.category_values[k - 1][j - 1].name == undefined
+                    "
+                  >
+                    {{ this.category_values[k - 1][j - 1] }}
+                  </span>
+                  <span
+                    v-if="
+                      this.category_values[k - 1][j - 1] == '' ||
+                      this.category_values[k - 1][j - 1] == []
+                    "
+                  >
+                    <va-icon name="photo" />
+                    &nbsp;Odaberi sliku</span
+                  >
+                </va-chip>
+                <va-form ref="valuesform">
                   <input
                     file-types="image/*"
                     type="file"
@@ -1284,255 +1369,257 @@ export default {
                       $forceUpdate();
                     "
                   />
-                </span>
-                <va-input
-                  v-else
-                  :label="
-                    'Vrijednost ' + j + '. kategorije za ' + k + '. pojam'
-                  "
-                  type="text"
-                  v-model="category_values[k - 1][j - 1]"
-                  immediate-validation
-                  @update:model-value="check_same()"
-                  :rules="[
-                    (value) => {
-                      if (is_duplicate_value(j - 1, k - 1) == false) {
-                        if (value == '') {
-                          return 'Kategorija nema vrijednost za pojam.';
-                        } else {
-                          return true;
-                        }
+                </va-form>
+              </span>
+            <va-form ref="valuesform"
+                v-else>
+              <va-input
+                :label="'Vrijednost ' + j + '. kategorije za ' + k + '. pojam'"
+                type="text"
+                v-model="category_values[k - 1][j - 1]"
+                immediate-validation
+                @update:model-value="check_same();$forceUpdate()"
+                :rules="[
+                  (value) => {
+                    if (is_duplicate_value(j - 1, k - 1) == false) {
+                      if (value == '') {
+                        return 'Kategorija nema vrijednost za pojam.';
                       } else {
-                        if (value == '') {
-                          return 'Kategorija nema vrijednost za pojam i vrijednost kategorije za pojam nije jedinstvena unutar kategorije.';
-                        } else {
-                          return 'Vrijednost kategorije za pojam nije jedinstvena unutar kategorije.';
-                        }
+                        return true;
                       }
-                    },
-                  ]"
-                />
-              </va-form>
-            </div>
-          </va-card-content>
-        </va-card>
-      </span>
-    </div>
+                    } else {
+                      if (value == '') {
+                        return 'Kategorija nema vrijednost za pojam i vrijednost kategorije za pojam nije jedinstvena unutar kategorije.';
+                      } else {
+                        return 'Vrijednost kategorije za pojam nije jedinstvena unutar kategorije.';
+                      }
+                    }
+                  },
+                ]"
+              />
+            </va-form>
+          </div>
+          <MyCounter
+            :min_value="category_counter_min"
+            :max_value="numcategories"
+            v-bind:value="category_to_display"
+            @input="(n) => ((category_to_display = n), $forceUpdate())"
+            :some_text="''"
+          ></MyCounter>
+
+          <div class="my_row">
+            <va-alert
+              v-if="alert"
+              style="white-space: pre-wrap"
+              color="danger"
+              :title="'Greške u unosu uputa, kategorija i vrijednosti'"
+              center
+              
+            >
+              Neke upute, kategorije i vrijednosti nisu popunjene ili nisu
+              jedinstvene.
+            </va-alert>
+          </div>
+        </va-card-content>
+      </va-card>
+    </span>
+    <span v-if="is_image[category_to_display - 1] == true">
+      <br />
+      <br />
+    </span>
     <span v-for="i in numcategories" v-bind:key="i">
-      <div
-        class="my_row"
+      <va-card
+        :color="colors_for_number[i - 1]"
         v-if="is_image[i - 1] == true && i == category_to_display"
       >
-        <va-card :color="colors_for_number[i - 1]">
-          <!--<va-card-title
-                >
-<va-chip
-                  :color="colors_for_number[i - 1]"
-                  style="overflow-wrap: anywhere"
-                  >
-                  {{ i }}. kategorija&nbsp;
-                  <va-icon
-                    v-if="is_image[i - 1] == false"
-                    name="title"/>
-<va-icon v-else name="photo"/>
-</va-chip
-              >
-</va-card-title>-->
-          <va-card-content style="background-color: white">
-            <!--<br/>-->
-            <va-tabs
-              v-model="value_to_display"
-              :color="colors_for_number[i - 1]"
-            >
-              <template #tabs>
-                <span v-for="val in numvalues" v-bind:key="val">
-                  <va-tab :name="val">
-                    <span> {{ i }}{{ alphabet[val - 1] }} </span>
-                  </va-tab>
-                </span>
-              </template>
-            </va-tabs>
-            <span v-for="j in numvalues" v-bind:key="j">
-              <div v-if="j == value_to_display" class="image_container">
-                <img
-                  :id="'img' + (j - 1) + ':' + (i - 1)"
-                  :src="urls[j - 1][i - 1]"
-                  alt="Nema slike"
-                  style="width: 100%"
-                />
-                <!--<div
-                    :class="{
-                      padded: true,
-                      topleft: true,
-                      first: i == 1,
-                      second: i == 2,
-                      third: i == 3,
-                      fourth: i == 4,
-                      fifth: i == 5,
-                    }"
-                  >
-                    {{ i }}{{ alphabet[j - 1] }}
-                  </div>-->
-              </div>
-            </span>
-          </va-card-content>
-        </va-card>
-      </div>
+        <va-card-content style="background-color: white">
+        <div class="my_row">
+          <va-tabs
+            v-model="value_to_display"
+            :color="colors_for_number[i - 1]"
+          >
+            <template #tabs>
+              <span v-for="val in numvalues" v-bind:key="val">
+                <va-tab :name="val">
+                  <span> {{ i }}{{ alphabet[val - 1] }} </span>
+                </va-tab>
+              </span>
+            </template>
+          </va-tabs>
+          </div> 
+          <span v-for="j in numvalues" v-bind:key="j">
+            <div v-if="j == value_to_display" class="image_container">
+              <img
+                :id="'img' + (j - 1) + ':' + (i - 1)"
+                :src="urls[j - 1][i - 1]"
+                alt="Nema slike"
+                style="width: 100%"
+              />
+            </div>
+          </span>
+        </va-card-content>
+      </va-card>
     </span>
-    <div class="my_row" v-if="alert">
-      <va-alert
-        style="white-space: pre-wrap"
-        color="danger"
-        :title="'Greške u unosu uputa, kategorija i vrijednosti'"
-        center
-        class="mb-4"
-      >
-        Neke upute, kategorije i vrijednosti nisu popunjene ili nisu
-        jedinstvene.
-      </va-alert>
-    </div>
-    <div class="my_row">
-      <va-input
-        class="mb-4"
-        v-model="title"
-        immediate-validation
-        type="text"
-        label="Naslov zagonetke"
-        :rules="[(value) => value.length > 0 || 'Unesite naslov.']"
-      />
-      <va-input
-        class="mb-4"
-        v-model="description"
-        immediate-validation
-        type="textarea"
-        label="Opis zagonetke"
-        :min-rows="3"
-        :max-rows="5"
-        :rules="[(value) => value.length > 0 || 'Unesite opis.']"
-      />
-      <va-input
-        class="mb-4"
-        v-model="source"
-        immediate-validation
-        type="textarea"
-        label="Izvor zagonetke"
-        :min-rows="3"
-        :max-rows="5"
-        :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
-      />
-    </div>
-    <div class="my_row" v-if="edit">
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
-          authorUserRecord.email
-        }})
-      </va-chip>
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
-      </va-chip>
-      <br />
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
-          updaterUserRecord.email
-        }})
-      </va-chip>
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        style="overflow-wrap: anywhere"
-        @click="is_public = !is_public"
-      >
-        <span v-if="is_public == false">
-          <va-icon name="public_off" />
-          &nbsp;Samo suradnici
-        </span>
-        <span v-else><va-icon name="public" /> &nbsp;Svi</span>
-      </va-button>
-    </div>
-    <div class="my_row">
-      <va-input
-        style="display: inline-block; margin-left: 10px; margin-top: 10px"
-        type="text"
-        v-model="collaborator"
-        placeholder="Email adresa"
-        label="Email adresa suradnika"
-      >
-        <template #append>
-          &nbsp;
-          <va-icon
-            @click="
-              checkIfUserExists();
-              $forceUpdate();
-            "
-            color="primary"
-            class="mr-4"
-            name="add_moderator"
-          />
-        </template>
-      </va-input>
-    </div>
-    <div class="my_row">
-      <va-chip
-        style="
-          overflow-wrap: anywhere;
-          display: inline-block;
-          margin-left: 10px;
-          margin-top: 10px;
-        "
-        v-for="(permission, i) in permissionsUserRecords"
-        :key="i"
-      >
-        <va-icon
-          style="display: inline-block"
-          @click="permissions.splice(i, 1)"
-          name="remove_moderator"
-          class="mr-2"
+    <br />
+    <br />
+    <va-card>
+      <h4 class="display-4">Podaci o zagonetci</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <va-input
+          
+          v-model="title"
+          immediate-validation
+          type="text"
+          label="Naslov zagonetke"
+          :rules="[(value) => value.length > 0 || 'Unesite naslov.']"
         />
-        &nbsp;{{ permission.displayName }} ({{ permission.email }})
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
-        v-if="edit"
-        :disabled="
-          !(
-            edit &&
-            !alert &&
-            title.length > 0 &&
-            description.length > 0 &&
-            source.length > 0
-          )
-        "
-        @click="store()"
-      >
-        <va-icon name="mode_edit" />
-        &nbsp;Izmijeni postojeću zagonetku</va-button
-      >&nbsp;
-      <va-button
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
-        :disabled="
-          !(
-            !alert &&
-            title.length > 0 &&
-            description.length > 0 &&
-            source.length > 0
-          )
-        "
-        @click="duplicate()"
-      >
-        <va-icon name="control_point_duplicate" />
-        &nbsp;Spremi izmjene kao novu zagonetku</va-button
-      >
-    </div>
-   </body>
+      </div>
+      <div class="my_row">
+        <va-input
+          
+          v-model="description"
+          immediate-validation
+          type="textarea"
+          label="Opis zagonetke"
+          :min-rows="3"
+          :max-rows="5"
+          :rules="[(value) => value.length > 0 || 'Unesite opis.']"
+        />
+      </div>
+      <div class="my_row">
+        <va-input
+          
+          v-model="source"
+          immediate-validation
+          type="textarea"
+          label="Izvor zagonetke"
+          :min-rows="3"
+          :max-rows="5"
+          :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
+        />
+      </div>
+      <div class="my_row" v-if="edit">
+        <span class="display-6" style="margin-left: 10px"
+          >Autor zagonetke: {{ authorUserRecord.displayName }}
+          <router-link :to="'/profile/' + authorUserRecord.email"
+            >({{ authorUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
+        >
+      </div>
+      <div class="my_row" v-if="edit">
+        <span class="display-6" style="margin-left: 10px"
+          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
+          <router-link :to="'/profile/' + updaterUserRecord.email"
+            >({{ updaterUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
+        >
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <h4 class="display-4">Dozvola uređivanja</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <va-button
+          style="overflow-wrap: anywhere"
+          @click="is_public = !is_public"
+        >
+          <span v-if="is_public == false">
+            <va-icon name="public_off" />
+            &nbsp;Samo suradnici
+          </span>
+          <span v-else><va-icon name="public" /> &nbsp;Svi</span>
+        </va-button>
+      </div>
+      <div class="my_row">
+        <va-input
+          style="display: inline-block; margin-left: 10px; margin-top: 10px"
+          type="text"
+          v-model="collaborator"
+          placeholder="Email adresa"
+          label="Email adresa suradnika"
+        >
+          <template #append>
+            &nbsp;
+            <va-icon
+              @click="
+                checkIfUserExists();
+                $forceUpdate();
+              "
+              color="primary"
+              class="mr-4"
+              name="add_moderator"
+            />
+          </template>
+        </va-input>
+      </div>
+      <div class="my_row">
+        <va-chip
+          style="
+            overflow-wrap: anywhere;
+            display: inline-block;
+            margin-left: 10px;
+            margin-top: 10px;
+          "
+          v-for="(permission, i) in permissionsUserRecords"
+          :key="i"
+        >
+          <va-icon
+            style="display: inline-block"
+            @click="permissions.splice(i, 1)"
+            name="remove_moderator"
+            class="mr-2"
+          />
+          &nbsp;{{ permission.displayName }} ({{ permission.email }})
+        </va-chip>
+      </div>
+    </va-card>
+    <br />
+    <br />
+    <va-card>
+      <div class="my_row">
+        <va-button
+          style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+          v-if="edit"
+          :disabled="
+            !(
+              edit &&
+              !alert &&
+              title.length > 0 &&
+              description.length > 0 &&
+              source.length > 0
+            )
+          "
+          @click="store()"
+        >
+          <va-icon name="mode_edit" />
+          &nbsp;Izmijeni postojeću zagonetku</va-button
+        >&nbsp;
+        <va-button
+          style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+          :disabled="
+            !(
+              !alert &&
+              title.length > 0 &&
+              description.length > 0 &&
+              source.length > 0
+            )
+          "
+          @click="duplicate()"
+        >
+          <va-icon name="control_point_duplicate" />
+          &nbsp;Spremi izmjene kao novu zagonetku</va-button
+        >
+      </div>
+    </va-card>
+  </body>
 </template>
 
 <style scoped>

@@ -899,30 +899,164 @@ export default {
 </script>
 
 <template>
-    <body class="my_body" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
-   </body>
-   <body class="my_body" v-else>
+  </body>
+  <body class="my_body" v-else>
+    <va-card>
+      <div class="my_row">
+        <h4 class="display-4">
+          <va-icon size="large" name="draw"></va-icon>
+          &nbsp;Riješi nonogram
+        </h4>
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab disabled  
+              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+            >
+            <va-tab @click="$refs.description.show()"
+              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+            </va-tab>
+            <va-tab
+              @click="
+                show_error = !show_error;
+                $forceUpdate();
+              "
+            >
+              <span v-if="show_error == false">
+                <va-icon name="report_off" />
+                &nbsp;Ne prikazuj greške</span
+              >
+              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+            </va-tab>
+            <va-tab @click="$refs.show_solution_modal.show()">
+              <va-icon name="help" />
+              &nbsp;Otkrij sva polja
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+    </va-card>
+    <br /><br /> 
+
+    <va-card>
+      <h4 class="display-4">Boje</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab
+              @click="
+                drag = !drag;
+                if (allow_mouseover) {
+                  drag = false;
+                }
+              "
+              :disabled="allow_mouseover"
+            >
+              <span v-if="drag == false">
+                <va-icon name="grid_off" />
+                &nbsp;Bojanje jedan po jedan
+              </span>
+              <span v-else
+                ><va-icon name="grid_on" /> &nbsp;Bojanje segmenta</span
+              >
+            </va-tab>
+            <va-tab
+              @click="
+                allow_mouseover = !allow_mouseover;
+                if (allow_mouseover) {
+                  drag = false;
+                }
+              "
+            >
+              <span v-if="allow_mouseover == false">
+                <va-icon name="grid_view" />
+                &nbsp;Bojanje gestom isključeno
+              </span>
+              <span v-else
+                ><va-icon name="gesture" /> &nbsp;Bojanje gestom uključeno</span
+              >
+            </va-tab>
+            <va-tab @click="reset()">
+              <va-icon name="delete" />
+              &nbsp;Izbriši
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+   
     <div class="my_row">
-      <span style="float: left; overflow-wrap: anywhere">
-        <va-button
-          @click="show_error = !show_error"
-          style="margin-left: 10px; margin-top: 10px"
+      <va-icon
+        style="
+          border-radius: 50%;
+          display: inline-block;
+          position: absolute;
+          background-color: black;
+        "
+        v-if="mode == 0"
+        name="check_circle"
+        color="success"
+      >
+      </va-icon>
+      <button
+        class="mr-2"
+        style="
+          width: 28px;
+          height: 28px;
+          display: inline-block;
+          background-color: white;
+          border-radius: 50%;
+          margin: 10px;
+        "
+        :id="'colorbutton' + 0"
+        @click="mode = 0"
+      ></button>
+      <div
+        style="display: inline-block"
+        v-for="i in num_colors - 1"
+        v-bind:key="i"
+      >
+        <va-icon
+          style="
+            border-radius: 50%;
+            display: inline-block;
+            position: absolute;
+            background-color: black;
+          "
+          v-if="mode == i"
+          name="check_circle"
+          color="success"
         >
-          <span v-if="show_error == false">
-            <va-icon name="report_off" />
-            &nbsp;Ne prikazuj greške</span
-          >
-          <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
-        </va-button>
-      </span>
-      <va-chip style="float: right" outline>
-        <va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}
-      </va-chip>
-    </div>
+        </va-icon>
+        <button
+          class="mr-2"
+          style="
+            width: 28px;
+            height: 28px;
+            display: inline-block;
+            background-color: black;
+            border-radius: 50%;
+            margin: 10px;
+          "
+          @click="after_click(i)"
+          :id="'colorbutton' + i"
+        ></button>
+      </div>
+    </div> 
+    </va-card>
+    <br/><br/>
+    <va-card>
+      <h4 class="display-4">Zagonetka</h4>
+      <va-divider></va-divider>
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -937,7 +1071,8 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'" :is_zoom="true"
+        :some_text="'Povećanje'"
+        :is_zoom="true"
       ></MyCounter>
     </div>
     <div class="my_row" v-if="prev_x != null && prev_y != null && drag">
@@ -1213,161 +1348,71 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="my_row">
-      <va-button style="overflow-wrap: anywhere" @click="reset()">
-        <va-icon name="delete" />
-        &nbsp;Izbriši</va-button
-      >
-    </div>
-    <div class="my_row">
-      <va-icon
-        style="
-          border-radius: 50%;
-          display: inline-block;
-          position: absolute;
-          background-color: black;
-        "
-        v-if="mode == 0"
-        name="check_circle"
-        color="success"
-      >
-      </va-icon>
-      <button
-        class="mr-2"
-        style="
-          width: 28px;
-          height: 28px;
-          display: inline-block;
-          background-color: white;
-          border-radius: 50%;
-          margin: 10px;
-        "
-        :id="'colorbutton' + 0"
-        @click="mode = 0"
-      ></button>
-      <div
-        style="display: inline-block"
-        v-for="i in num_colors - 1"
-        v-bind:key="i"
-      >
-        <va-icon
-          style="
-            border-radius: 50%;
-            display: inline-block;
-            position: absolute;
-            background-color: black;
-          "
-          v-if="mode == i"
-          name="check_circle"
-          color="success"
+    </va-card>
+    <br/><br/>
+    <va-card>
+      <h4 class="display-4">Podaci o zagonetci</h4>
+      <va-divider></va-divider> 
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
         >
-        </va-icon>
-        <button
-          class="mr-2"
-          style="
-            width: 28px;
-            height: 28px;
-            display: inline-block;
-            background-color: black;
-            border-radius: 50%;
-            margin: 10px;
-          "
-          @click="after_click(i)"
-          :id="'colorbutton' + i"
-        ></button>
-      </div>
-    </div>
-    <div class="my_row">
-      <va-button
-        @click="
-          allow_mouseover = !allow_mouseover;
-          if (allow_mouseover) {
-            drag = false;
-          }
-        "
-      >
-        <span v-if="allow_mouseover == false">
-          <va-icon name="grid_view" />
-          &nbsp;Bojanje gestom isključeno
-        </span>
-        <span v-else
-          ><va-icon name="gesture" /> &nbsp;Bojanje gestom uključeno</span
-        >
-      </va-button>
-      &nbsp;
-      <va-button
-        @click="
-          drag = !drag;
-          if (allow_mouseover) {
-            drag = false;
-          }
-        "
-        :disabled="allow_mouseover"
-      >
-        <span v-if="drag == false">
-          <va-icon name="grid_off" />
-          &nbsp;Bojanje jedan po jedan
-        </span>
-        <span v-else><va-icon name="grid_on" /> &nbsp;Bojanje segmenta</span>
-      </va-button>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Naslov zagonetke</va-card-title>
-        <va-card-content>
+          Naslov
+        </h6>
+        <p style="text-align: start">
           {{ title }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Opis zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Opis
+        </h6>
+        <p style="text-align: start">
           {{ description }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Izvor zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Izvor
+        </h6>
+        <p style="text-align: start">
           {{ source }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
-          authorUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
-      </va-chip>
-      <br />
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
-          updaterUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        @click="$refs.show_solution_modal.show()"
-        style="overflow-wrap: anywhere"
-      >
-        <va-icon name="help" />
-        &nbsp;Otkrij sva polja</va-button
-      >
-    </div>
-   </body>
+        </p>
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Autor zagonetke: {{ authorUserRecord.displayName }}
+          <router-link :to="'/profile/' + authorUserRecord.email"
+            >({{ authorUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
+        >
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
+          <router-link :to="'/profile/' + updaterUserRecord.email"
+            >({{ updaterUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
+        >
+      </div>
+    </va-card>
+  </body>
   <va-modal
     :mobile-fullscreen="false"
     ref="show_error"

@@ -13,7 +13,7 @@ export default {
   components: {
     MyCounter,
     LoadingBar,
-    CryptogramInfo
+    CryptogramInfo,
   },
   data() {
     return {
@@ -680,94 +680,18 @@ export default {
         }
       }
       return false;
-    },
-    modeChange(event) {
-      /*switch (event.code) {
-            case "Enter":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "Backspace":
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "ArrowUp":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "ArrowDown": 
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "ArrowRight":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "ArrowLeft": 
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "KeyW":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "KeyS": 
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "KeyD":
-                this.option_number++
-                if (this.option_number >= 3) {
-                    this.option_number = -1
-                }
-                break;
-            case "KeyA": 
-                this.option_number--
-                if (this.option_number <= -2) {
-                    this.option_number = 2
-                }
-                break;
-            case "Digit0": 
-                this.option_number = -1
-                break; 
-            case "Digit1": 
-                this.option_number = 1
-                break; 
-            case "Digit2": 
-                this.option_number = 2
-                break; 
-            case "Digit3": 
-                this.option_number = 3
-                break; 
-        } */
-    },
+    },  
     check_victory() {
       this.victory = true;
       for (let i = 0; i < this.unnumbered.length; i++) {
         for (let j = 0; j < this.unnumbered[i].length; j++) {
           if (
             this.unnumbered[i][j] == 1 &&
-            this.unnumbered_text[i][j] &&
+            // this.unnumbered_text[i][j] &&
             this.solution[i][j] != -1 &&
             this.option[i][j] != -1 &&
             this.unnumbered_text[i][j] !=
-              this.letters[this.solution[i][j]][this.option[i][j]]
+            this.letters[this.solution[i][j]][this.option[i][j]]
           ) {
             this.victory = false;
             return;
@@ -853,6 +777,13 @@ export default {
           this.values[i][j] = this.letters[i][j];
         }
       }
+      for (let i = 0; i < this.unnumbered_text.length; i++) {
+        for (let j = 0; j < this.unnumbered_text[i].length; j++) {
+          if (this.unnumbered[i][j] == 1) {
+            this.unnumbered_text[i][j] = this.letters[this.solution[i][j]][this.option[i][j]];
+          }
+        }
+      }
       for (let i = 0; i < this.option.length; i++) {
         for (let j = 0; j < this.option[i].length; j++) {
           this.new_options[i][j] = this.option[i][j];
@@ -876,12 +807,12 @@ export default {
         })
         .catch((error) => {});
     },
-    getErrorMessage(i, j) { 
-      let value = this.unnumbered_text[i - 1][j - 1]
+    getErrorMessage(i, j) {
+      let value = this.unnumbered_text[i - 1][j - 1];
       if (this.findLetter(value) == false) {
         if (this.alphabet.includes(value)) {
           if (this.show_error == false) {
-            return 'Nije na popisu.';
+            return "Nije na popisu.";
           } else {
             if (
               value !=
@@ -889,14 +820,14 @@ export default {
                 this.option[i - 1][j - 1]
               ]
             ) {
-              return 'Netočno i nije na popisu.';
+              return "Netočno i nije na popisu.";
             } else {
-              return 'Nije na popisu.';
+              return "Nije na popisu.";
             }
           }
         } else {
           if (this.show_error == false) {
-            return 'Nije na popisu ni u abecedi.';
+            return "Nije na popisu ni u abecedi.";
           } else {
             if (
               value !=
@@ -904,16 +835,16 @@ export default {
                 this.option[i - 1][j - 1]
               ]
             ) {
-              return 'Netočno, nije na popisu ni u abecedi.';
+              return "Netočno, nije na popisu ni u abecedi.";
             } else {
-              return 'Nije na popisu ni u abecedi.';
+              return "Nije na popisu ni u abecedi.";
             }
           }
         }
       } else {
         if (this.alphabet.includes(value)) {
           if (this.show_error == false) {
-            return '';
+            return "";
           } else {
             if (
               value !=
@@ -921,14 +852,14 @@ export default {
                 this.option[i - 1][j - 1]
               ]
             ) {
-              return 'Netočno.';
+              return "Netočno.";
             } else {
-              return '';
+              return "";
             }
           }
         } else {
           if (this.show_error == false) {
-            return 'Nije u abecedi.';
+            return "Nije u abecedi.";
           } else {
             if (
               value !=
@@ -936,14 +867,14 @@ export default {
                 this.option[i - 1][j - 1]
               ]
             ) {
-              return 'Netočno i nije u abecedi.';
+              return "Netočno i nije u abecedi.";
             } else {
-              return 'Nije u abecedi.';
+              return "Nije u abecedi.";
             }
           }
         }
       }
-    }
+    },
   },
   beforeMount() {
     this.fetch_puzzle();
@@ -1010,300 +941,111 @@ export default {
 </script>
 
 <template>
-    <body class="my_body" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
-   </body>
-   <body class="my_body" v-else>
-    <div class="my_row">
-      <span style="float: left; overflow-wrap: anywhere">
-        <va-icon color="info" name="info" @click="$refs.description.show()"></va-icon> 
-      </span>
-      <va-button
-        @click="
-          show_error = !show_error;
-          $forceUpdate();
-        "
-        style="margin-left: 10px; margin-top: 10px"
-      >
-        <span v-if="show_error == false">
-          <va-icon name="report_off" />
-          &nbsp;Ne prikazuj greške</span
-        >
-        <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
-      </va-button>
-      <va-chip
-        style="
-          float: right;
-          overflow-wrap: anywhere;
-          margin-left: 10px;
-          margin-top: 10px;
-        "
-        outline
-      >
-        <va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}
-      </va-chip>
-    </div>
-     <div class="my_row">
-      <va-infinite-scroll disabled :load="() => {}">
-        <div>
-          <table style="display: inline-table">
-            <!--<tr>  
-              <td> 
-              </td>
-              <td v-for="i in num_letters" v-bind:key="i">
-                <va-chip
-                  style="
-                    width: 140px;
-                    min-width: 140px;
-                    max-width: 140px;
-                    margin-left: 10px;
-                  "
-                >
-                  {{ i - 1 }}. slovo</va-chip
-                >
-                <br />
-                <br />
-              </td>
-            </tr> -->
-            <tr v-for="j in 3" v-bind:key="j">
-              <!--<td>
-                <va-chip
-                  style="
-                    width: 140px;
-                    min-width: 140px;
-                    max-width: 140px;
-                    margin-left: 10px;
-                  "
-                >
-                  {{ j }}. opcija</va-chip
-                >
-              </td>  -->
-              <td v-for="i in num_letters" v-bind:key="i">
-                <va-form ref="lettersform">
-                  <va-input   maxlength="2"
-                  class="mb-4"
-                  @click="option_number = j"
-                  @update:model-value="check_letter()"
-                  v-model="values[i - 1][j - 1]"
-                  style="
-                      width: 100px;
-                      min-width: 100px;
-                      max-width: 100px;
-                      margin-left: 10px; 
-                  "
-                  type="text"
-                  :label="'' + (i - 1) + ' (' + j + ')'"
-                  :readonly="letters_revealed[i - 1][j - 1] == 1"
-                  immediate-validation
-                  :rules="[
-                    (value) => {
-                      if (check_duplicated(i - 1, j - 1) == 1) {
-                        if (alphabet.includes(value)) {
-                          if (show_error == false) {
-                            return 'Udvostručeno.';
-                          } else {
-                            if (values[i - 1][j - 1] != letters[i - 1][j - 1]) {
-                              return 'Netočno i udvostručeno.';
-                            } else {
-                              return 'Udvostručeno.';
-                            }
-                          }
-                        } else {
-                          if (show_error == false) {
-                            return 'Udvostručeno i nije u abecedi.';
-                          } else {
-                            if (values[i - 1][j - 1] != letters[i - 1][j - 1]) {
-                              return 'Netočno, udvostručeno i nije u abecedi.';
-                            } else {
-                              return 'Udvostručeno i nije u abecedi.';
-                            }
-                          }
-                        }
-                      } else {
-                        if (alphabet.includes(value)) {
-                          if (show_error == false) {
-                            return true;
-                          } else {
-                            if (values[i - 1][j - 1] != letters[i - 1][j - 1]) {
-                              return 'Netočno.';
-                            } else {
-                              return true;
-                            }
-                          }
-                        } else {
-                          if (show_error == false) {
-                            return 'Nije u abecedi.';
-                          } else {
-                            if (values[i - 1][j - 1] != letters[i - 1][j - 1]) {
-                              return 'Netočno i nije u abecedi.';
-                            } else {
-                              return 'Nije u abecedi.';
-                            }
-                          }
-                        }
-                      }
-                    },
-                  ]"
-                > 
-                  </va-input>
-                </va-form>
-              </td>
-            </tr>
-          </table>
-        </div>
-      </va-infinite-scroll>
-    </div>
-     
-    <div class="my_row">
-      <va-tabs v-model="option_number">
-        <template #tabs>
-          <va-tab name="-1"> Bez opcije </va-tab>
-          <va-tab name="0"> 1. opcija </va-tab>
-          <va-tab name="1"> 2. opcija </va-tab>
-          <va-tab name="2"> 3. opcija </va-tab>
-        </template>
-      </va-tabs>
-    </div>
-    <div class="my_row" v-if="current_x != null && current_y != null">
-      <va-chip
-        ><va-icon name="my_location" />&nbsp;({{ current_x }},
-        {{ current_y }})</va-chip
-      >
-    </div>
-    <div class="my_row">
-      <MyCounter
-        :min_value="1"
-        :max_value="max_zoom"
-        v-bind:value="zoom"
-        @input="
-          (n) => {
-            zoom = n;
-            zoom_number();
-          }
-        "
-        :some_text="'Povećanje'" :is_zoom="true"
-      ></MyCounter>
-    </div>
-    <div class="my_row" style="max-height: 500px">
-      <va-infinite-scroll disabled :load="() => {}">
-        <div class="my_row">
-          <table class="numbers_table" id="table_zoom">
-            <tr v-for="i in rows" v-bind:key="i">
-              <td
-                v-for="j in columns"
-                v-bind:key="j"
-                @click="
-                  new_options[i - 1][j - 1] = option_number;
-                  check_victory();
-                "
-                @mouseover="
-                  current_x = i;
-                  current_y = j;
-                "
-                :class="{
-                  unnumbered_cell: unnumbered[i - 1][j - 1] == 1,
-                  black: solution[i - 1][j - 1] == -1,
-                  special: is_special[i - 1][j - 1] == 1,
-                  wrong:
-                    (show_error &&
-                      new_options[i - 1][j - 1] != option[i - 1][j - 1]) ||
-                    (solution[i - 1][j - 1] != -2 &&
-                      solution[i - 1][j - 1] != -1 &&
-                      new_options[i - 1][j - 1] != -1 &&
-                      values[solution[i - 1][j - 1]][
-                        new_options[i - 1][j - 1]
-                      ] !=
-                        letters[solution[i - 1][j - 1]][
-                          new_options[i - 1][j - 1]
-                        ]),
-                  bordertop: border_top[i - 1][j - 1] == 1,
-                  borderbottom: border_bottom[i - 1][j - 1] == 1,
-                  borderleft: border_left[i - 1][j - 1] == 1,
-                  borderright: border_right[i - 1][j - 1] == 1,
-                }"
+  </body>
+  <body class="my_body" v-else>
+    <va-card>
+      <div class="my_row">
+        <h4 class="display-4">
+          <va-icon size="large" name="multiple_stop"></va-icon>
+          &nbsp;Riješi kriptogram
+        </h4>
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab disabled
+              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+            >
+            <va-tab @click="$refs.description.show()"
+              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+            </va-tab>
+            <va-tab
+              @click="
+                show_error = !show_error;
+                $forceUpdate();
+              "
+            >
+              <span v-if="show_error == false">
+                <va-icon name="report_off" />
+                &nbsp;Ne prikazuj greške</span
               >
-                <div v-if="unnumbered[i - 1][j - 1] == 0">
-                  <sup
-                    v-if="
-                      solution[i - 1][j - 1] != -2 &&
-                      solution[i - 1][j - 1] != -1
-                    "
-                  >
-                    {{ solution[i - 1][j - 1] }}
-                  </sup>
-                  &nbsp;
-                  <span
-                    v-if="
-                      solution[i - 1][j - 1] != -2 &&
-                      solution[i - 1][j - 1] != -1 &&
-                      new_options[i - 1][j - 1] != -1
-                    "
-                  >
-                    {{
-                      values[solution[i - 1][j - 1]][new_options[i - 1][j - 1]]
-                    }}
-                  </span>
-                </div>
-                <div v-else>                   
-                  <input 
-                  maxlength="2" 
-                  :class="{ 
-                    unnumbered_input: true, 
-                    wrong: getErrorMessage(i, j) != ''
-                  }" 
-                  type="text" 
-                  v-model="unnumbered_text[i - 1][j - 1]" 
-                  @input="check_letter()"/>
-                  <va-icon name="warning" 
-                  class="wrong"
-                  v-if="getErrorMessage(i, j) != ''"
-                  @click="$vaToast.init(getErrorMessage(i, j))"
-                  size="small">
-                  </va-icon>  
-                  <!--<va-form ref="unnumberedform">
-                    <va-input  
-                      @update:model-value=""
-                      v-model="unnumbered_text[i - 1][j - 1]"
-                      outline
-                      type="text" 
+              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+            </va-tab>
+            <va-tab @click="$refs.show_solution_modal.show()">
+              <va-icon name="help" />
+              &nbsp;Otkrij sva polja
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <h4 class="display-4">Slova</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <va-tabs v-model="option_number">
+          <template #tabs>
+            <va-tab name="-1"> Bez opcije </va-tab>
+            <va-tab name="0"> 1. opcija </va-tab>
+            <va-tab name="1"> 2. opcija </va-tab>
+            <va-tab name="2"> 3. opcija </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+      <div class="my_row">
+        <va-infinite-scroll disabled :load="() => {}">
+          <div>
+            <table style="display: inline-table">
+              <tr v-for="j in 3" v-bind:key="j">
+                <td v-for="i in num_letters" v-bind:key="i">
+                  <va-form ref="lettersform">
+                    <va-input
+                      maxlength="2"
+                      
+                      @click="option_number = j - 1"
+                      @update:model-value="check_letter()"
+                      v-model="values[i - 1][j - 1]"
                       style="
-                        padding-bottom: none;
-                        max-width: 70px;
-                        background-color: #fdefef;
-                        display: inline-block;
+                        width: 100px;
+                        min-width: 100px;
+                        max-width: 100px;
+                        margin-left: 10px;
                       "
+                      type="text"
+                      :label="'' + (i - 1) + ' (' + j + ')'"
+                      :readonly="letters_revealed[i - 1][j - 1] == 1"
                       immediate-validation
                       :rules="[
                         (value) => {
-                          if (findLetter(value) == false) {
+                          if (check_duplicated(i - 1, j - 1) == 1) {
                             if (alphabet.includes(value)) {
                               if (show_error == false) {
-                                return 'Nije na popisu.';
+                                return 'Udvostručeno.';
                               } else {
                                 if (
-                                  value !=
-                                  letters[solution[i - 1][j - 1]][
-                                    option[i - 1][j - 1]
-                                  ]
+                                  values[i - 1][j - 1] != letters[i - 1][j - 1]
                                 ) {
-                                  return 'Netočno i nije na popisu.';
+                                  return 'Netočno i udvostručeno.';
                                 } else {
-                                  return 'Nije na popisu.';
+                                  return 'Udvostručeno.';
                                 }
                               }
                             } else {
                               if (show_error == false) {
-                                return 'Nije na popisu ni u abecedi.';
+                                return 'Udvostručeno i nije u abecedi.';
                               } else {
                                 if (
-                                  value !=
-                                  letters[solution[i - 1][j - 1]][
-                                    option[i - 1][j - 1]
-                                  ]
+                                  values[i - 1][j - 1] != letters[i - 1][j - 1]
                                 ) {
-                                  return 'Netočno, nije na popisu ni u abecedi.';
+                                  return 'Netočno, udvostručeno i nije u abecedi.';
                                 } else {
-                                  return 'Nije na popisu ni u abecedi.';
+                                  return 'Udvostručeno i nije u abecedi.';
                                 }
                               }
                             }
@@ -1313,10 +1055,7 @@ export default {
                                 return true;
                               } else {
                                 if (
-                                  value !=
-                                  letters[solution[i - 1][j - 1]][
-                                    option[i - 1][j - 1]
-                                  ]
+                                  values[i - 1][j - 1] != letters[i - 1][j - 1]
                                 ) {
                                   return 'Netočno.';
                                 } else {
@@ -1328,10 +1067,7 @@ export default {
                                 return 'Nije u abecedi.';
                               } else {
                                 if (
-                                  value !=
-                                  letters[solution[i - 1][j - 1]][
-                                    option[i - 1][j - 1]
-                                  ]
+                                  values[i - 1][j - 1] != letters[i - 1][j - 1]
                                 ) {
                                   return 'Netočno i nije u abecedi.';
                                 } else {
@@ -1342,86 +1078,208 @@ export default {
                           }
                         },
                       ]"
+                    >
+                    </va-input>
+                  </va-form>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </va-infinite-scroll>
+      </div>
+    </va-card>
+    <br /><br /> 
+    <va-card>
+      <h4 class="display-4">Zagonetka</h4>
+      <va-divider></va-divider>
+      <div class="my_row" v-if="current_x != null && current_y != null">
+        <va-chip
+          ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
+          {{ current_y }})</va-chip
+        >
+      </div>
+      <div class="my_row">
+        <MyCounter
+          :min_value="1"
+          :max_value="max_zoom"
+          v-bind:value="zoom"
+          @input="
+            (n) => {
+              zoom = n;
+              zoom_number();
+            }
+          "
+          :some_text="'Povećanje'"
+          :is_zoom="true"
+        ></MyCounter>
+      </div>
+      <div class="my_row" style="max-height: 500px">
+        <va-infinite-scroll disabled :load="() => {}">
+          <div class="my_row">
+            <table class="numbers_table" id="table_zoom">
+              <tr v-for="i in rows" v-bind:key="i">
+                <td
+                  v-for="j in columns"
+                  v-bind:key="j"
+                  @click="
+                    new_options[i - 1][j - 1] = option_number;
+                    check_victory();
+                  "
+                  @mouseover="
+                    current_x = i;
+                    current_y = j;
+                  "
+                  :class="{
+                    unnumbered_cell: unnumbered[i - 1][j - 1] == 1,
+                    black: solution[i - 1][j - 1] == -1,
+                    special: is_special[i - 1][j - 1] == 1,
+                    wrong:
+                      (show_error &&
+                        new_options[i - 1][j - 1] != option[i - 1][j - 1]) ||
+                      (solution[i - 1][j - 1] != -2 &&
+                        solution[i - 1][j - 1] != -1 &&
+                        new_options[i - 1][j - 1] != -1 &&
+                        values[solution[i - 1][j - 1]][
+                          new_options[i - 1][j - 1]
+                        ] !=
+                          letters[solution[i - 1][j - 1]][
+                            new_options[i - 1][j - 1]
+                          ]),
+                    bordertop: border_top[i - 1][j - 1] == 1,
+                    borderbottom: border_bottom[i - 1][j - 1] == 1,
+                    borderleft: border_left[i - 1][j - 1] == 1,
+                    borderright: border_right[i - 1][j - 1] == 1,
+                  }"
+                >
+                  <div v-if="unnumbered[i - 1][j - 1] == 0">
+                    <sup
+                      v-if="
+                        solution[i - 1][j - 1] != -2 &&
+                        solution[i - 1][j - 1] != -1
+                      "
+                    >
+                      {{ solution[i - 1][j - 1] }}
+                    </sup>
+                    &nbsp;
+                    <span
+                      v-if="
+                        solution[i - 1][j - 1] != -2 &&
+                        solution[i - 1][j - 1] != -1 &&
+                        new_options[i - 1][j - 1] != -1
+                      "
+                    >
+                      {{
+                        values[solution[i - 1][j - 1]][
+                          new_options[i - 1][j - 1]
+                        ]
+                      }}
+                    </span>
+                  </div>
+                  <div v-else>
+                    <input
+                      maxlength="2"
+                      :class="{
+                        unnumbered_input: true,
+                        wrong: getErrorMessage(i, j) != '',
+                      }"
+                      type="text"
+                      v-model="unnumbered_text[i - 1][j - 1]"
+                      @input="check_letter()"
                     />
-                  </va-form>-->
-                </div>
-              </td>
-            </tr>
-          </table>
-        </div>
-      </va-infinite-scroll>
-    </div>
-    <div class="my_row" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
-    </div>
-    <div class="my_row" v-if="!image">
-      <va-alert
-        style="white-space: pre-wrap"
-        color="warning"
-        title="Prazna slika"
-        center
-        class="mb-4"
-      >
-        Niste dodali sliku uz zagonetku.
-      </va-alert>
-    </div>
-    <div class="my_row">
-      <va-card>
-        <va-card-title>Naslov zagonetke</va-card-title>
-        <va-card-content>
+                    <va-icon
+                      name="warning"
+                      class="wrong"
+                      v-if="getErrorMessage(i, j) != ''"
+                      @click="$vaToast.init(getErrorMessage(i, j))"
+                      size="small"
+                    >
+                    </va-icon>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </va-infinite-scroll>
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <h4 class="display-4">Podaci o zagonetci</h4>
+      <va-divider></va-divider>
+      <div class="my_row" v-if="image">
+        <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
+      </div>
+      <div class="my_row" v-if="!image">
+        <va-alert
+          style="white-space: pre-wrap"
+          color="warning"
+          title="Prazna slika"
+          center
+          
+        >
+          Niste dodali sliku uz zagonetku.
+        </va-alert>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Naslov
+        </h6>
+        <p style="text-align: start">
           {{ title }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card>
-        <va-card-title>Opis zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Opis
+        </h6>
+        <p style="text-align: start">
           {{ description }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card>
-        <va-card-title>Izvor zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Izvor
+        </h6>
+        <p style="text-align: start">
           {{ source }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
-          authorUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
-      </va-chip>
-      <br />
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
-          updaterUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        @click="$refs.show_solution_modal.show()"
-        style="overflow-wrap: anywhere"
-      >
-        <va-icon name="help" />
-        &nbsp;Otkrij sva polja</va-button
-      >
-    </div>
-   </body>
+        </p>
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Autor zagonetke: {{ authorUserRecord.displayName }}
+          <router-link :to="'/profile/' + authorUserRecord.email"
+            >({{ authorUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
+        >
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
+          <router-link :to="'/profile/' + updaterUserRecord.email"
+            >({{ updaterUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
+        >
+      </div>
+    </va-card>
+  </body>
   <va-modal
     :mobile-fullscreen="false"
     ref="show_error"
@@ -1451,7 +1309,7 @@ export default {
   />
   <va-modal
     :mobile-fullscreen="false"
-    ref="description" 
+    ref="description"
     hide-default-actions
     stateful
   >
@@ -1485,18 +1343,18 @@ export default {
 .special {
   background-color: salmon;
 }
-.unnumbered_cell {   
+.unnumbered_cell {
   background-color: #fdefef !important;
 }
-.unnumbered_input { 
-  width: 24px;  
+.unnumbered_input {
+  width: 24px;
   text-align: center;
-  vertical-align: middle;  
-  display: inline-block; 
+  vertical-align: middle;
+  display: inline-block;
   background-color: #fdefef !important;
   border: none;
 }
 .wrong {
   color: #de1041;
-} 
+}
 </style>

@@ -95,7 +95,7 @@ export default {
             <router-link to="/search-cryptogram">
               <span style="color: #ffffff">
                 <va-icon name="multiple_stop" />
-                <span style="height: 24px"> Kriptogrami </span>
+                <span> Kriptogrami </span>
               </span>
             </router-link>
           </va-tab>
@@ -103,7 +103,7 @@ export default {
             <router-link to="/search-eight">
               <span style="color: #ffffff">
                 <va-icon name="pattern" />
-                <span style="height: 24px"> Osmosmjerke </span>
+                <span> Osmosmjerke </span>
               </span>
             </router-link>
           </va-tab>
@@ -111,7 +111,7 @@ export default {
             <router-link to="/search-initial">
               <span style="color: #ffffff">
                 <va-icon name="text_rotation_none" />
-                <span style="height: 24px"> Inicijalne osmosmjerke </span>
+                <span> Inicijalne osmosmjerke </span>
               </span>
             </router-link>
           </va-tab>
@@ -119,7 +119,7 @@ export default {
             <router-link to="/search-integram">
               <span style="color: #ffffff">
                 <va-icon name="rule_folder" />
-                <span style="height: 24px"> Integrami </span>
+                <span> Integrami </span>
               </span>
             </router-link>
           </va-tab>
@@ -127,7 +127,7 @@ export default {
             <router-link to="/search-nonogram">
               <span style="color: #ffffff">
                 <va-icon name="draw" />
-                <span style="height: 24px"> Nonogrami </span>
+                <span> Nonogrami </span>
               </span>
             </router-link>
           </va-tab>
@@ -135,7 +135,7 @@ export default {
             <router-link to="/search-number-crossword">
               <span style="color: #ffffff">
                 <va-icon name="format_list_numbered" />
-                <span style="height: 24px"> Brojevne križaljke </span>
+                <span> Brojevne križaljke </span>
               </span>
             </router-link>
           </va-tab>
@@ -143,7 +143,7 @@ export default {
             <router-link to="/search-number-letter">
               <span style="color: #ffffff">
                 <va-icon name="sync_alt" />
-                <span style="height: 24px"> Isti broj - isto slovo </span>
+                <span> Isti broj - isto slovo </span>
               </span>
             </router-link>
           </va-tab>
@@ -151,75 +151,14 @@ export default {
             <router-link to="/search-tournament">
               <span style="color: #ffffff">
                 <va-icon name="workspace_premium" />
-                <span style="height: 24px"> Turniri </span>
+                <span> Turniri </span>
               </span>
             </router-link>
           </va-tab>
         </template>
       </va-tabs>
     </span>
-  </va-affix>
-  <!--<va-navbar color="primary" class="mb-2">
-      <template #left>
-        <va-navbar-item>
-          <va-tab><router-link to="/search-integram">
-            Integrami 
-          </router-link></va-tab>
-        </va-navbar-item>
-        <va-navbar-item>
-          <va-tab><router-link to="/search-nonogram">
-            Nonogrami
-          </router-link></va-tab>
-        </va-navbar-item>  
-        <va-navbar-item>
-          <va-tab><router-link to="/search-number-crossword">
-            Brojevne križaljke
-          </router-link></va-tab>
-        </va-navbar-item>
-        <va-navbar-item>
-          <va-tab><router-link  to="/search-cryptogram">
-            Kriptogrami
-          </router-link></va-tab>
-        </va-navbar-item>
-        <va-navbar-item>
-          <va-tab><router-link  to="/search-number-letter">
-            Isti broj - isto slovo
-          </router-link></va-tab>
-        </va-navbar-item>
-        <va-navbar-item>
-          <va-tab><router-link  to="/search-initial">
-            Inicijalne osmosmjerke
-          </router-link></va-tab>
-        </va-navbar-item>
-        <va-navbar-item>
-          <va-tab><router-link  to="/search-eight">
-            Osmosmjerke
-          </router-link></va-tab>
-        </va-navbar-item>
-        <va-navbar-item>
-          <va-tab><router-link  to="/search-tournament">
-            Turniri
-          </router-link></va-tab>
-        </va-navbar-item>
-      </template>
-      <template v-if="user" #center>
-        <va-navbar-item>
-          <va-tab><router-link  :to="'/profile/' + user.email">
-            Dobrodošli {{user.displayName}}
-          </router-link></va-tab>
-        </va-navbar-item> 
-      </template>
-      <template #right>
-        <va-navbar-item @click="signOut()" v-if="user != null">
-            Odjava
-        </va-navbar-item>
-        <va-navbar-item v-else>
-          <va-tab><router-link to="/login">
-            Prijava
-          </router-link></va-tab>
-        </va-navbar-item>
-      </template>
-    </va-navbar> -->
+  </va-affix> 
 </template>
 
 <style scoped></style>

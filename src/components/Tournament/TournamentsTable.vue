@@ -237,11 +237,11 @@ export default {
 </script>
 
 <template>
-    <body class="my_body" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
-   </body>
+  </body>
   <span v-else>
-     <body class="my_body">
+    <body class="my_body">
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="workspace_premium"> </va-icon>
@@ -523,7 +523,7 @@ export default {
         </div>
       </span>
       <NoDataToDisplay v-else customMessage="Nema turnira"></NoDataToDisplay>
-     </body>
+    </body>
   </span>
 </template>
 

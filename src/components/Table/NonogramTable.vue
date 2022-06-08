@@ -1,7 +1,10 @@
 <script>
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { nonogramsRef } from "../../firebase_main.js";
-import { nonogramsRecordsRef, nonogramsRatingsRef } from "../../firebase_main.js";
+import {
+  nonogramsRecordsRef,
+  nonogramsRatingsRef,
+} from "../../firebase_main.js";
 import RecordsTable from "../Utility/RecordsTable.vue";
 import RatingsTable from "../Utility/RatingsTable.vue";
 import { usersRef, friendsRef } from "../../firebase_main.js";
@@ -605,15 +608,31 @@ export default {
 </script>
 
 <template>
-  <LoadingBar v-if="!fully_loaded"></LoadingBar>
-  <span v-else>
+  <va-card>
     <div class="my_row">
-      <router-link to="/create-nonogram">
-        <va-button>
-          <va-icon name="add_circle" />&nbsp;Nova zagonetka</va-button
-        >
-      </router-link>
+      <va-tabs>
+        <template #tabs>
+          <va-tab>
+            <va-icon name="info" @click="$refs.description.show()"></va-icon>
+            &nbsp;Pomoć
+          </va-tab>
+          <va-tab>
+            <router-link
+              to="/create-nonogram"
+              style="float: right; overflow-wrap: anywhere"
+            >
+              <va-icon name="add_circle" />&nbsp;Nova zagonetka
+            </router-link>
+          </va-tab>
+        </template>
+      </va-tabs>
     </div>
+  </va-card>
+  <br />
+  <br />
+  <va-card style="padding: 20px">
+  <LoadingBar v-if="!fully_loaded"></LoadingBar>
+  <span v-else> 
     <span v-if="puzzles.length > 0">
       <div class="my_row">
         <va-input
@@ -633,7 +652,8 @@ export default {
           :min_value="1"
           :max_value="Math.ceil(this.filtered.length)"
           v-bind:value="perPage"
-          @input="(n) => (perPage = n)" :is_page_number="true"
+          @input="(n) => (perPage = n)"
+          :is_page_number="true"
           :some_text="'Broj rezultata na stranici'"
         ></MyCounter>
       </div>
@@ -869,7 +889,8 @@ export default {
         </RecordsTable>
       </span>
     </div>
-  </span>
+    </span>
+    </va-card> 
 </template>
 
 <style scoped></style>

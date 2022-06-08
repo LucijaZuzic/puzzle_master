@@ -5,7 +5,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { ref, getDownloadURL } from "firebase/storage";
 import { projectStorage } from "../../firebase_main.js";
 
-import EightInfo from "../Info/EightInfo.vue"; 
+import EightInfo from "../Info/EightInfo.vue";
 import MyCounter from "../Utility/MyCounter.vue";
 import LoadingBar from "../Utility/LoadingBar.vue";
 
@@ -13,7 +13,7 @@ export default {
   components: {
     MyCounter,
     LoadingBar,
-    EightInfo
+    EightInfo,
   },
   data() {
     return {
@@ -544,7 +544,7 @@ export default {
         ) {
           if (show_warning) {
             this.$vaToast.init(
-              "Nova riječ ne može započeti na odabranom polju jer u odabranom smjeru nema dovoljno polja."
+              "Nova riječ ne može započeti na odabranom polju jer su u odabranom smjeru neka polja već popunjena."
             );
           }
           return false;
@@ -611,15 +611,26 @@ export default {
     },
     place_word(x, y, word_index, dirx, diry, show_warning) {
       if (word_index == -1) {
-        return;
+        return false;
       }
       let dir = this.get_dir(dirx, diry);
       if (this.placed_words[dir][word_index] != 0) {
-        this.remove_word(dir, word_index);
-        return;
+        let old_place_x = this.placed_words[dir][word_index][0];
+        let old_place_y = this.placed_words[dir][word_index][1];
+        this.remove_word(dir, word_index); 
+        if (this.place_word(x,y,word_index,dirx,diry, show_warning) == false) {
+          this.place_word(
+            old_place_x,
+            old_place_y,
+            word_index,
+            dirx,
+            diry,
+            show_warning
+          );
+        }
       }
       if (this.victory) {
-        return;
+        return false;
       }
       /*let dir = this.get_dirxy(dirx, diry)
           if (this.placed_words[dir][word_index] == 1) {
@@ -630,9 +641,12 @@ export default {
       if (this.check_dir(x, y, word_index, dirx, diry, show_warning) == true) {
         this.add_word(x, y, word_index, dirx, diry);
         this.check_victory();
+      } else {
+        return false;
       }
       //}
       this.$forceUpdate();
+      return true;
     },
     store() {
       let datetime = new Date();
@@ -720,19 +734,7 @@ export default {
             return;
           }
         }
-      }
-      /*for (let i = 0; i < this.words_by_dir.length; i++) {
-                for (let j = 0; j < this.words_by_dir[i].length; j++) {
-                    if (this.placed_words[i][j] == 0) {
-                        this.victory = false 
-                        return
-                    }
-                    if (this.words_by_dir[i][j][0] != this.placed_words[i][j][0] || this.words_by_dir[i][j][1] != this.placed_words[i][j][1]) {
-                        this.victory = false 
-                        return
-                    }
-                }
-            }*/
+      } 
       if (this.victory) {
         clearInterval(this.interval);
         this.new_async(
@@ -847,45 +849,56 @@ export default {
 </script>
 
 <template>
-    <body class="my_body" v-if="!fully_loaded">
+  <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
-   </body>
-   <body class="my_body" v-else> 
-    <div class="my_row">
-      <span style="float: left; overflow-wrap: anywhere">
-        <va-icon color="info" name="info" @click="$refs.description.show()"></va-icon>  
-        <va-button
-          @click="show_error = !show_error"
-          style="margin-left: 10px; margin-top: 10px"
-        >
-          <span v-if="show_error == false">
-            <va-icon name="report_off" />
-            &nbsp;Ne prikazuj greške</span
-          >
-          <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
-        </va-button>
-      </span>
-      <va-chip
-        style="
-          float: right;
-          overflow-wrap: anywhere;
-          margin-left: 10px;
-          margin-top: 10px;
-        "
-        outline
-      >
-        <va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button style="overflow-wrap: anywhere" @click="reset()">
-        <va-icon name="delete" />
-        &nbsp;Izbriši</va-button
-      >
-    </div>
+  </body>
+  <body class="my_body" v-else>
+    <va-card>
+      <div class="my_row">
+        <h4 class="display-4">
+          <va-icon size="large" name="pattern"></va-icon>
+          &nbsp;Riješi osmosmjerku
+        </h4>
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab disabled
+              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+            >
+            <va-tab @click="$refs.description.show()"
+              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+            </va-tab>
+            <va-tab
+              @click="
+                show_error = !show_error;
+                $forceUpdate();
+              "
+            >
+              <span v-if="show_error == false">
+                <va-icon name="report_off" />
+                &nbsp;Ne prikazuj greške</span
+              >
+              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+            </va-tab>
+            <va-tab @click="$refs.show_solution_modal.show()">
+              <va-icon name="help" />
+              &nbsp;Otkrij sva polja
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+    </va-card>
+    <br /><br /> 
+    <va-card>
+      <h4 class="display-4">Zagonetka</h4>
+      <va-divider></va-divider>
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -900,7 +913,8 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'" :is_zoom="true"
+        :some_text="'Povećanje'"
+        :is_zoom="true"
       ></MyCounter>
     </div>
     <div class="my_row" style="max-height: 400px">
@@ -931,9 +945,16 @@ export default {
           </table>
         </div>
       </va-infinite-scroll>
-    </div>
-    <div class="my_row" v-if="count_special()">
-      Rješenje:
+      </div>
+      </va-card>
+    <span  v-if="count_special()">
+    <br />
+    <br /></span>
+    <va-card v-if="count_special()">
+      <h4 class="display-4">Rješenje</h4>
+      <va-divider></va-divider>
+    <div class="my_row"> 
+
       <span v-for="i in rows" v-bind:key="i">
         <span v-for="j in columns" v-bind:key="j">
           <va-chip
@@ -962,9 +983,9 @@ export default {
           </va-chip>
         </span>
       </span>
-    </div>
-    <div
-      class="my_row"
+      </div>
+    </va-card> 
+    <span 
       v-if="
         words_by_dir[0].length +
           words_by_dir[1].length +
@@ -975,7 +996,31 @@ export default {
           words_by_dir[6].length +
           words_by_dir[7].length >
         0
-      "
+      ">
+    <br />
+    <br /></span>
+    <va-card
+      v-if="
+        words_by_dir[0].length +
+          words_by_dir[1].length +
+          words_by_dir[2].length +
+          words_by_dir[3].length +
+          words_by_dir[4].length +
+          words_by_dir[5].length +
+          words_by_dir[6].length +
+          words_by_dir[7].length >
+        0
+      ">
+      <h4 class="display-4">Riječi po smjerovima</h4>
+      <va-divider></va-divider>
+    <div class="my_row">
+      <va-button style="overflow-wrap: anywhere" @click="reset()">
+        <va-icon name="delete" />
+        &nbsp;Izbriši sve</va-button
+      >
+    </div>
+    <div
+      class="my_row"
     >
       <va-tabs v-model="dir_to_display">
         <template #tabs>
@@ -1050,77 +1095,85 @@ export default {
         </va-chip>
       </span>
     </div>
-    <div class="my_row" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
-    </div>
-    <div class="my_row" v-if="!image">
-      <va-alert
-        style="white-space: pre-wrap"
-        color="warning"
-        title="Prazna slika"
-        center
-        class="mb-4"
-      >
-        Niste dodali sliku uz zagonetku.
-      </va-alert>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Naslov zagonetke</va-card-title>
-        <va-card-content>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <h4 class="display-4">Podaci o zagonetci</h4>
+      <va-divider></va-divider>
+      <div class="my_row" v-if="image">
+        <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
+      </div>
+      <div class="my_row" v-if="!image">
+        <va-alert
+          style="white-space: pre-wrap"
+          color="warning"
+          title="Prazna slika"
+          center
+          
+        >
+          Niste dodali sliku uz zagonetku.
+        </va-alert>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Naslov
+        </h6>
+        <p style="text-align: start">
           {{ title }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Opis zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Opis
+        </h6>
+        <p style="text-align: start">
           {{ description }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-card style="overflow-wrap: anywhere">
-        <va-card-title>Izvor zagonetke</va-card-title>
-        <va-card-content>
+        </p>
+      </div>
+      <div class="text-block" style="margin: 20px">
+        <h6
+          class="title"
+          color="info"
+          style="margin-bottom: 10px; text-align: start"
+        >
+          Izvor
+        </h6>
+        <p style="text-align: start">
           {{ source }}
-        </va-card-content>
-      </va-card>
-    </div>
-    <div class="my_row">
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
-          authorUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
-      </va-chip>
-      <br />
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
-          updaterUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        @click="$refs.show_solution_modal.show()"
-        style="overflow-wrap: anywhere"
-      >
-        <va-icon name="help" />
-        &nbsp;Otkrij sva polja</va-button
-      >
-    </div>
-   </body>
+        </p>
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Autor zagonetke: {{ authorUserRecord.displayName }}
+          <router-link :to="'/profile/' + authorUserRecord.email"
+            >({{ authorUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
+        >
+      </div>
+      <div class="my_row">
+        <span class="display-6" style="margin-left: 10px"
+          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
+          <router-link :to="'/profile/' + updaterUserRecord.email"
+            >({{ updaterUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
+        >
+      </div>
+    </va-card>
+  </body>
   <va-modal
     :mobile-fullscreen="false"
     ref="show_error"
@@ -1150,11 +1203,11 @@ export default {
   />
   <va-modal
     :mobile-fullscreen="false"
-    ref="description" 
+    ref="description"
     hide-default-actions
     stateful
   >
-    <EightInfo></EightInfo>
+    <EightInfo></EightInfo> 
   </va-modal>
 </template>
 

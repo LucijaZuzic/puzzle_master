@@ -1033,7 +1033,7 @@ export default {
       this.check_equal_colors();
       this.fully_loaded = true;
       this.$forceUpdate();
-    } 
+    }
     this.expand_color_list();
     this.initialize();
     this.check_equal_colors();
@@ -1088,28 +1088,237 @@ export default {
 </script>
 
 <template>
-   <body class="my_body">
-    <div class="my_row">
-      <MyCounter
-        :min_value="row_counter_min"
-        :max_value="row_counter_max"
-        v-bind:value="rownum"
-        @input="(n) => (rownum = n)"
-        :some_text="'Broj redaka'"
-      ></MyCounter>
-    </div>
-    <div class="my_row">
-      <MyCounter
-        :min_value="column_counter_min"
-        :max_value="column_counter_max"
-        v-bind:value="colnum"
-        @input="(n) => (colnum = n)"
-        :some_text="'Broj stupaca'"
-      ></MyCounter>
-    </div>
+  <body class="my_body" v-if="!fully_loaded">
+    <LoadingBar></LoadingBar>
+  </body>
+  <body class="my_body" v-else>
+    <va-card>
+      <div class="my_row">
+        <h4 class="display-4">
+          <va-icon size="large" name="draw"></va-icon>
+          &nbsp;Stvori nonogram
+        </h4>
+      </div>
+    </va-card>
+    <br />
+    <br />
+    <va-card>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab>
+              <va-icon name="info" @click="$refs.description.show()"></va-icon>
+              &nbsp;Pomoć
+            </va-tab>
+            <va-tab v-if="edit">
+              <router-link
+                v-bind:to="{ name: 'solve_nonogram', params: { id: $route.params.id } }"
+              >
+                <va-icon name="play_arrow"></va-icon>
+                &nbsp;Igraj
+              </router-link> 
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+    </va-card>
+    <br />
+    <br />
+    <va-card>
+      <h4 class="display-4">Dimenzije</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <div style="display: inline-block">
+          <MyCounter
+            :min_value="row_counter_min"
+            :max_value="row_counter_max"
+            v-bind:value="rownum"
+            @input="(n) => ((rownum = n), $forceUpdate())"
+            :some_text="'Broj redaka'"
+          ></MyCounter>
+        </div>
+        <div style="margin-left: 10px; display: inline-block">
+          <MyCounter
+            :min_value="column_counter_min"
+            :max_value="column_counter_max"
+            v-bind:value="colnum"
+            @input="(n) => ((colnum = n), $forceUpdate())"
+            :some_text="'Broj stupaca'"
+          ></MyCounter>
+        </div>
+        <div style="margin-left: 10px; display: inline-block">
+          <MyCounter
+            :min_value="color_counter_min"
+            :max_value="color_counter_max"
+            v-bind:value="num_colors"
+            @input="(n) => (num_colors = n, $forceUpdate())"
+            :some_text="'Broj boja'"
+          ></MyCounter>
+        </div>
+      </div>
+    </va-card>
+    <br />
+    <br />
+    <va-card>
+      <h4 class="display-4">Boje</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <va-tabs>
+          <template #tabs>
+            <va-tab
+              @click="
+                drag = !drag;
+                if (allow_mouseover) {
+                  drag = false;
+                }
+              "
+              :disabled="allow_mouseover"
+            >
+              <span v-if="drag == false">
+                <va-icon name="grid_off" />
+                &nbsp;Bojanje jedan po jedan
+              </span>
+              <span v-else
+                ><va-icon name="grid_on" /> &nbsp;Bojanje segmenta</span
+              >
+            </va-tab>
+            <va-tab
+              @click="
+                allow_mouseover = !allow_mouseover;
+                if (allow_mouseover) {
+                  drag = false;
+                }
+              "
+            >
+              <span v-if="allow_mouseover == false">
+                <va-icon name="grid_view" />
+                &nbsp;Bojanje gestom isključeno
+              </span>
+              <span v-else
+                ><va-icon name="gesture" /> &nbsp;Bojanje gestom uključeno</span
+              >
+            </va-tab>
+            <va-tab @click="reset()">
+              <va-icon name="delete" />
+              &nbsp;Izbriši
+            </va-tab>
+          </template>
+        </va-tabs>
+      </div>
+      <div class="my_row">
+        <va-icon
+          style="
+            border-radius: 50%;
+            display: inline-block;
+            position: absolute;
+            background-color: black;
+          "
+          v-if="mode == 0"
+          name="check_circle"
+          color="success"
+        >
+        </va-icon>
+        <button
+          class="mr-2"
+          style="
+            width: 28px;
+            height: 28px;
+            display: inline-block;
+            background-color: white;
+            border-radius: 50%;
+            margin: 10px;
+          "
+          :id="'colorbutton' + 0"
+          @click="mode = 0"
+        ></button>
+        <input
+          :id="'colorpicker' + 0"
+          type="color"
+          disabled
+          hidden
+          :value="colors[0]"
+        />
+        <div
+          style="display: inline-block"
+          v-for="i in num_colors - 1"
+          v-bind:key="i"
+        >
+          <va-icon
+            style="
+              border-radius: 50%;
+              display: inline-block;
+              position: absolute;
+              background-color: black;
+            "
+            v-if="mode == i"
+            name="check_circle"
+            color="success"
+          >
+          </va-icon>
+          <button
+            class="mr-2"
+            style="
+              width: 28px;
+              height: 28px;
+              display: inline-block;
+              background-color: black;
+              border-radius: 50%;
+              margin: 10px;
+            "
+            v-if="wrong_colors[i] == false"
+            @click="trigger_click(i)"
+            @focusout="after_click(i)"
+            :id="'colorbutton' + i"
+          ></button>
+          <button
+            class="mr-2"
+            style="
+              width: 28px;
+              height: 28px;
+              display: inline-block;
+              color: white;
+              background-color: black;
+              border-color: #de1041;
+              border-radius: 50%;
+            "
+            v-else
+            @click="trigger_click(i)"
+            @focusout="after_click(i)"
+            :id="'colorbutton' + i"
+          ></button>
+        </div>
+        <input
+          hidden
+          v-for="i in num_colors - 1"
+          v-bind:key="i"
+          type="color"
+          @focusout="
+            mode = i;
+            update_colors();
+          "
+          :id="'colorpicker' + i"
+          :value="colors[i]"
+        />
+      </div>
+      <div class="my_row" v-if="warning">
+        <va-alert
+          color="danger"
+          :title="'Postoje boje koje se ponavljaju'"
+          center
+          
+        >
+          Boje moraju biti jedinstvene.
+        </va-alert>
+      </div>
+    </va-card>
+    <br />
+    <br /> 
+    <va-card>
+      <h4 class="display-4">Zagonetka</h4>
+      <va-divider></va-divider> 
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" />&nbsp;({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -1124,7 +1333,8 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'" :is_zoom="true"
+        :some_text="'Povećanje'"
+        :is_zoom="true"
       ></MyCounter>
     </div>
     <div class="my_row" v-if="prev_x != null && prev_y != null && drag">
@@ -1280,312 +1490,167 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    <div class="my_row">
-      <va-button style="overflow-wrap: anywhere" @click="reset()" icon-left="">
-        <va-icon name="delete" />
-        &nbsp;Izbriši</va-button
-      >
-    </div>
-    <div class="my_row">
-      <MyCounter
-        :min_value="color_counter_min"
-        :max_value="color_counter_max"
-        v-bind:value="num_colors"
-        @input="(n) => (num_colors = n)"
-        :some_text="'Broj boja'"
-      ></MyCounter>
-    </div>
+    </va-card>
     <br />
-    <div class="my_row">
-      <va-icon
-        style="
-          border-radius: 50%;
-          display: inline-block;
-          position: absolute;
-          background-color: black;
-        "
-        v-if="mode == 0"
-        name="check_circle"
-        color="success"
-      >
-      </va-icon>
-      <button
-        class="mr-2"
-        style="
-          width: 28px;
-          height: 28px;
-          display: inline-block;
-          background-color: white;
-          border-radius: 50%;
-          margin: 10px;
-        "
-        :id="'colorbutton' + 0"
-        @click="mode = 0"
-      ></button>
-      <input
-        :id="'colorpicker' + 0"
-        type="color"
-        disabled
-        hidden
-        :value="colors[0]"
-      />
-      <div
-        style="display: inline-block"
-        v-for="i in num_colors - 1"
-        v-bind:key="i"
-      >
-        <!--<va-icon style="position:relative;left:10px" v-if="wrong_colors[i]==true" name="error" color="danger">
-</va-icon>-->
-        <va-icon
-          style="
-            border-radius: 50%;
-            display: inline-block;
-            position: absolute;
-            background-color: black;
-          "
-          v-if="mode == i"
-          name="check_circle"
-          color="success"
-        >
-        </va-icon>
-        <button
-          class="mr-2"
-          style="
-            width: 28px;
-            height: 28px;
-            display: inline-block;
-            background-color: black;
-            border-radius: 50%;
-            margin: 10px;
-          "
-          v-if="wrong_colors[i] == false"
-          @click="trigger_click(i)"
-          @focusout="after_click(i)"
-          :id="'colorbutton' + i"
-        ></button>
-        <button
-          class="mr-2"
-          style="
-            width: 28px;
-            height: 28px;
-            display: inline-block;
-            color: white;
-            background-color: black;
-            border-color: #de1041;
-            border-radius: 50%;
-          "
-          v-else
-          @click="trigger_click(i)"
-          @focusout="after_click(i)"
-          :id="'colorbutton' + i"
-        ></button>
-      </div>
-    </div>
-    <br />
-    <input
-      hidden
-      v-for="i in num_colors - 1"
-      v-bind:key="i"
-      type="color"
-      @focusout="
-        mode = i;
-        update_colors();
-      "
-      :id="'colorpicker' + i"
-      :value="colors[i]"
-    />
-    <div class="my_row">
-      <va-button
-        @click="
-          allow_mouseover = !allow_mouseover;
-          if (allow_mouseover) {
-            drag = false;
-          }
-        "
-      >
-        <span v-if="allow_mouseover == false">
-          <va-icon name="grid_view" />
-          &nbsp;Bojanje gestom isključeno
-        </span>
-        <span v-else
-          ><va-icon name="gesture" /> &nbsp;Bojanje gestom uključeno</span
-        >
-      </va-button>
-    </div>
-    <div class="my_row">
-      <va-button
-        @click="
-          drag = !drag;
-          if (allow_mouseover) {
-            drag = false;
-          }
-        "
-        :disabled="allow_mouseover"
-      >
-        <span v-if="drag == false">
-          <va-icon name="grid_off" />
-          &nbsp;Bojanje jedan po jedan
-        </span>
-        <span v-else><va-icon name="grid_on" /> &nbsp;Bojanje segmenta</span>
-      </va-button>
-    </div>
-    <div class="my_row" v-if="warning">
-      <va-alert
-        color="danger"
-        :title="'Postoje boje koje se ponavljaju'"
-        center
-        class="mb-4"
-      >
-        <!--<p >
-                  {{warning}}
-        </p>-->
-        Boje moraju biti jedinstvene.
-      </va-alert>
-      <br />
-    </div>
-    <br />
-    <div class="my_row">
-      <va-input
-        class="mb-4"
-        v-model="title"
-        immediate-validation
-        type="text"
-        label="Naslov zagonetke"
-        :rules="[(value) => value.length > 0 || 'Unesite naslov.']"
-      />
-      <va-input
-        class="mb-4"
-        v-model="description"
-        immediate-validation
-        type="textarea"
-        label="Opis zagonetke"
-        :min-rows="3"
-        :max-rows="5"
-        :rules="[(value) => value.length > 0 || 'Unesite opis.']"
-      />
-      <va-input
-        class="mb-4"
-        v-model="source"
-        immediate-validation
-        type="textarea"
-        label="Izvor zagonetke"
-        :min-rows="3"
-        :max-rows="5"
-        :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
-      />
-    </div>
-    <div class="my_row" v-if="edit">
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Autor zagonetke: {{ authorUserRecord.displayName }} ({{
-          authorUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme kreiranja: {{ time_created.toLocaleString() }}
-      </va-chip>
-      <br />
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Zadnji ažurirao: {{ updaterUserRecord.displayName }} ({{
-          updaterUserRecord.email
-        }})</va-chip
-      >
-      <va-chip
-        style="margin-left: 10px; margin-top: 10px; overflow-wrap: anywhere"
-        >Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        style="overflow-wrap: anywhere"
-        @click="is_public = !is_public"
-      >
-        <span v-if="is_public == false">
-          <va-icon name="public_off" />
-          &nbsp;Samo suradnici
-        </span>
-        <span v-else><va-icon name="public" /> &nbsp;Svi</span>
-      </va-button>
-    </div>
-    <div class="my_row">
-      <va-input
-        style="display: inline-block; margin-left: 10px; margin-top: 10px"
-        type="text"
-        v-model="collaborator"
-        placeholder="Email adresa"
-        label="Email adresa suradnika"
-      >
-        <template #append>
-          &nbsp;
-          <va-icon
-            @click="
-              checkIfUserExists();
-              $forceUpdate();
-            "
-            color="primary"
-            class="mr-4"
-            name="add_moderator"
-          />
-        </template>
-      </va-input>
-    </div>
-    <div class="my_row">
-      <va-chip
-        style="
-          overflow-wrap: anywhere;
-          display: inline-block;
-          margin-left: 10px;
-          margin-top: 10px;
-        "
-        v-for="(permission, i) in permissionsUserRecords"
-        :key="i"
-      >
-        <va-icon
-          style="display: inline-block"
-          @click="permissions.splice(i, 1)"
-          name="remove_moderator"
-          class="mr-2"
+    <br /> 
+    <va-card>
+      <h4 class="display-4">Podaci o zagonetci</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <va-input
+          
+          v-model="title"
+          immediate-validation
+          type="text"
+          label="Naslov zagonetke"
+          :rules="[(value) => value.length > 0 || 'Unesite naslov.']"
         />
-        &nbsp;{{ permission.displayName }} ({{ permission.email }})
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
-        v-if="edit"
-        :disabled="
-          !(
-            edit &&
-            !warning &&
-            title.length > 0 &&
-            description.length > 0 &&
-            source.length > 0
-          )
-        "
-        @click="store()"
-      >
-        <va-icon name="mode_edit" />
-        &nbsp;Izmijeni postojeću zagonetku</va-button
-      >
-      <va-button
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
-        :disabled="
-          !(
-            !warning &&
-            title.length > 0 &&
-            description.length > 0 &&
-            source.length > 0
-          )
-        "
-        @click="duplicate()"
-      >
-        <va-icon name="control_point_duplicate" />
-        &nbsp;Spremi izmjene kao novu zagonetku</va-button
-      >
-    </div>
-   </body>
+      </div>
+      <div class="my_row">
+        <va-input
+          
+          v-model="description"
+          immediate-validation
+          type="textarea"
+          label="Opis zagonetke"
+          :min-rows="3"
+          :max-rows="5"
+          :rules="[(value) => value.length > 0 || 'Unesite opis.']"
+        />
+      </div>
+      <div class="my_row">
+        <va-input
+          
+          v-model="source"
+          immediate-validation
+          type="textarea"
+          label="Izvor zagonetke"
+          :min-rows="3"
+          :max-rows="5"
+          :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
+        />
+      </div>
+      <div class="my_row" v-if="edit">
+        <span class="display-6" style="margin-left: 10px"
+          >Autor zagonetke: {{ authorUserRecord.displayName }}
+          <router-link :to="'/profile/' + authorUserRecord.email"
+            >({{ authorUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
+        >
+      </div>
+      <div class="my_row" v-if="edit">
+        <span class="display-6" style="margin-left: 10px"
+          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
+          <router-link :to="'/profile/' + updaterUserRecord.email"
+            >({{ updaterUserRecord.email }})</router-link
+          >
+        </span>
+        <span class="display-6" style="margin-left: 10px">
+          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
+        >
+      </div>
+    </va-card>
+    <br /><br />
+    <va-card>
+      <h4 class="display-4">Dozvola uređivanja</h4>
+      <va-divider></va-divider>
+      <div class="my_row">
+        <va-button
+          style="overflow-wrap: anywhere"
+          @click="is_public = !is_public"
+        >
+          <span v-if="is_public == false">
+            <va-icon name="public_off" />
+            &nbsp;Samo suradnici
+          </span>
+          <span v-else><va-icon name="public" /> &nbsp;Svi</span>
+        </va-button>
+      </div>
+      <div class="my_row">
+        <va-input
+          style="display: inline-block; margin-left: 10px; margin-top: 10px"
+          type="text"
+          v-model="collaborator"
+          placeholder="Email adresa"
+          label="Email adresa suradnika"
+        >
+          <template #append>
+            &nbsp;
+            <va-icon
+              @click="
+                checkIfUserExists();
+                $forceUpdate();
+              "
+              color="primary"
+              class="mr-4"
+              name="add_moderator"
+            />
+          </template>
+        </va-input>
+      </div>
+      <div class="my_row">
+        <va-chip
+          style="
+            overflow-wrap: anywhere;
+            display: inline-block;
+            margin-left: 10px;
+            margin-top: 10px;
+          "
+          v-for="(permission, i) in permissionsUserRecords"
+          :key="i"
+        >
+          <va-icon
+            style="display: inline-block"
+            @click="permissions.splice(i, 1)"
+            name="remove_moderator"
+            class="mr-2"
+          />
+          &nbsp;{{ permission.displayName }} ({{ permission.email }})
+        </va-chip>
+      </div>
+    </va-card>
+    <br />
+    <br />
+    <va-card>
+      <div class="my_row">
+        <va-button
+          style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+          v-if="edit"
+          :disabled="
+            !(
+              edit &&
+              !warning &&
+              title.length > 0 &&
+              description.length > 0 &&
+              source.length > 0
+            )
+          "
+          @click="store()"
+        >
+          <va-icon name="mode_edit" />
+          &nbsp;Izmijeni postojeću zagonetku</va-button
+        >&nbsp;
+        <va-button
+          style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
+          :disabled="
+            !(
+              !warning &&
+              title.length > 0 &&
+              description.length > 0 &&
+              source.length > 0
+            )
+          "
+          @click="duplicate()"
+        >
+          <va-icon name="control_point_duplicate" />
+          &nbsp;Spremi izmjene kao novu zagonetku</va-button
+        >
+      </div>
+    </va-card>
+  </body>
 </template>
 
 <style scoped>

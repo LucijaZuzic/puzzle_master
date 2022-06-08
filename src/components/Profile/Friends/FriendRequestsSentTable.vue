@@ -1,5 +1,9 @@
 <script>
-import { usersRef, friendRequestsRef, friendsRef } from "../../../firebase_main.js";
+import {
+  usersRef,
+  friendRequestsRef,
+  friendsRef,
+} from "../../../firebase_main.js";
 import NoDataToDisplay from "../../Utility/NoDataToDisplay.vue";
 import LoadingBar from "../../Utility/LoadingBar.vue";
 import MyCounter from "../../Utility/MyCounter.vue";
@@ -141,7 +145,8 @@ export default {
           :min_value="1"
           :max_value="Math.ceil(this.filtered.length)"
           v-bind:value="perPage"
-          @input="(n) => (perPage = n)" :is_page_number="true"
+          @input="(n) => (perPage = n)"
+          :is_page_number="true"
           :some_text="'Broj rezultata na stranici'"
         ></MyCounter>
       </div>

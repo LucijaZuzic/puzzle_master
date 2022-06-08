@@ -10,25 +10,25 @@ import Login from "./components/Utility/Login.vue";
 
 import CreateTournament from "./components/Tournament/CreateTournament.vue";
 import SearchTournament from "./components/Tournament/TournamentsTable.vue";
- 
+
 import EditCryptogram from "./components/Edit/EditCryptogram.vue";
 import SolveCryptogram from "./components/Solve/SolveCryptogram.vue";
- 
+
 import EditEight from "./components/Edit/EditEight.vue";
 import SolveEight from "./components/Solve/SolveEight.vue";
- 
+
 import EditInitial from "./components/Edit/EditInitial.vue";
 import SolveInitial from "./components/Solve/SolveInitial.vue";
- 
+
 import EditIntegram from "./components/Edit/EditIntegram.vue";
 import SolveIntegram from "./components/Solve/SolveIntegram.vue";
- 
+
 import EditNonogram from "./components/Edit/EditNonogram.vue";
 import SolveNonogram from "./components/Solve/SolveNonogram.vue";
- 
+
 import EditNumberCrossword from "./components/Edit/EditNumberCrossword.vue";
 import SolveNumberCrossword from "./components/Solve/SolveNumberCrossword.vue";
- 
+
 import EditNumberLetter from "./components/Edit/EditNumberLetter.vue";
 import SolveNumberLetter from "./components/Solve/SolveNumberLetter.vue";
 
@@ -51,23 +51,25 @@ import "vuestic-ui/dist/vuestic-ui.css";
 // Each route should map to a component.
 // We'll talk about nested routes later.
 const routes = [
-  { 
-    path: "/:pathMatch(.*)*", 
-    name: "not_found", 
-    component: NotFound },
-  { 
-    path: "/", 
-    name: "not_entered", 
-    component: NotFound },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not_found",
+    component: NotFound,
+  },
+  {
+    path: "/",
+    name: "not_entered",
+    component: NotFound,
+  },
   {
     path: "/sign-in-success",
     name: "sign_in_success",
     component: SignInSuccess,
   },
-  { 
-    path: "/login", 
-    name: "login", 
-    component: Login 
+  {
+    path: "/login",
+    name: "login",
+    component: Login,
   },
   {
     path: "/create-tournament",
@@ -90,17 +92,17 @@ const routes = [
     props: { edit: false },
     name: "create_cryptogram",
   },
-  { 
-    path: "/create-eight", 
-    component: EditEight, 
+  {
+    path: "/create-eight",
+    component: EditEight,
     props: { edit: false },
-    name: "create_eight" 
+    name: "create_eight",
   },
-  { 
-    path: "/create-initial", 
-    component: EditInitial, 
+  {
+    path: "/create-initial",
+    component: EditInitial,
     props: { edit: false },
-    name: "create_initial" 
+    name: "create_initial",
   },
   {
     path: "/create-integram",
@@ -132,17 +134,17 @@ const routes = [
     props: { edit: true },
     name: "edit_cryptogram",
   },
-  { 
-    path: "/edit-eight/:id", 
-    component: EditEight, 
+  {
+    path: "/edit-eight/:id",
+    component: EditEight,
     props: { edit: true },
-    name: "edit_eight" 
+    name: "edit_eight",
   },
-  { 
-    path: "/edit-initial/:id", 
-    component: EditInitial, 
+  {
+    path: "/edit-initial/:id",
+    component: EditInitial,
     props: { edit: true },
-    name: "edit_initial" 
+    name: "edit_initial",
   },
   {
     path: "/edit-integram/:id",
@@ -170,44 +172,72 @@ const routes = [
   },
   {
     path: "/search-cryptogram",
-    component: SearchPuzzle, 
-    props: { component_name: "CryptogramTable", icon: "multiple_stop", title: "Kriptogrami" },
+    component: SearchPuzzle,
+    props: {
+      component_name: "CryptogramTable",
+      icon: "multiple_stop",
+      title: "Kriptogrami",
+    },
     name: "search_cryptogram",
   },
-  { 
-    path: "/search-eight", 
-    component: SearchPuzzle, 
-    props: { component_name: "EightTable", icon: "pattern", title: "Osmosmjerke" },
-    name: "search_eight" 
+  {
+    path: "/search-eight",
+    component: SearchPuzzle,
+    props: {
+      component_name: "EightTable",
+      icon: "pattern",
+      title: "Osmosmjerke",
+    },
+    name: "search_eight",
   },
-  { 
-    path: "/search-initial", 
-    component: SearchPuzzle, 
-    props: { component_name: "InitialTable", icon: "text_rotation_none", title: "Inicijalne osmosmjerke" },
-    name: "search_initial" 
+  {
+    path: "/search-initial",
+    component: SearchPuzzle,
+    props: {
+      component_name: "InitialTable",
+      icon: "text_rotation_none",
+      title: "Inicijalne osmosmjerke",
+    },
+    name: "search_initial",
   },
   {
     path: "/search-integram",
-    component: SearchPuzzle, 
-    props: { component_name: "IntegramTable", icon: "rule_folder", title: "Integrami" },
+    component: SearchPuzzle,
+    props: {
+      component_name: "IntegramTable",
+      icon: "rule_folder",
+      title: "Integrami",
+    },
     name: "search_integram",
   },
   {
     path: "/search-nonogram",
-    component: SearchPuzzle, 
-    props: { component_name: "NonogramTable", icon: "draw", title: "Nonogrami" },
+    component: SearchPuzzle,
+    props: {
+      component_name: "NonogramTable",
+      icon: "draw",
+      title: "Nonogrami",
+    },
     name: "search_nonogram",
   },
   {
     path: "/search-number-crossword",
-    component: SearchPuzzle, 
-    props: { component_name: "NumberCrosswordTable", icon: "format_list_numbered", title: "Brojevne križaljke" },
+    component: SearchPuzzle,
+    props: {
+      component_name: "NumberCrosswordTable",
+      icon: "format_list_numbered",
+      title: "Brojevne križaljke",
+    },
     name: "search_number_crossword",
   },
   {
     path: "/search-number-letter",
-    component: SearchPuzzle, 
-    props: { component_name: "NumberLetterTable", icon: "sync_alt", title: "Isti broj - isto slovo" },
+    component: SearchPuzzle,
+    props: {
+      component_name: "NumberLetterTable",
+      icon: "sync_alt",
+      title: "Isti broj - isto slovo",
+    },
     name: "search_number_letter",
   },
   {
@@ -215,10 +245,10 @@ const routes = [
     component: SolveCryptogram,
     name: "solve_cryptogram",
   },
-  { 
+  {
     path: "/solve-eight/:id",
-    component: SolveEight, 
-    name: "solve_eight" 
+    component: SolveEight,
+    name: "solve_eight",
   },
   {
     path: "/solve-initial/:id",

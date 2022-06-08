@@ -187,7 +187,7 @@ export default {
 </script>
 
 <template>
-   <body class="my_body">
+  <body class="my_body">
     <div class="my_row">
       <h4 class="display-4">
         <va-icon size="large" name="edit_calendar"></va-icon>&nbsp;Novi turnir
@@ -235,7 +235,7 @@ export default {
         color="danger"
         title="Nije odabrano ispravno vrijeme"
         center
-        class="mb-4"
+        
       >
         {{ time_alert }}
       </va-alert>
@@ -338,7 +338,7 @@ export default {
         color="danger"
         title="Nije odabrana niti jedna zagonetka"
         center
-        class="mb-4"
+        
       >
         Odaberite barem jednu zagonetku da biste organizirali turnir.
       </va-alert>
@@ -360,7 +360,7 @@ export default {
         ><va-icon name="add_circle"></va-icon>&nbsp;Spremi turnir</va-button
       >
     </div>
-   </body>
+  </body>
 </template>
 
 <style scoped></style>
