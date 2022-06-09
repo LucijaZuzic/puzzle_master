@@ -190,12 +190,12 @@ export default {
   <body class="my_body">
     <div class="my_row">
       <h4 class="display-4">
-        <va-icon size="large" name="edit_calendar"></va-icon>&nbsp;Novi turnir
+        <va-icon size="large" name="edit_calendar"></va-icon>&nbsp; Novi turnir
       </h4>
     </div>
     <div class="my_row">
       <h4 class="display-4">
-        <va-icon size="large" name="hourglass_top"></va-icon>&nbsp;Početak
+        <va-icon size="large" name="hourglass_top"></va-icon>&nbsp; Početak
         turnira
       </h4>
     </div>
@@ -213,7 +213,7 @@ export default {
     </div>
     <div class="my_row">
       <h4 class="display-4">
-        <va-icon size="large" name="hourglass_bottom"></va-icon>&nbsp;Kraj
+        <va-icon size="large" name="hourglass_bottom"></va-icon>&nbsp; Kraj
         turnira
       </h4>
     </div>
@@ -242,7 +242,7 @@ export default {
     </div>
     <div class="my_row">
       <h4 class="display-4">
-        <va-icon size="large" name="extension"> </va-icon>&nbsp;Odabir zagonetki
+        <va-icon size="large" name="extension"> </va-icon>&nbsp; Odabir zagonetki
       </h4>
     </div>
     <va-tabs v-model="value" style="width: 100%">
@@ -357,7 +357,7 @@ export default {
           )
         "
         @click="store()"
-        ><va-icon name="add_circle"></va-icon>&nbsp;Spremi turnir</va-button
+        ><va-icon name="add_circle"></va-icon>&nbsp; Spremi turnir</va-button
       >
     </div>
   </body>

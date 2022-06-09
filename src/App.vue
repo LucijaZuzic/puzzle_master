@@ -7,11 +7,11 @@ export default {
 };
 </script>
 <template>
-  <div style="background-color: white">
+  <div style="background-color: #f4f8fa">
     <Navbar></Navbar>
     <va-card
       style="
-        background-color: #f4f8fa;
+      background-color: white;
         margin: 20px;
         padding: 20px;
         display: inline-block;
@@ -38,7 +38,20 @@ export default {
 .my_row {
   width: 100%;
   display: inline-block;
+  font-size: initial;
+  font-weight: normal;
+  text-align: center;
+  vertical-align: middle;
   padding: 20px;
+}
+.small_row {
+  width: 100%;
+  display: inline-block;
+  font-size: initial;
+  font-weight: normal;
+  text-align: center;
+  vertical-align: middle;
+  padding: 10px;
 }
 a,
 a:hover,

@@ -11,8 +11,8 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usersRef } from "../../firebase_main.js";
 import { numberLettersRef } from "../../firebase_main.js";
 
-import MyCounter from "../Utility/MyCounter.vue";
-
+import MyCounter from "../Utility/MyCounter.vue"; 
+import NumberLetterInfo from "../Info/NumberLetterInfo.vue";
 import LoadingBar from "../Utility/LoadingBar.vue";
 
 export default {
@@ -20,6 +20,7 @@ export default {
   components: {
     MyCounter,
     LoadingBar,
+    NumberLetterInfo
   },
   data() {
     return {
@@ -1401,40 +1402,38 @@ export default {
   <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="my_body" v-else>
-    <va-card>
+  <body class="my_body" v-else> 
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="sync_alt"></va-icon>
-          &nbsp;Stvori zagonetku tipa Isti broj - isto slovo
+          
+        &nbsp; 
+        <span v-if="edit">Uredi</span>
+        <span v-else>Stvori</span> zagonetku tipa Isti broj - isto slovo
         </h4>
-      </div>
-    </va-card>
+      </div> 
     <br />
-    <br />
-    <va-card>
+    <br /> 
       <div class="my_row">
         <va-tabs>
           <template #tabs>
             <va-tab>
               <va-icon name="info" @click="$refs.description.show()"></va-icon>
-              &nbsp;Pomoć
+              &nbsp; Pomoć
             </va-tab>
             <va-tab v-if="edit">
               <router-link
                 v-bind:to="{ name: 'solve_number_letter', params: { id: $route.params.id } }"
               >
                 <va-icon name="play_arrow"></va-icon>
-                &nbsp;Igraj
+                &nbsp; Igraj
               </router-link> 
             </va-tab>
           </template>
         </va-tabs>
-      </div>
-    </va-card>
+      </div> 
     <br />
-    <br />
-    <va-card>
+    <br /> 
       <h4 class="display-4">Dimenzije</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -1465,11 +1464,9 @@ export default {
             :some_text="'Broj slova'"
           ></MyCounter>
         </div>
-      </div>
-    </va-card>
+      </div>  
     <br />
-    <br />
-    <va-card>
+    <br /> 
       <h4 class="display-4">Ispuna mreže</h4>
       <va-divider></va-divider>
       <h6 class="display-6" style="text-align: start; margin-left: 10px;margin-top: 10px">
@@ -1479,7 +1476,7 @@ export default {
       <va-tabs v-model="mode">
         <template #tabs>
           <va-tab :name="-1">
-            <va-icon color="#000000" name="contrast"></va-icon>&nbsp;Barijera
+            <va-icon color="#000000" name="contrast"></va-icon>&nbsp; Barijera
           </va-tab>
           <va-tab :name="-2"> ? </va-tab>
           <va-tab name="0" label="0"> </va-tab>
@@ -1499,32 +1496,30 @@ export default {
       <va-tabs v-model="mode">
         <template #tabs>
           <va-tab :name="-3">
-            <va-icon color="#FA8072" name="contrast"></va-icon>&nbsp;Dio
+            <va-icon color="#FA8072" name="contrast"></va-icon>&nbsp; Dio
             rješenja
           </va-tab>
           <va-tab :name="-4">
             <va-icon name="border_top" />
-            &nbsp;Iscrtkano gore
+            &nbsp; Iscrtkano gore
           </va-tab>
           <va-tab :name="-5">
             <va-icon name="border_bottom" />
-            &nbsp;Iscrtkano dolje
+            &nbsp; Iscrtkano dolje
           </va-tab>
           <va-tab :name="-6">
             <va-icon name="border_left" />
-            &nbsp;Iscrtkano lijevo
+            &nbsp; Iscrtkano lijevo
           </va-tab>
           <va-tab :name="-7">
             <va-icon name="border_right" />
-            &nbsp;Iscrtkano desno
+            &nbsp; Iscrtkano desno
           </va-tab>
         </template>
       </va-tabs>
-    </div>
-    </va-card>
+    </div> 
     <br />
-    <br />
-    <va-card>
+    <br /> 
       <h4 class="display-4">Slova</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -1573,10 +1568,8 @@ export default {
           </table>
         </div>
       </va-infinite-scroll>
-    </div>
-    </va-card>
-    <br /><br />
-    <va-card>
+    </div>  
+    <br /><br /> 
       <h4 class="display-4">Nasumično generiranje</h4>
       <va-divider></va-divider>
       <h6
@@ -1612,23 +1605,21 @@ export default {
           </va-tab>
           <va-tab @click="choose_random_type()">
             <va-icon name="shuffle" />
-            &nbsp;Odaberi nasumično
+            &nbsp; Odaberi nasumično
           </va-tab>
           <va-tab @click="choose_reset_type()">
             <va-icon name="delete" />
-            &nbsp;Izbriši
+            &nbsp; Izbriši
           </va-tab>
         </template>
       </va-tabs>
-    </div>
-    </va-card>
-    <br/><br/>
-    <va-card>
+    </div> 
+    <br/><br/> 
       <h4 class="display-4">Zagonetka</h4>
       <va-divider></va-divider> 
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp;  Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -1643,7 +1634,7 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'"
+        :some_text="'Povećanje %'"
         :is_zoom="true"
       ></MyCounter>
     </div>
@@ -1678,7 +1669,7 @@ export default {
                   >
                   </span>
                   <span v-else>
-                    <sup> {{ solution[i - 1][j - 1] }} </sup>&nbsp;{{
+                    <sup> {{ solution[i - 1][j - 1] }} </sup>&nbsp; {{
                       letters[solution[i - 1][j - 1]]
                     }}
                   </span>
@@ -1699,10 +1690,8 @@ export default {
       >
         Neke ćelije nemaju dodijeljen broj slova.
       </va-alert>
-    </div>
-    </va-card>
-    <br /><br />
-    <va-card>
+    </div> 
+    <br /><br /> 
       <h4 class="display-4">Podaci o zagonetci</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -1711,7 +1700,7 @@ export default {
           @click="click_file()"
         >
           <span v-if="this.imageURL != ''"> {{ this.imageURL }} </span>
-          <span v-else><va-icon name="photo" /> &nbsp;Odaberi sliku </span>
+          <span v-else><va-icon name="photo" /> &nbsp; Odaberi sliku </span>
         </va-button>
         <input
           file-types="image/*"
@@ -1790,22 +1779,20 @@ export default {
         <span class="display-6" style="margin-left: 10px">
           Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
         >
-      </div>
-    </va-card>
-    <br /><br />
-    <va-card>
+      </div> 
+    <br /><br /> 
       <h4 class="display-4">Dozvola uređivanja</h4>
       <va-divider></va-divider>
       <div class="my_row">
         <va-button
           style="overflow-wrap: anywhere"
-          @click="is_public = !is_public"
+          @click="is_public = !is_public" :disabled="!permission_to_edit_visibility && edit"
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
-            &nbsp;Samo suradnici
+            &nbsp; Samo suradnici
           </span>
-          <span v-else><va-icon name="public" /> &nbsp;Svi</span>
+          <span v-else><va-icon name="public" /> &nbsp; Svi</span>
         </va-button>
       </div>
       <div class="my_row">
@@ -1817,7 +1804,7 @@ export default {
           label="Email adresa suradnika"
         >
           <template #append>
-            &nbsp;
+            &nbsp; 
             <va-icon
               @click="
                 checkIfUserExists();
@@ -1830,7 +1817,7 @@ export default {
           </template>
         </va-input>
       </div>
-      <div class="my_row">
+      <div class="my_row" v-if="permissionsUserRecords.length > 0">
         <va-chip
           style="
             overflow-wrap: anywhere;
@@ -1847,13 +1834,11 @@ export default {
             name="remove_moderator"
             class="mr-2"
           />
-          &nbsp;{{ permission.displayName }} ({{ permission.email }})
+          &nbsp; {{ permission.displayName }} ({{ permission.email }})
         </va-chip>
-      </div>
-    </va-card>
+      </div> 
     <br />
-    <br />
-    <va-card>
+    <br /> 
       <div class="my_row">
         <va-button
           style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
@@ -1871,8 +1856,8 @@ export default {
           @click="store()"
         >
           <va-icon name="mode_edit" />
-          &nbsp;Izmijeni postojeću zagonetku</va-button
-        >&nbsp;
+          &nbsp; Izmijeni postojeću zagonetku</va-button
+        >&nbsp; 
         <va-button
           style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
           :disabled="
@@ -1886,13 +1871,24 @@ export default {
           "
           @click="duplicate()"
         >
-          <va-icon name="control_point_duplicate" />
-          &nbsp;Spremi izmjene kao novu zagonetku</va-button
+          <va-icon v-if="edit" name="control_point_duplicate" /><va-icon v-else name="add_circle" />
+          
+        &nbsp; 
+        <span v-if="edit">Spremi izmjene kao novu zagonetku</span>
+        <span v-else>Spremi novu zagonetku</span></va-button
         >
-      </div>
-    </va-card>  
+      </div>  
   </body>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="description"
+    hide-default-actions
+    stateful
+  >
+    <NumberLetterInfo></NumberLetterInfo>
+  </va-modal>
 </template>
+
 
 <style scoped>
 .numbers_table {

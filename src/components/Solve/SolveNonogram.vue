@@ -5,11 +5,13 @@ import { nonogramsRecordsRef } from "../../firebase_main.js";
 import { usersRef, friendsRef } from "../../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import LoadingBar from "../Utility/LoadingBar.vue";
+import NonogramInfo from "../Info/NonogramInfo.vue";
 import MyCounter from "../Utility/MyCounter.vue";
 export default {
   components: {
     MyCounter,
     LoadingBar,
+    NonogramInfo
   },
   data() {
     return {
@@ -58,6 +60,20 @@ export default {
     };
   },
   methods: {
+    checkIdentity() {
+      if (this.author == this.user.uid) {
+        return true;
+      }
+      if (this.is_public == true) {
+        return true;
+      }
+      for (let i = 0; i < this.permissions.length; i++) {
+        if (this.permissions[i] == this.user.uid) {
+          return true;
+        }
+      }
+      return false;
+    },
     zoom_number() {
       if (this.zoom > this.max_zoom) {
         this.zoom = this.max_zoom;
@@ -903,24 +919,24 @@ export default {
     <LoadingBar></LoadingBar>
   </body>
   <body class="my_body" v-else>
-    <va-card>
+    
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="draw"></va-icon>
-          &nbsp;Riješi nonogram
+          &nbsp; Igraj nonogram
         </h4>
       </div>
-    </va-card>
+    
     <br /><br />
-    <va-card>
+    
       <div class="my_row">
         <va-tabs>
           <template #tabs>
             <va-tab disabled  
-              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+              ><va-icon name="timer" />&nbsp; {{ format(time_elapsed) }}</va-tab
             >
             <va-tab @click="$refs.description.show()"
-              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+              ><va-icon name="info"></va-icon>&nbsp;  Pomoć
             </va-tab>
             <va-tab
               @click="
@@ -930,21 +946,21 @@ export default {
             >
               <span v-if="show_error == false">
                 <va-icon name="report_off" />
-                &nbsp;Ne prikazuj greške</span
+                &nbsp; Ne prikazuj greške</span
               >
-              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+              <span v-else><va-icon name="report" /> &nbsp; Prikaži greške</span>
             </va-tab>
             <va-tab @click="$refs.show_solution_modal.show()">
               <va-icon name="help" />
-              &nbsp;Otkrij sva polja
+              &nbsp; Otkrij sva polja
             </va-tab>
           </template>
         </va-tabs>
       </div>
-    </va-card>
+    
     <br /><br /> 
 
-    <va-card>
+    
       <h4 class="display-4">Boje</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -961,10 +977,10 @@ export default {
             >
               <span v-if="drag == false">
                 <va-icon name="grid_off" />
-                &nbsp;Bojanje jedan po jedan
+                &nbsp; Bojanje jedan po jedan
               </span>
               <span v-else
-                ><va-icon name="grid_on" /> &nbsp;Bojanje segmenta</span
+                ><va-icon name="grid_on" /> &nbsp; Bojanje segmenta</span
               >
             </va-tab>
             <va-tab
@@ -977,15 +993,15 @@ export default {
             >
               <span v-if="allow_mouseover == false">
                 <va-icon name="grid_view" />
-                &nbsp;Bojanje gestom isključeno
+                &nbsp; Bojanje gestom isključeno
               </span>
               <span v-else
-                ><va-icon name="gesture" /> &nbsp;Bojanje gestom uključeno</span
+                ><va-icon name="gesture" /> &nbsp; Bojanje gestom uključeno</span
               >
             </va-tab>
             <va-tab @click="reset()">
               <va-icon name="delete" />
-              &nbsp;Izbriši
+              &nbsp; Izbriši
             </va-tab>
           </template>
         </va-tabs>
@@ -1049,14 +1065,14 @@ export default {
         ></button>
       </div>
     </div> 
-    </va-card>
+    
     <br/><br/>
-    <va-card>
+    
       <h4 class="display-4">Zagonetka</h4>
       <va-divider></va-divider>
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp;  Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -1071,14 +1087,14 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'"
+        :some_text="'Povećanje %'"
         :is_zoom="true"
       ></MyCounter>
     </div>
     <div class="my_row" v-if="prev_x != null && prev_y != null && drag">
       <va-chip>
         <va-icon name="texture"></va-icon>
-        ({{ prev_x }}, {{ prev_y }}) &nbsp;
+        ({{ prev_x }}, {{ prev_y }}) &nbsp; 
         <va-icon name="close" @click="(prev_x = null), (prev_y = null)">
         </va-icon>
       </va-chip>
@@ -1194,7 +1210,7 @@ export default {
                 v-bind:key="column_index"
                 style="border: none !important"
               >
-                &nbsp;
+                &nbsp; 
               </td>
             </tr>
             <tr
@@ -1325,7 +1341,7 @@ export default {
                       values[row_index - 1][column_index - 1] != 0
                     )
                   "
-                  >&nbsp;</span
+                  >&nbsp; </span
                 >
                 <span
                   class="numbers"
@@ -1348,9 +1364,9 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    </va-card>
+    
     <br/><br/>
-    <va-card>
+    
       <h4 class="display-4">Podaci o zagonetci</h4>
       <va-divider></va-divider> 
       <div class="text-block" style="margin: 20px">
@@ -1411,7 +1427,7 @@ export default {
           Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
         >
       </div>
-    </va-card>
+    
   </body>
   <va-modal
     :mobile-fullscreen="false"
@@ -1440,7 +1456,16 @@ export default {
     message="Ne može se spremiti vaš rezultat jer niste prijavljeni. Želite li svejedno nastaviti?"
     stateful
   />
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="description"
+    hide-default-actions
+    stateful
+  >
+    <NonogramInfo></NonogramInfo>
+  </va-modal>
 </template>
+
 
 <style scoped>
 table {

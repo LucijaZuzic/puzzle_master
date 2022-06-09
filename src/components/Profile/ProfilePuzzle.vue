@@ -121,20 +121,20 @@ export default {
   <va-tabs v-model="value" style="width: 100%">
     <template #tabs>
       <va-tab name="author"
-        ><va-icon name="person"></va-icon>&nbsp;Autor</va-tab
+        ><va-icon name="person"></va-icon>&nbsp; Autor</va-tab
       >
       <va-tab name="updater"
-        ><va-icon name="update"></va-icon>&nbsp;Zadnji ažurirao</va-tab
+        ><va-icon name="update"></va-icon>&nbsp; Zadnji ažurirao</va-tab
       >
       <va-tab name="collaborator"
-        ><va-icon name="shield"></va-icon>&nbsp;Suradnik</va-tab
+        ><va-icon name="shield"></va-icon>&nbsp; Suradnik</va-tab
       >
       <va-tab name="record"
-        ><va-icon name="schedule"></va-icon>&nbsp;Rezultati</va-tab
+        ><va-icon name="schedule"></va-icon>&nbsp; Rezultati</va-tab
       >
-      <va-tab name="rating"><va-icon name="star"></va-icon>&nbsp;Ocjene</va-tab>
+      <va-tab name="rating"><va-icon name="star"></va-icon>&nbsp; Ocjene</va-tab>
       <va-tab name="favorite"
-        ><va-icon name="favorite"></va-icon>&nbsp;Spremljeno</va-tab
+        ><va-icon name="favorite"></va-icon>&nbsp; Spremljeno</va-tab
       >
     </template>
   </va-tabs>

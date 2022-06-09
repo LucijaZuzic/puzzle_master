@@ -133,7 +133,7 @@ export default {
           placeholder="Unesite pojam za pretragu"
           v-model="filter"
         />
-        &nbsp;
+        &nbsp; 
         <va-checkbox
           style="display: inline-block"
           label="Traži cijelu riječ"
@@ -146,7 +146,7 @@ export default {
           :max_value="Math.ceil(this.filtered.length)"
           v-bind:value="perPage"
           @input="(n) => (perPage = n)"
-          :is_page_number="true"
+          :is_page_size="true"
           :some_text="'Broj rezultata na stranici'"
         ></MyCounter>
       </div>

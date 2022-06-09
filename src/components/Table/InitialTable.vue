@@ -10,6 +10,7 @@ import { ref, listAll, deleteObject, getMetadata } from "firebase/storage";
 import LoadingBar from "../Utility/LoadingBar.vue";
 import MyCounter from "../Utility/MyCounter.vue";
 import NoDataToDisplay from "../Utility/NoDataToDisplay.vue";
+import InitialInfo from "../Info/InitialInfo.vue";
 
 export default {
   emits: ["selectedInitials"],
@@ -20,7 +21,8 @@ export default {
     LoadingBar,
     MyCounter,
     NoDataToDisplay,
-  },
+    InitialInfo
+},
   mounted() {
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
@@ -596,30 +598,26 @@ export default {
 };
 </script>
 
-<template>
-  <va-card>
+<template> 
     <div class="my_row">
       <va-tabs>
         <template #tabs>
           <va-tab>
             <va-icon name="info" @click="$refs.description.show()"></va-icon>
-            &nbsp;Pomoć
+            &nbsp; Pomoć
           </va-tab>
           <va-tab>
             <router-link
               to="/create-initial"
               style="float: right; overflow-wrap: anywhere"
             >
-              <va-icon name="add_circle" />&nbsp;Nova zagonetka
+              <va-icon name="add_circle" />&nbsp; Nova zagonetka
             </router-link>
           </va-tab>
         </template>
       </va-tabs>
-    </div>
-  </va-card>
-  <br />
-  <br />
-  <va-card style="padding: 20px">
+    </div> 
+<va-divider></va-divider>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else> 
     <span v-if="puzzles.length > 0">
@@ -629,7 +627,7 @@ export default {
           placeholder="Unesite pojam za pretragu"
           v-model="filter"
         />
-        &nbsp;
+        &nbsp; 
         <va-checkbox
           style="display: inline-block"
           label="Traži cijelu riječ"
@@ -642,7 +640,7 @@ export default {
           :max_value="Math.ceil(this.filtered.length)"
           v-bind:value="perPage"
           @input="(n) => (perPage = n)"
-          :is_page_number="true"
+          :is_page_size="true"
           :some_text="'Broj rezultata na stranici'"
         ></MyCounter>
       </div>
@@ -763,7 +761,7 @@ export default {
       <div class="my_row" v-if="selectedItemsEmitted.length > 0">
         <h4 class="display-4">
           <va-icon size="large" name="extension"></va-icon>
-          &nbsp; Podaci o zagonetci
+          &nbsp;  Podaci o zagonetci
         </h4>
       </div>
       <va-tabs
@@ -773,16 +771,16 @@ export default {
       >
         <template #tabs>
           <va-tab name="all"
-            ><va-icon name="browse_gallery" />&nbsp;Svi rezultati</va-tab
+            ><va-icon name="browse_gallery" />&nbsp; Svi rezultati</va-tab
           >
           <va-tab name="mine"
-            ><va-icon name="schedule" />&nbsp;Rezultati korisnika</va-tab
+            ><va-icon name="schedule" />&nbsp; Rezultati korisnika</va-tab
           >
           <va-tab name="rate"
-            ><va-icon name="hotel_class" />&nbsp;Sve ocjene</va-tab
+            ><va-icon name="hotel_class" />&nbsp; Sve ocjene</va-tab
           >
           <va-tab name="rate_mine"
-            ><va-icon name="star" />&nbsp;Ocjena korisnika</va-tab
+            ><va-icon name="star" />&nbsp; Ocjena korisnika</va-tab
           >
         </template>
       </va-tabs>
@@ -827,16 +825,16 @@ export default {
       >
         <template #tabs>
           <va-tab name="all"
-            ><va-icon name="browse_gallery" />&nbsp;Svi rezultati</va-tab
+            ><va-icon name="browse_gallery" />&nbsp; Svi rezultati</va-tab
           >
           <va-tab name="mine"
-            ><va-icon name="schedule" />&nbsp;Rezultati korisnika</va-tab
+            ><va-icon name="schedule" />&nbsp; Rezultati korisnika</va-tab
           >
           <va-tab name="rate"
-            ><va-icon name="hotel_class" />&nbsp;Sve ocjene</va-tab
+            ><va-icon name="hotel_class" />&nbsp; Sve ocjene</va-tab
           >
           <va-tab name="rate_mine"
-            ><va-icon name="star" />&nbsp;Ocjena korisnika</va-tab
+            ><va-icon name="star" />&nbsp; Ocjena korisnika</va-tab
           >
         </template>
       </va-tabs>
@@ -877,8 +875,15 @@ export default {
         </RecordsTable>
       </span>
     </div>
-    </span>
-    </va-card> 
+    </span> 
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="description"
+    hide-default-actions
+    stateful
+  >
+    <InitialInfo></InitialInfo>  
+  </va-modal>
 </template>
 
 <style scoped></style>

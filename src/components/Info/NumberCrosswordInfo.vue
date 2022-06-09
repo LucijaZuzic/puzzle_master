@@ -10,7 +10,7 @@ export default {
 
 <template>
   <h4 class="display-4" style="text-align: center; vertical-align: middle">
-    <va-icon size="large" name="pattern"></va-icon>&nbsp;Osmosmjerke
+    <va-icon size="large" name="pattern"></va-icon>&nbsp; Osmosmjerke
   </h4>
   <br />
   <span>
@@ -44,7 +44,7 @@ export default {
     <br />
 
     <h6 class="display-6">
-      <va-icon size="medium" color="#FA8072" name="contrast"></va-icon>&nbsp;Dio
+      <va-icon size="medium" color="#FA8072" name="contrast"></va-icon>&nbsp; Dio
       rješenja
     </h6>
     <br />

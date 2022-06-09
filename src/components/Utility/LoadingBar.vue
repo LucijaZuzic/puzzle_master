@@ -15,7 +15,7 @@ export default {
   >
     <va-progress-circle indeterminate :thickness="0.6" size="large">
     </va-progress-circle>
-    <h4 class="display-4">&nbsp;Učitavanje</h4>
+    <h4 class="display-4">&nbsp; Učitavanje</h4>
   </div>
 </template>
 

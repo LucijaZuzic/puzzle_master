@@ -10,7 +10,7 @@ export default {
 
 <template>
   <h4 class="display-4" style="text-align: center; vertical-align: middle">
-    <va-icon size="large" name="multiple_stop"></va-icon>&nbsp;Kriptogrami
+    <va-icon size="large" name="multiple_stop"></va-icon>&nbsp; Kriptogrami
   </h4>
   <br />
   <span>
@@ -40,7 +40,7 @@ export default {
     <br />
 
     <h6 class="display-6">
-      <va-icon size="medium" name="visibility"></va-icon>&nbsp;Otkrivena slova
+      <va-icon size="medium" name="visibility"></va-icon>&nbsp; Otkrivena slova
     </h6>
     <br />
 
@@ -53,7 +53,7 @@ export default {
 
     <h6 class="display-6">
       <va-icon size="medium" color="#FA8072" name="contrast"></va-icon
-      >&nbsp;Pomoćni ključ (osjenčano)
+      >&nbsp; Pomoćni ključ (osjenčano)
     </h6>
     <br />
 
@@ -66,7 +66,7 @@ export default {
 
     <h6 class="display-6">
       <va-icon size="medium" color="#fdefef" name="contrast"></va-icon
-      >&nbsp;Glavni ključ (neobrojčeno)
+      >&nbsp; Glavni ključ (neobrojčeno)
     </h6>
     <br />
 
@@ -78,7 +78,7 @@ export default {
     <br />
 
     <h6 class="display-6">
-      <va-icon size="medium" name="border_clear"></va-icon>&nbsp;Iscrtkano
+      <va-icon size="medium" name="border_clear"></va-icon>&nbsp; Iscrtkano
     </h6>
     <br />
 
@@ -90,7 +90,7 @@ export default {
 
     <h6 class="display-6">
       <va-icon size="medium" color="#000000" name="contrast"></va-icon
-      >&nbsp;Barijera
+      >&nbsp; Barijera
     </h6>
     <br />
 

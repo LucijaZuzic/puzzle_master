@@ -234,7 +234,7 @@ export default {
       <va-list-item>
         <va-list-item-section avatar>
           <va-chip>
-            <va-icon name="star" size="large"></va-icon>&nbsp;
+            <va-icon name="star" size="large"></va-icon>&nbsp; 
             {{ value }}
           </va-chip>
         </va-list-item-section>
@@ -262,12 +262,12 @@ export default {
     </div>
     <div class="my_row" v-if="user">
       <va-button :disabled="comment.length < 1" @click="submit()">
-        <va-icon name="rate_review"></va-icon>&nbsp;Ocjenite</va-button
+        <va-icon name="rate_review"></va-icon>&nbsp; Ocjenite</va-button
       >
     </div>
     <div class="my_row" v-if="user_ratings.length > 0">
       <va-chip>
-        <va-icon name="stars"></va-icon>&nbsp;Ocjena:
+        <va-icon name="stars"></va-icon>&nbsp; Ocjena:
         {{ sum_ratings / user_ratings.length }}
       </va-chip>
     </div>
@@ -278,7 +278,7 @@ export default {
           placeholder="Unesite pojam za pretragu"
           v-model="filter"
         />
-        &nbsp;
+        &nbsp; 
         <va-checkbox
           style="display: inline-block"
           label="Traži cijelu riječ"
@@ -291,7 +291,7 @@ export default {
           :max_value="Math.ceil(this.filtered.length)"
           v-bind:value="perPage"
           @input="(n) => (perPage = n)"
-          :is_page_number="true"
+          :is_page_size="true"
           :some_text="'Broj rezultata na stranici'"
         ></MyCounter>
       </div>

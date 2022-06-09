@@ -10,11 +10,13 @@ import { numberLettersRef } from "../../firebase_main.js";
 
 import MyCounter from "../Utility/MyCounter.vue";
 import LoadingBar from "../Utility/LoadingBar.vue";
+import NumberLetterInfo from "../Info/NumberLetterInfo.vue";
 
 export default {
   components: {
     MyCounter,
     LoadingBar,
+    NumberLetterInfo
   },
   data() {
     return {
@@ -95,6 +97,20 @@ export default {
     };
   },
   methods: {
+    checkIdentity() {
+      if (this.author == this.user.uid) {
+        return true;
+      }
+      if (this.is_public == true) {
+        return true;
+      }
+      for (let i = 0; i < this.permissions.length; i++) {
+        if (this.permissions[i] == this.user.uid) {
+          return true;
+        }
+      }
+      return false;
+    },
     zoom_number() {
       if (this.zoom > this.max_zoom) {
         this.zoom = this.max_zoom;
@@ -690,25 +706,22 @@ export default {
   <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="my_body" v-else>
-    <va-card>
+  <body class="my_body" v-else> 
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="sync_alt"></va-icon>
-          &nbsp;Riješi zagonetku tipa Ist broj - isto slovo
+          &nbsp; Igraj zagonetku tipa Ist broj - isto slovo
         </h4>
-      </div>
-    </va-card>
-    <br /><br />
-    <va-card>
+      </div> 
+    <br /><br /> 
       <div class="my_row">
         <va-tabs>
           <template #tabs>
             <va-tab disabled
-              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+              ><va-icon name="timer" />&nbsp; {{ format(time_elapsed) }}</va-tab
             >
             <va-tab @click="$refs.description.show()"
-              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+              ><va-icon name="info"></va-icon>&nbsp;  Pomoć
             </va-tab>
             <va-tab
               @click="
@@ -718,20 +731,18 @@ export default {
             >
               <span v-if="show_error == false">
                 <va-icon name="report_off" />
-                &nbsp;Ne prikazuj greške</span
+                &nbsp; Ne prikazuj greške</span
               >
-              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+              <span v-else><va-icon name="report" /> &nbsp; Prikaži greške</span>
             </va-tab>
             <va-tab @click="$refs.show_solution_modal.show()">
               <va-icon name="help" />
-              &nbsp;Otkrij sva polja
+              &nbsp; Otkrij sva polja
             </va-tab>
           </template>
         </va-tabs>
-      </div>
-    </va-card>
-    <br /><br />  
-    <va-card>
+      </div> 
+    <br /><br />   
       <h4 class="display-4">Slova</h4>
       <va-divider></va-divider> 
     <div class="my_row">
@@ -799,15 +810,13 @@ export default {
           </table>
         </div>
       </va-infinite-scroll>
-    </div>
-    </va-card>
-    <br /><br />  
-    <va-card>
+    </div> 
+    <br /><br />   
       <h4 class="display-4">Zagonetka</h4>
       <va-divider></va-divider> 
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp;  Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -822,7 +831,7 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'"
+        :some_text="'Povećanje %'"
         :is_zoom="true"
       ></MyCounter>
     </div>
@@ -859,7 +868,7 @@ export default {
                   >
                   </span>
                   <span v-else>
-                    <sup> {{ solution[i - 1][j - 1] }} </sup>&nbsp;{{
+                    <sup> {{ solution[i - 1][j - 1] }} </sup>&nbsp; {{
                       values[solution[i - 1][j - 1]]
                     }}
                   </span>
@@ -869,10 +878,8 @@ export default {
           </table>
         </div>
       </va-infinite-scroll>
-    </div>
-  </va-card>
-  <br /><br />
-    <va-card>
+    </div> 
+  <br /><br /> 
       <h4 class="display-4">Podaci o zagonetci</h4>
       <va-divider></va-divider>
       <div class="my_row" v-if="image">
@@ -946,8 +953,7 @@ export default {
         <span class="display-6" style="margin-left: 10px">
           Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
         >
-      </div>
-    </va-card>
+      </div> 
   </body>
   <va-modal
     :mobile-fullscreen="false"
@@ -976,7 +982,16 @@ export default {
     message="Ne može se spremiti vaš rezultat jer niste prijavljeni. Želite li svejedno nastaviti?"
     stateful
   />
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="description"
+    hide-default-actions
+    stateful
+  >
+    <NumberLetterInfo></NumberLetterInfo>
+  </va-modal>
 </template>
+
 
 <style scoped>
 .numbers_table {

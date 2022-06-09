@@ -245,7 +245,7 @@ export default {
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="workspace_premium"> </va-icon>
-          &nbsp; Turniri
+          &nbsp;  Turniri
         </h4>
       </div>
       <div class="my_row">
@@ -262,7 +262,7 @@ export default {
             placeholder="Unesite pojam za pretragu"
             v-model="filter"
           />
-          &nbsp;
+          &nbsp; 
           <va-checkbox
             style="display: inline-block"
             label="Traži cijelu riječ"

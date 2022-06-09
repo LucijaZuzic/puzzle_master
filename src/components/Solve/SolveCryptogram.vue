@@ -100,6 +100,20 @@ export default {
     };
   },
   methods: {
+    checkIdentity() {
+      if (this.author == this.user.uid) {
+        return true;
+      }
+      if (this.is_public == true) {
+        return true;
+      }
+      for (let i = 0; i < this.permissions.length; i++) {
+        if (this.permissions[i] == this.user.uid) {
+          return true;
+        }
+      }
+      return false;
+    },
     zoom_number() {
       if (this.zoom > this.max_zoom) {
         this.zoom = this.max_zoom;
@@ -944,25 +958,21 @@ export default {
   <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="my_body" v-else>
-    <va-card>
+  <body class="my_body" v-else> 
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="multiple_stop"></va-icon>
-          &nbsp;Riješi kriptogram
+          &nbsp; Igraj kriptogram
         </h4>
-      </div>
-    </va-card>
-    <br /><br />
-    <va-card>
-      <div class="my_row">
+      </div> 
+      <va-divider></va-divider> 
         <va-tabs>
           <template #tabs>
             <va-tab disabled
-              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+              ><va-icon name="timer" />&nbsp; {{ format(time_elapsed) }}</va-tab
             >
             <va-tab @click="$refs.description.show()"
-              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+              ><va-icon name="info"></va-icon>&nbsp;  Pomoć
             </va-tab>
             <va-tab
               @click="
@@ -972,23 +982,173 @@ export default {
             >
               <span v-if="show_error == false">
                 <va-icon name="report_off" />
-                &nbsp;Ne prikazuj greške</span
+                &nbsp; Ne prikazuj greške</span
               >
-              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+              <span v-else><va-icon name="report" /> &nbsp; Prikaži greške</span>
             </va-tab>
             <va-tab @click="$refs.show_solution_modal.show()">
               <va-icon name="help" />
-              &nbsp;Otkrij sva polja
+              &nbsp; Otkrij sva polja
             </va-tab>
+          <va-tab v-if="checkIdentity()">
+            <router-link
+              v-bind:to="{
+                name: 'edit_cryptogram',
+                params: { id: $route.params.id }, 
+              }"
+            >
+              <va-icon name="edit"></va-icon>
+              &nbsp; Uredi
+            </router-link>
+          </va-tab>
+          <va-tab>
+            <router-link
+              v-bind:to="{
+                name: 'create_cryptogram',
+                params: { id: $route.params.id }, 
+              }"
+            >
+              <va-icon name="add_circle"></va-icon>
+              &nbsp; Nova zagonetka
+            </router-link>
+          </va-tab>
+          <va-tab>
+            <router-link
+              v-bind:to="{
+                name: 'search_cryptogram', 
+              }"
+            >
+              <va-icon name="search"></va-icon>
+              &nbsp; Popis kriptograma
+            </router-link>
+          </va-tab>
           </template>
-        </va-tabs>
-      </div>
-    </va-card>
-    <br /><br />
-    <va-card>
-      <h4 class="display-4">Slova</h4>
+        </va-tabs>  
+      <va-divider></va-divider>
+    <h4
+      class="display-4" 
+    >
+      Zagonetka
+    </h4>
       <va-divider></va-divider>
       <div class="my_row">
+        <MyCounter
+          :min_value="1"
+          :max_value="max_zoom"
+          v-bind:value="zoom"
+          @input="
+            (n) => {
+              zoom = n;
+              zoom_number();
+            }
+          "
+          :some_text="'Povećanje %'"
+          :is_zoom="true"
+        >
+        </MyCounter>
+      </div> 
+      <div class="my_row">
+        <va-chip
+          ><va-icon name="my_location" /> &nbsp;  Zadnja lokacija ({{ current_x }},
+          {{ current_y }})
+        </va-chip> 
+      </div> 
+      <div class="my_row" style="max-height: 500px">
+        <va-infinite-scroll disabled :load="() => {}">
+          <div class="my_row">
+            <table class="numbers_table" id="table_zoom">
+              <tr v-for="i in rows" v-bind:key="i">
+                <td
+                  v-for="j in columns"
+                  v-bind:key="j"
+                  @click="
+                    new_options[i - 1][j - 1] = option_number;
+                    check_victory();
+                  "
+                  @mouseover="
+                    current_x = i;
+                    current_y = j;
+                  "
+                  :class="{
+                    unnumbered_cell: unnumbered[i - 1][j - 1] == 1,
+                    black: solution[i - 1][j - 1] == -1,
+                    special: is_special[i - 1][j - 1] == 1,
+                    wrong:
+                      (show_error &&
+                        new_options[i - 1][j - 1] != option[i - 1][j - 1]) ||
+                      (solution[i - 1][j - 1] != -2 &&
+                        solution[i - 1][j - 1] != -1 &&
+                        new_options[i - 1][j - 1] != -1 &&
+                        values[solution[i - 1][j - 1]][
+                          new_options[i - 1][j - 1]
+                        ] !=
+                          letters[solution[i - 1][j - 1]][
+                            new_options[i - 1][j - 1]
+                          ]),
+                    bordertop: border_top[i - 1][j - 1] == 1,
+                    borderbottom: border_bottom[i - 1][j - 1] == 1,
+                    borderleft: border_left[i - 1][j - 1] == 1,
+                    borderright: border_right[i - 1][j - 1] == 1,
+                  }"
+                >
+                  <div v-if="unnumbered[i - 1][j - 1] == 0">
+                    <sup
+                      v-if="
+                        solution[i - 1][j - 1] != -2 &&
+                        solution[i - 1][j - 1] != -1
+                      "
+                    >
+                      {{ solution[i - 1][j - 1] }}
+                    </sup>
+                    &nbsp; 
+                    <span
+                      v-if="
+                        solution[i - 1][j - 1] != -2 &&
+                        solution[i - 1][j - 1] != -1 &&
+                        new_options[i - 1][j - 1] != -1
+                      "
+                    >
+                      {{
+                        values[solution[i - 1][j - 1]][
+                          new_options[i - 1][j - 1]
+                        ]
+                      }}
+                    </span>
+                  </div>
+                  <div v-else>
+                    <input
+                      maxlength="2"
+                      :class="{
+                        unnumbered_input: true,
+                        wrong: getErrorMessage(i, j) != '',
+                      }"
+                      type="text"
+                      v-model="unnumbered_text[i - 1][j - 1]"
+                      @input="check_letter()"
+                    />
+                    <va-icon
+                      name="warning"
+                      class="wrong"
+                      v-if="getErrorMessage(i, j) != ''"
+                      @click="$vaToast.init(getErrorMessage(i, j))"
+                      size="small"
+                    >
+                    </va-icon>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </va-infinite-scroll>
+      </div>   
+    <va-divider></va-divider>
+    <h4
+      class="display-4"
+      style="text-align: center" 
+    >
+      Slova
+    </h4>
+      <va-divider></va-divider>
         <va-tabs v-model="option_number">
           <template #tabs>
             <va-tab name="-1"> Bez opcije </va-tab>
@@ -996,8 +1156,7 @@ export default {
             <va-tab name="1"> 2. opcija </va-tab>
             <va-tab name="2"> 3. opcija </va-tab>
           </template>
-        </va-tabs>
-      </div>
+        </va-tabs>   
       <div class="my_row">
         <va-infinite-scroll disabled :load="() => {}">
           <div>
@@ -1016,6 +1175,7 @@ export default {
                         min-width: 100px;
                         max-width: 100px;
                         margin-left: 10px;
+                        margin-bottom: 10px;
                       "
                       type="text"
                       :label="'' + (i - 1) + ' (' + j + ')'"
@@ -1086,125 +1246,13 @@ export default {
             </table>
           </div>
         </va-infinite-scroll>
-      </div>
-    </va-card>
-    <br /><br /> 
-    <va-card>
-      <h4 class="display-4">Zagonetka</h4>
+      </div>   
       <va-divider></va-divider>
-      <div class="my_row" v-if="current_x != null && current_y != null">
-        <va-chip
-          ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
-          {{ current_y }})</va-chip
-        >
-      </div>
-      <div class="my_row">
-        <MyCounter
-          :min_value="1"
-          :max_value="max_zoom"
-          v-bind:value="zoom"
-          @input="
-            (n) => {
-              zoom = n;
-              zoom_number();
-            }
-          "
-          :some_text="'Povećanje'"
-          :is_zoom="true"
-        ></MyCounter>
-      </div>
-      <div class="my_row" style="max-height: 500px">
-        <va-infinite-scroll disabled :load="() => {}">
-          <div class="my_row">
-            <table class="numbers_table" id="table_zoom">
-              <tr v-for="i in rows" v-bind:key="i">
-                <td
-                  v-for="j in columns"
-                  v-bind:key="j"
-                  @click="
-                    new_options[i - 1][j - 1] = option_number;
-                    check_victory();
-                  "
-                  @mouseover="
-                    current_x = i;
-                    current_y = j;
-                  "
-                  :class="{
-                    unnumbered_cell: unnumbered[i - 1][j - 1] == 1,
-                    black: solution[i - 1][j - 1] == -1,
-                    special: is_special[i - 1][j - 1] == 1,
-                    wrong:
-                      (show_error &&
-                        new_options[i - 1][j - 1] != option[i - 1][j - 1]) ||
-                      (solution[i - 1][j - 1] != -2 &&
-                        solution[i - 1][j - 1] != -1 &&
-                        new_options[i - 1][j - 1] != -1 &&
-                        values[solution[i - 1][j - 1]][
-                          new_options[i - 1][j - 1]
-                        ] !=
-                          letters[solution[i - 1][j - 1]][
-                            new_options[i - 1][j - 1]
-                          ]),
-                    bordertop: border_top[i - 1][j - 1] == 1,
-                    borderbottom: border_bottom[i - 1][j - 1] == 1,
-                    borderleft: border_left[i - 1][j - 1] == 1,
-                    borderright: border_right[i - 1][j - 1] == 1,
-                  }"
-                >
-                  <div v-if="unnumbered[i - 1][j - 1] == 0">
-                    <sup
-                      v-if="
-                        solution[i - 1][j - 1] != -2 &&
-                        solution[i - 1][j - 1] != -1
-                      "
-                    >
-                      {{ solution[i - 1][j - 1] }}
-                    </sup>
-                    &nbsp;
-                    <span
-                      v-if="
-                        solution[i - 1][j - 1] != -2 &&
-                        solution[i - 1][j - 1] != -1 &&
-                        new_options[i - 1][j - 1] != -1
-                      "
-                    >
-                      {{
-                        values[solution[i - 1][j - 1]][
-                          new_options[i - 1][j - 1]
-                        ]
-                      }}
-                    </span>
-                  </div>
-                  <div v-else>
-                    <input
-                      maxlength="2"
-                      :class="{
-                        unnumbered_input: true,
-                        wrong: getErrorMessage(i, j) != '',
-                      }"
-                      type="text"
-                      v-model="unnumbered_text[i - 1][j - 1]"
-                      @input="check_letter()"
-                    />
-                    <va-icon
-                      name="warning"
-                      class="wrong"
-                      v-if="getErrorMessage(i, j) != ''"
-                      @click="$vaToast.init(getErrorMessage(i, j))"
-                      size="small"
-                    >
-                    </va-icon>
-                  </div>
-                </td>
-              </tr>
-            </table>
-          </div>
-        </va-infinite-scroll>
-      </div>
-    </va-card>
-    <br /><br />
-    <va-card>
-      <h4 class="display-4">Podaci o zagonetci</h4>
+    <h4
+      class="display-4" 
+    >
+      Podaci o zagonetci
+    </h4>
       <va-divider></va-divider>
       <div class="my_row" v-if="image">
         <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
@@ -1277,8 +1325,7 @@ export default {
         <span class="display-6" style="margin-left: 10px">
           Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
         >
-      </div>
-    </va-card>
+      </div> 
   </body>
   <va-modal
     :mobile-fullscreen="false"

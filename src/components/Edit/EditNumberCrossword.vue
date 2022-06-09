@@ -11,7 +11,7 @@ import {
 } from "firebase/storage";
 import { projectStorage } from "../../firebase_main.js";
 import MyCounter from "../Utility/MyCounter.vue";
-
+import NumberCrosswordInfo from "../Info/NumberCrosswordInfo.vue";
 import LoadingBar from "../Utility/LoadingBar.vue";
 
 export default {
@@ -19,6 +19,7 @@ export default {
   components: {
     MyCounter,
     LoadingBar,
+    NumberCrosswordInfo
   },
   data() {
     return {
@@ -1225,39 +1226,42 @@ export default {
     <LoadingBar></LoadingBar>
   </body>
   <body class="my_body" v-else>
-    <va-card>
+    
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="format_list_numbered"></va-icon>
-          &nbsp;Stvori brojevnu križaljku
+          
+        &nbsp; 
+        <span v-if="edit">Uredi</span>
+        <span v-else>Stvori</span> brojevnu križaljku
         </h4>
       </div>
-    </va-card>
+    
     <br />
     <br />
-    <va-card>
+    
       <div class="my_row">
         <va-tabs>
           <template #tabs>
             <va-tab>
               <va-icon name="info" @click="$refs.description.show()"></va-icon>
-              &nbsp;Pomoć
+              &nbsp; Pomoć
             </va-tab>
             <va-tab v-if="edit">
               <router-link
                 v-bind:to="{ name: 'solve_number_crossword', params: { id: $route.params.id } }"
               >
                 <va-icon name="play_arrow"></va-icon>
-                &nbsp;Igraj
+                &nbsp; Igraj
               </router-link> 
             </va-tab>
           </template>
         </va-tabs>
       </div>
-    </va-card>
+    
     <br />
     <br />
-    <va-card>
+    
       <h4 class="display-4">Dimenzije</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -1280,10 +1284,10 @@ export default {
           ></MyCounter>
         </div> 
       </div>
-    </va-card>
+    
     <br />
     <br /> 
-    <va-card>
+    
       <h4 class="display-4">Ispuna mreže</h4>
       <va-divider></va-divider>
       <h6
@@ -1296,7 +1300,7 @@ export default {
       <va-tabs v-model="mode">
         <template #tabs>
           <va-tab :name="-1">
-            <va-icon color="#000000" name="contrast"></va-icon>&nbsp;Barijera
+            <va-icon color="#000000" name="contrast"></va-icon>&nbsp; Barijera
           </va-tab>
           <va-tab :name="10" label="?"> </va-tab>
           <va-tab name="0" label="0"> </va-tab>
@@ -1314,11 +1318,11 @@ export default {
       <va-tabs v-model="mode">
         <template #tabs>
           <va-tab :name="-2">
-            <va-icon color="#FA8072" name="contrast"></va-icon>&nbsp;Dio
+            <va-icon color="#FA8072" name="contrast"></va-icon>&nbsp; Dio
             rješenja
           </va-tab>
           <va-tab :name="-3">
-            <va-icon color="#90beee" name="contrast"></va-icon>&nbsp;Pomoć
+            <va-icon color="#90beee" name="contrast"></va-icon>&nbsp; Pomoć
             (otkriveno)
           </va-tab>
         </template>
@@ -1343,23 +1347,23 @@ export default {
           </va-tab>
           <va-tab @click="choose_random_type()">
             <va-icon name="shuffle" />
-            &nbsp;Odaberi nasumično
+            &nbsp; Odaberi nasumično
           </va-tab>
           <va-tab @click="reset()">
             <va-icon name="delete" />
-            &nbsp;Izbriši
+            &nbsp; Izbriši
           </va-tab>
         </template>
       </va-tabs>
     </div>
-    </va-card>
+    
     <br/><br/>
-    <va-card>
+    
       <h4 class="display-4">Zagonetka</h4>
       <va-divider></va-divider> 
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp;  Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -1374,7 +1378,7 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'"
+        :some_text="'Povećanje %'"
         :is_zoom="true"
       ></MyCounter>
     </div>
@@ -1426,10 +1430,9 @@ export default {
         brojeva u križaljci.
       </va-alert> 
       </div>
-      </va-card> 
+       
       <span v-if="count_special()">
-    <br/><br/></span>
-    <va-card v-if="count_special()">
+    <br/><br/></span> 
       <h4 class="display-4">Rješenje</h4>
       <va-divider></va-divider>   
     <div class="my_row"> 
@@ -1449,10 +1452,9 @@ export default {
         </span>
       </span>
     </div> 
-      </va-card> 
+       
       <span v-if="!warning">
-    <br/><br/></span>
-    <va-card v-if="!warning">
+    <br/><br/></span> 
       <h4 class="display-4">Brojevi po duljini</h4>
       <va-divider></va-divider>    
     <div class="my_row">
@@ -1501,9 +1503,9 @@ export default {
         </div>
       </va-infinite-scroll>
     </div>
-    </va-card>
+    
     <br /><br />
-    <va-card>
+    
       <h4 class="display-4">Podaci o zagonetci</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -1512,7 +1514,7 @@ export default {
           @click="click_file()"
         >
           <span v-if="this.imageURL != ''"> {{ this.imageURL }} </span>
-          <span v-else><va-icon name="photo" /> &nbsp;Odaberi sliku </span>
+          <span v-else><va-icon name="photo" /> &nbsp; Odaberi sliku </span>
         </va-button>
         <input
           file-types="image/*"
@@ -1592,21 +1594,21 @@ export default {
           Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
         >
       </div>
-    </va-card>
+    
     <br /><br />
-    <va-card>
+    
       <h4 class="display-4">Dozvola uređivanja</h4>
       <va-divider></va-divider>
       <div class="my_row">
         <va-button
           style="overflow-wrap: anywhere"
-          @click="is_public = !is_public"
+          @click="is_public = !is_public" :disabled="!permission_to_edit_visibility && edit"
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
-            &nbsp;Samo suradnici
+            &nbsp; Samo suradnici
           </span>
-          <span v-else><va-icon name="public" /> &nbsp;Svi</span>
+          <span v-else><va-icon name="public" /> &nbsp; Svi</span>
         </va-button>
       </div>
       <div class="my_row">
@@ -1618,7 +1620,7 @@ export default {
           label="Email adresa suradnika"
         >
           <template #append>
-            &nbsp;
+            &nbsp; 
             <va-icon
               @click="
                 checkIfUserExists();
@@ -1631,7 +1633,7 @@ export default {
           </template>
         </va-input>
       </div>
-      <div class="my_row">
+      <div class="my_row" v-if="permissionsUserRecords.length > 0">
         <va-chip
           style="
             overflow-wrap: anywhere;
@@ -1648,13 +1650,13 @@ export default {
             name="remove_moderator"
             class="mr-2"
           />
-          &nbsp;{{ permission.displayName }} ({{ permission.email }})
+          &nbsp; {{ permission.displayName }} ({{ permission.email }})
         </va-chip>
       </div>
-    </va-card>
+    
     <br />
     <br />
-    <va-card>
+    
       <div class="my_row">
         <va-button
           style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
@@ -1671,8 +1673,8 @@ export default {
           @click="store()"
         >
           <va-icon name="mode_edit" />
-          &nbsp;Izmijeni postojeću zagonetku</va-button
-        >&nbsp;
+          &nbsp; Izmijeni postojeću zagonetku</va-button
+        >&nbsp; 
         <va-button
           style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
           :disabled="
@@ -1685,12 +1687,23 @@ export default {
           "
           @click="duplicate()"
         >
-          <va-icon name="control_point_duplicate" />
-          &nbsp;Spremi izmjene kao novu zagonetku</va-button
+          <va-icon v-if="edit" name="control_point_duplicate" /><va-icon v-else name="add_circle" />
+          
+        &nbsp; 
+        <span v-if="edit">Spremi izmjene kao novu zagonetku</span>
+        <span v-else>Spremi novu zagonetku</span></va-button
         >
       </div>
-    </va-card> 
-  </body>
+     
+  </body> 
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="description"
+    hide-default-actions
+    stateful
+  >
+    <NumberCrossowrdInfo></NumberCrossowrdInfo>
+  </va-modal>
 </template>
 
 <style scoped>

@@ -13,12 +13,14 @@ import { integramsRef } from "../../firebase_main.js";
 
 import MyCounter from "../Utility/MyCounter.vue";
 import LoadingBar from "../Utility/LoadingBar.vue";
+import IntegramInfo from "../Info/IntegramInfo.vue";
 
 export default {
   props: ["edit"],
   components: {
     MyCounter,
     LoadingBar,
+    IntegramInfo
   },
   data() {
     return {
@@ -1162,7 +1164,10 @@ export default {
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="rule_folder"></va-icon>
-          &nbsp;Stvori integram
+          
+        &nbsp; 
+        <span v-if="edit">Uredi</span>
+        <span v-else>Stvori</span> integram
         </h4>
       </div>
     </va-card>
@@ -1174,14 +1179,14 @@ export default {
           <template #tabs>
             <va-tab>
               <va-icon name="info" @click="$refs.description.show()"></va-icon>
-              &nbsp;Pomoć
+              &nbsp; Pomoć
             </va-tab>
             <va-tab v-if="edit">
               <router-link
                 v-bind:to="{ name: 'solve_integram', params: { id: $route.params.id } }"
               >
                 <va-icon name="play_arrow"></va-icon>
-                &nbsp;Igraj
+                &nbsp; Igraj
               </router-link> 
             </va-tab>
           </template>
@@ -1275,7 +1280,7 @@ export default {
             class="display-4"
             style="overflow-wrap: anywhere"
           >
-            {{ j }}. kategorija&nbsp;
+            {{ j }}. kategorija&nbsp; 
             <span
               @click="
                 clear_category(j - 1);
@@ -1354,7 +1359,7 @@ export default {
                     "
                   >
                     <va-icon name="photo" />
-                    &nbsp;Odaberi sliku</span
+                    &nbsp; Odaberi sliku</span
                   >
                 </va-chip>
                 <va-form ref="valuesform">
@@ -1529,13 +1534,13 @@ export default {
       <div class="my_row">
         <va-button
           style="overflow-wrap: anywhere"
-          @click="is_public = !is_public"
+          @click="is_public = !is_public" :disabled="!permission_to_edit_visibility && edit"
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
-            &nbsp;Samo suradnici
+            &nbsp; Samo suradnici
           </span>
-          <span v-else><va-icon name="public" /> &nbsp;Svi</span>
+          <span v-else><va-icon name="public" /> &nbsp; Svi</span>
         </va-button>
       </div>
       <div class="my_row">
@@ -1547,7 +1552,7 @@ export default {
           label="Email adresa suradnika"
         >
           <template #append>
-            &nbsp;
+            &nbsp; 
             <va-icon
               @click="
                 checkIfUserExists();
@@ -1560,7 +1565,7 @@ export default {
           </template>
         </va-input>
       </div>
-      <div class="my_row">
+      <div class="my_row" v-if="permissionsUserRecords.length > 0">
         <va-chip
           style="
             overflow-wrap: anywhere;
@@ -1577,7 +1582,7 @@ export default {
             name="remove_moderator"
             class="mr-2"
           />
-          &nbsp;{{ permission.displayName }} ({{ permission.email }})
+          &nbsp; {{ permission.displayName }} ({{ permission.email }})
         </va-chip>
       </div>
     </va-card>
@@ -1600,8 +1605,8 @@ export default {
           @click="store()"
         >
           <va-icon name="mode_edit" />
-          &nbsp;Izmijeni postojeću zagonetku</va-button
-        >&nbsp;
+          &nbsp; Izmijeni postojeću zagonetku</va-button
+        >&nbsp; 
         <va-button
           style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
           :disabled="
@@ -1614,13 +1619,25 @@ export default {
           "
           @click="duplicate()"
         >
-          <va-icon name="control_point_duplicate" />
-          &nbsp;Spremi izmjene kao novu zagonetku</va-button
+          <va-icon v-if="edit" name="control_point_duplicate" /><va-icon v-else name="add_circle" />
+          
+        &nbsp; 
+        <span v-if="edit">Spremi izmjene kao novu zagonetku</span>
+        <span v-else>Spremi novu zagonetku</span></va-button
         >
       </div>
     </va-card>
   </body>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="description"
+    hide-default-actions
+    stateful
+  >
+    <IntegramInfo></IntegramInfo>
+  </va-modal>
 </template>
+
 
 <style scoped>
 table {

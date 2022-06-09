@@ -1,193 +1,155 @@
 <template>
-  <span v-if="!is_zoom">
-    <span>
-      {{ some_text }}
-      <br />
-      <br />
-      <va-chip outline>
-        <span style="display: inline-block; overflow-wrap: anywhere !important">
-          <va-button
-            size="small"
-            outline
-            round
-            style="border: none"
-            :rounded="false"
-            :disabled="value <= min_value"
-            @click="
-              value = min_value;
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-          >
-            <span v-if="!is_page_number">{{ min_value }}</span>
-            <va-icon v-else size="small" name="compress"></va-icon>
-          </va-button>
-          <va-button
-            size="small"
-            outline
-            round
-            :rounded="false"
-            style="border: none"
-            :disabled="value <= min_value"
-            @click="
-              value--;
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-          >
-            <va-icon
-              v-if="!is_page_number"
-              size="small"
-              name="arrow_left"
-            ></va-icon>
-            <va-icon v-else size="small" name="unfold_less"></va-icon>
-          </va-button>
-          <input
-            @input="
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-            v-model="value"
-            :min="min_value"
-            :max="max_value"
-            type="number"
-          />
-          <va-button
-            size="small"
-            outline
-            round
-            :rounded="false"
-            style="border: none"
-            :disabled="value >= max_value"
-            @click="
-              value++;
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-          >
-            <va-icon
-              v-if="!is_page_number"
-              size="small"
-              name="arrow_right"
-            ></va-icon>
-            <va-icon v-else size="small" name="unfold_more"></va-icon>
-          </va-button>
-          <va-button
-            size="small"
-            outline
-            round
-            :rounded="false"
-            style="border: none"
-            :disabled="value >= max_value"
-            @click="
-              value = max_value;
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-          >
-            <span v-if="!is_page_number">{{ max_value }}</span>
-            <va-icon v-else size="small" name="expand"></va-icon>
-          </va-button>
-        </span>
-      </va-chip>
+  <div style="display: inline-block; overflow-wrap: anywhere !important; padding: 10px">
+    <span v-if="is_zoom"> <va-icon size="small" name="search" />&nbsp;  </span>
+    <va-button
+      v-if="is_page_number"
+      :disabled="value == min_value"
+      size="small"
+      outline
+      round
+      :rounded="false"
+      style="border: none"
+      @click="
+        value = min_value;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+      <va-icon size="small" name="first_page"></va-icon>
+    </va-button>
+    {{ some_text }}
+    <va-button
+      v-if="is_zoom"
+      :disabled="value == 100"
+      size="small"
+      outline
+      round
+      :rounded="false"
+      style="border: none"
+      @click="
+        value = 100;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+      <va-icon size="small" name="restart_alt"></va-icon>
+    </va-button>
+    <va-button
+      v-if="is_page_size"
+      :disabled="value == min_value"
+      size="small"
+      outline
+      round
+      :rounded="false"
+      style="border: none"
+      @click="
+        value = min_value;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+      <va-icon size="small" name="compress"></va-icon>
+    </va-button>
+    <va-button
+      v-if="is_page_size"
+      :disabled="value == max_value"
+      size="small"
+      outline
+      round
+      :rounded="false"
+      style="border: none"
+      @click="
+        value = max_value;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+      <va-icon size="small" name="expand"></va-icon>
+    </va-button>
+    <va-button
+      v-if="is_page_number"
+      :disabled="value == max_value"
+      size="small"
+      outline
+      round
+      :rounded="false"
+      style="border: none"
+      @click="
+        value = max_value;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+      <va-icon size="small" name="last_page"></va-icon>
+    </va-button> 
+    <br /> 
+    <br />  
+    <span
+      v-if="min_value < value"
+      style="font-weight: bold; color: #babfc2"
+      @click="
+        value = value - 1;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+      {{ value - 1 }} 
     </span>
-  </span>
-  <span v-else>
-    <span>
-      <va-icon size="small" name="search" />&nbsp; {{ some_text }}
-      <va-button
-        size="small"
-        outline
-        round
-        :rounded="false"
-        style="border: none"
-        @click="
-          value = 100;
+    <span
+      v-if="min_value == value && !is_page_size && !is_page_number"
+      style="font-weight: bold; color: #babfc2"
+      @click="
+        value = max_value;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+      {{ max_value }} 
+    </span> 
+    <span
+      style="
+        width: 25px;
+        vertical-align: middle;
+        text-align: center;
+        font-weight: bold;
+        color: #767c88;
+      "
+    >
+      &nbsp;  | <input
+        @input="
           value = Math.max(min_value, Math.min(value, max_value));
           $emit('input', value);
         "
-      >
-        <va-icon size="small" name="restart_alt"></va-icon>
-      </va-button>
-      <br />
-      <br />
-      <va-chip outline>
-        <span style="display: inline-block; overflow-wrap: anywhere !important">
-          <va-button
-            size="small"
-            outline
-            round
-            :rounded="false"
-            style="border: none"
-            :disabled="value <= min_value"
-            @click="
-              value = min_value;
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-          >
-            MIN
-          </va-button>
-          <va-button
-            size="small"
-            outline
-            round
-            :rounded="false"
-            style="border: none"
-            :disabled="value <= min_value"
-            @click="
-              value--;
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-          >
-            -
-          </va-button>
-          <input
-            @input="
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-            v-model="value"
-            :min="min_value"
-            :max="max_value"
-            type="number"
-          />%
-          <va-button
-            size="small"
-            outline
-            round
-            :rounded="false"
-            style="border: none"
-            :disabled="value >= max_value"
-            @click="
-              value++;
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-          >
-            +
-          </va-button>
-          <va-button
-            size="small"
-            outline
-            round
-            :rounded="false"
-            style="border: none"
-            :disabled="value >= max_value"
-            @click="
-              value = max_value;
-              value = Math.max(min_value, Math.min(value, max_value));
-              $emit('input', value);
-            "
-          >
-            MAX
-          </va-button>
-        </span>
-      </va-chip>
+        v-model="value"
+        :min="min_value"
+        :max="max_value"
+        type="number"
+      />  |  &nbsp; 
     </span>
-  </span>
-  <!-- </div>-->
+    <span
+      v-if="max_value > value"
+      style="font-weight: bold; color: #babfc2"
+      @click="
+        value = value + 1;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+        {{ value + 1 }} 
+    </span>
+    <span
+      v-if="max_value == value && !is_page_size && !is_page_number"
+      style="font-weight: bold; color: #babfc2"
+      @click="
+        value = min_value;
+        value = Math.max(min_value, Math.min(value, max_value));
+        $emit('input', value);
+      "
+    >
+        {{ min_value }} 
+    </span>
+    <br /> 
+  </div>
 </template>
 
 <script>
@@ -198,6 +160,7 @@ export default {
     "some_text",
     "max_value",
     "min_value",
+    "is_page_size",
     "is_page_number",
     "is_zoom",
   ],
@@ -220,11 +183,14 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   border: none;
-  background-color: transparent;
   width: 25px;
+  background-color: transparent; 
   vertical-align: middle;
   text-align: center;
   font-weight: bold;
   color: #767c88;
+  display: inline-block;
+  margin: none;
+  padding: none;
 }
 </style>

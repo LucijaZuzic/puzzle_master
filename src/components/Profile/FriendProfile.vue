@@ -248,18 +248,18 @@ export default {
       <span v-if="user.email != friend.email">
         <div class="my_row">
           <h4 class="display-4">
-            <va-icon name="account_box"></va-icon>&nbsp; Profil korisnika
+            <va-icon name="account_box"></va-icon>&nbsp;  Profil korisnika
           </h4>
         </div>
         <div class="my_row">
           <h4 class="display-4">
-            <va-icon name="person"></va-icon>&nbsp;
+            <va-icon name="person"></va-icon>&nbsp; 
             {{ friend.displayName }}
           </h4>
         </div>
         <div class="my_row">
           <span>
-            <va-icon name="email"></va-icon>&nbsp;
+            <va-icon name="email"></va-icon>&nbsp; 
             {{ friend.email }}
           </span>
         </div>
@@ -272,7 +272,7 @@ export default {
                 size="large"
               >
               </va-icon>
-              &nbsp; Prekini prijateljstvo
+              &nbsp;  Prekini prijateljstvo
             </span>
             <span v-if="!areFriends && !requestSent">
               <va-icon
@@ -281,11 +281,11 @@ export default {
                 size="large"
               >
               </va-icon>
-              &nbsp; Pošalji zahtjev za prijateljstvo
+              &nbsp;  Pošalji zahtjev za prijateljstvo
             </span>
             <span v-if="!areFriends && requestSent">
               <va-icon name="person_add_disabled" size="large"> </va-icon>
-              &nbsp; Već je poslan zahtjev za prijateljstvo
+              &nbsp;  Već je poslan zahtjev za prijateljstvo
             </span>
           </va-button>
         </div>
@@ -293,18 +293,18 @@ export default {
       <span v-else>
         <div class="my_row">
           <h4 class="display-4">
-            <va-icon name="account_box"></va-icon>&nbsp; Moj profil
+            <va-icon name="account_box"></va-icon>&nbsp;  Moj profil
           </h4>
         </div>
         <div class="my_row">
           <h4 class="display-4">
-            <va-icon name="person"></va-icon>&nbsp;
+            <va-icon name="person"></va-icon>&nbsp; 
             {{ friend.displayName }}
           </h4>
         </div>
         <div class="my_row">
           <span>
-            <va-icon name="email"></va-icon>&nbsp;
+            <va-icon name="email"></va-icon>&nbsp; 
             {{ friend.email }}
           </span>
         </div>
@@ -318,15 +318,15 @@ export default {
           >
             <span v-if="friend.visible == true">
               <va-icon name="lock_open" />
-              &nbsp;Javno</span
+              &nbsp; Javno</span
             >
-            <span v-else><va-icon name="lock" /> &nbsp;Privatno</span>
+            <span v-else><va-icon name="lock" /> &nbsp; Privatno</span>
           </va-button>
           <va-button
             @click="setVisibility()"
             style="margin-left: 10px; margin-top: 10px; display: inline-block"
           >
-            <va-icon name="settings"></va-icon>&nbsp; Izmjeni vidljivost profila
+            <va-icon name="settings"></va-icon>&nbsp;  Izmjeni vidljivost profila
           </va-button>
         </div>
       </span>
@@ -431,14 +431,14 @@ export default {
         <va-tabs v-model="friendOption" style="width: 100%">
           <template #tabs>
             <va-tab name="friend"
-              ><va-icon name="person_add"></va-icon>&nbsp; Prijatelji</va-tab
+              ><va-icon name="person_add"></va-icon>&nbsp;  Prijatelji</va-tab
             >
             <va-tab name="received"
-              ><va-icon name="inbox"></va-icon>&nbsp; Primljeni zahtjevi za
+              ><va-icon name="inbox"></va-icon>&nbsp;  Primljeni zahtjevi za
               prijateljstvo</va-tab
             >
             <va-tab name="sent"
-              ><va-icon name="outgoing_mail"></va-icon>&nbsp; Poslani zahtjevi
+              ><va-icon name="outgoing_mail"></va-icon>&nbsp;  Poslani zahtjevi
               za prijateljstvo</va-tab
             >
           </template>

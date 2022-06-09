@@ -5,7 +5,7 @@ import { usersRef } from "../../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import MyCounter from "../Utility/MyCounter.vue";
-
+import NonogramInfo from "../Info/NonogramInfo.vue";
 import LoadingBar from "../Utility/LoadingBar.vue";
 
 export default {
@@ -13,6 +13,7 @@ export default {
   components: {
     LoadingBar,
     MyCounter,
+    NonogramInfo
   },
   data() {
     return {
@@ -1092,39 +1093,42 @@ export default {
     <LoadingBar></LoadingBar>
   </body>
   <body class="my_body" v-else>
-    <va-card>
+    
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="draw"></va-icon>
-          &nbsp;Stvori nonogram
+          
+        &nbsp; 
+        <span v-if="edit">Uredi</span>
+        <span v-else>Stvori</span> nonogram
         </h4>
       </div>
-    </va-card>
+    
     <br />
     <br />
-    <va-card>
+    
       <div class="my_row">
         <va-tabs>
           <template #tabs>
             <va-tab>
               <va-icon name="info" @click="$refs.description.show()"></va-icon>
-              &nbsp;Pomoć
+              &nbsp; Pomoć
             </va-tab>
             <va-tab v-if="edit">
               <router-link
                 v-bind:to="{ name: 'solve_nonogram', params: { id: $route.params.id } }"
               >
                 <va-icon name="play_arrow"></va-icon>
-                &nbsp;Igraj
+                &nbsp; Igraj
               </router-link> 
             </va-tab>
           </template>
         </va-tabs>
       </div>
-    </va-card>
+    
     <br />
     <br />
-    <va-card>
+    
       <h4 class="display-4">Dimenzije</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -1156,10 +1160,10 @@ export default {
           ></MyCounter>
         </div>
       </div>
-    </va-card>
+    
     <br />
     <br />
-    <va-card>
+    
       <h4 class="display-4">Boje</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -1176,10 +1180,10 @@ export default {
             >
               <span v-if="drag == false">
                 <va-icon name="grid_off" />
-                &nbsp;Bojanje jedan po jedan
+                &nbsp; Bojanje jedan po jedan
               </span>
               <span v-else
-                ><va-icon name="grid_on" /> &nbsp;Bojanje segmenta</span
+                ><va-icon name="grid_on" /> &nbsp; Bojanje segmenta</span
               >
             </va-tab>
             <va-tab
@@ -1192,15 +1196,15 @@ export default {
             >
               <span v-if="allow_mouseover == false">
                 <va-icon name="grid_view" />
-                &nbsp;Bojanje gestom isključeno
+                &nbsp; Bojanje gestom isključeno
               </span>
               <span v-else
-                ><va-icon name="gesture" /> &nbsp;Bojanje gestom uključeno</span
+                ><va-icon name="gesture" /> &nbsp; Bojanje gestom uključeno</span
               >
             </va-tab>
             <va-tab @click="reset()">
               <va-icon name="delete" />
-              &nbsp;Izbriši
+              &nbsp; Izbriši
             </va-tab>
           </template>
         </va-tabs>
@@ -1310,15 +1314,15 @@ export default {
           Boje moraju biti jedinstvene.
         </va-alert>
       </div>
-    </va-card>
+    
     <br />
     <br /> 
-    <va-card>
+    
       <h4 class="display-4">Zagonetka</h4>
       <va-divider></va-divider> 
     <div class="my_row" v-if="current_x != null && current_y != null">
       <va-chip
-        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
+        ><va-icon name="my_location" /> &nbsp;  Zadnja lokacija ({{ current_x }},
         {{ current_y }})</va-chip
       >
     </div>
@@ -1333,14 +1337,14 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'"
+        :some_text="'Povećanje %'"
         :is_zoom="true"
       ></MyCounter>
     </div>
     <div class="my_row" v-if="prev_x != null && prev_y != null && drag">
       <va-chip>
         <va-icon name="texture"></va-icon>
-        ({{ prev_x }}, {{ prev_y }}) &nbsp;
+        ({{ prev_x }}, {{ prev_y }}) &nbsp; 
         <va-icon name="close" @click="(prev_x = null), (prev_y = null)">
         </va-icon>
       </va-chip>
@@ -1416,7 +1420,7 @@ export default {
                 v-bind:key="column_index"
                 style="border: none !important"
               >
-                &nbsp;
+                &nbsp; 
               </td>
             </tr>
             <tr
@@ -1483,17 +1487,17 @@ export default {
                   >
                   </va-icon>
                 </span>
-                <span class="numbers" v-else>&nbsp;</span>
+                <span class="numbers" v-else>&nbsp; </span>
               </td>
             </tr>
           </table>
         </div>
       </va-infinite-scroll>
     </div>
-    </va-card>
+    
     <br />
     <br /> 
-    <va-card>
+    
       <h4 class="display-4">Podaci o zagonetci</h4>
       <va-divider></va-divider>
       <div class="my_row">
@@ -1552,21 +1556,21 @@ export default {
           Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
         >
       </div>
-    </va-card>
+    
     <br /><br />
-    <va-card>
+    
       <h4 class="display-4">Dozvola uređivanja</h4>
       <va-divider></va-divider>
       <div class="my_row">
         <va-button
           style="overflow-wrap: anywhere"
-          @click="is_public = !is_public"
+          @click="is_public = !is_public" :disabled="!permission_to_edit_visibility && edit"
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
-            &nbsp;Samo suradnici
+            &nbsp; Samo suradnici
           </span>
-          <span v-else><va-icon name="public" /> &nbsp;Svi</span>
+          <span v-else><va-icon name="public" /> &nbsp; Svi</span>
         </va-button>
       </div>
       <div class="my_row">
@@ -1578,7 +1582,7 @@ export default {
           label="Email adresa suradnika"
         >
           <template #append>
-            &nbsp;
+            &nbsp; 
             <va-icon
               @click="
                 checkIfUserExists();
@@ -1591,7 +1595,7 @@ export default {
           </template>
         </va-input>
       </div>
-      <div class="my_row">
+      <div class="my_row" v-if="permissionsUserRecords.length > 0">
         <va-chip
           style="
             overflow-wrap: anywhere;
@@ -1608,13 +1612,13 @@ export default {
             name="remove_moderator"
             class="mr-2"
           />
-          &nbsp;{{ permission.displayName }} ({{ permission.email }})
+          &nbsp; {{ permission.displayName }} ({{ permission.email }})
         </va-chip>
       </div>
-    </va-card>
+    
     <br />
     <br />
-    <va-card>
+    
       <div class="my_row">
         <va-button
           style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
@@ -1631,8 +1635,8 @@ export default {
           @click="store()"
         >
           <va-icon name="mode_edit" />
-          &nbsp;Izmijeni postojeću zagonetku</va-button
-        >&nbsp;
+          &nbsp; Izmijeni postojeću zagonetku</va-button
+        >&nbsp; 
         <va-button
           style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
           :disabled="
@@ -1645,13 +1649,25 @@ export default {
           "
           @click="duplicate()"
         >
-          <va-icon name="control_point_duplicate" />
-          &nbsp;Spremi izmjene kao novu zagonetku</va-button
+          <va-icon v-if="edit" name="control_point_duplicate" /><va-icon v-else name="add_circle" />
+          
+        &nbsp; 
+        <span v-if="edit">Spremi izmjene kao novu zagonetku</span>
+        <span v-else>Spremi novu zagonetku</span></va-button
         >
       </div>
-    </va-card>
+    
   </body>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="description"
+    hide-default-actions
+    stateful
+  >
+    <NonogramInfo></NonogramInfo>
+  </va-modal>
 </template>
+
 
 <style scoped>
 table {

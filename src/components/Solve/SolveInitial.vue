@@ -91,6 +91,20 @@ export default {
     };
   },
   methods: {
+    checkIdentity() {
+      if (this.author == this.user.uid) {
+        return true;
+      }
+      if (this.is_public == true) {
+        return true;
+      }
+      for (let i = 0; i < this.permissions.length; i++) {
+        if (this.permissions[i] == this.user.uid) {
+          return true;
+        }
+      }
+      return false;
+    },
     zoom_number() {
       if (this.zoom > this.max_zoom) {
         this.zoom = this.max_zoom;
@@ -869,25 +883,22 @@ export default {
   <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="my_body" v-else>
-    <va-card>
+  <body class="my_body" v-else> 
       <div class="my_row">
         <h4 class="display-4">
           <va-icon size="large" name="text_rotation_none"></va-icon>
-          &nbsp;Riješi inicijalnu osmosmjerku
+          &nbsp; Igraj inicijalnu osmosmjerku
         </h4>
-      </div>
-    </va-card>
-    <br /><br />
-    <va-card>
-      <div class="my_row">
+      </div> 
+    <br /><br />  
+      <va-divider></va-divider> 
         <va-tabs>
           <template #tabs>
             <va-tab disabled
-              ><va-icon name="timer" />&nbsp;{{ format(time_elapsed) }}</va-tab
+              ><va-icon name="timer" />&nbsp; {{ format(time_elapsed) }}</va-tab
             >
             <va-tab @click="$refs.description.show()"
-              ><va-icon name="info"></va-icon>&nbsp; Pomoć
+              ><va-icon name="info"></va-icon>&nbsp;  Pomoć
             </va-tab>
             <va-tab
               @click="
@@ -897,28 +908,51 @@ export default {
             >
               <span v-if="show_error == false">
                 <va-icon name="report_off" />
-                &nbsp;Ne prikazuj greške</span
+                &nbsp; Ne prikazuj greške</span
               >
-              <span v-else><va-icon name="report" /> &nbsp;Prikaži greške</span>
+              <span v-else><va-icon name="report" /> &nbsp; Prikaži greške</span>
             </va-tab>
             <va-tab @click="$refs.show_solution_modal.show()">
               <va-icon name="help" />
-              &nbsp;Otkrij sva polja
+              &nbsp; Otkrij sva polja
             </va-tab>
+          <va-tab v-if="checkIdentity()">
+            <router-link
+              v-bind:to="{
+                name: 'edit_initial',
+                params: { id: $route.params.id }, 
+              }"
+            >
+              <va-icon name="edit"></va-icon>
+              &nbsp; Uredi
+            </router-link>
+          </va-tab>
+          <va-tab>
+            <router-link
+              v-bind:to="{
+                name: 'create_initial',
+                params: { id: $route.params.id }, 
+              }"
+            >
+              <va-icon name="add_circle"></va-icon>
+              &nbsp; Nova zagonetka
+            </router-link>
+          </va-tab>
+          <va-tab>
+            <router-link
+              v-bind:to="{
+                name: 'search_initial', 
+              }"
+            >
+              <va-icon name="search"></va-icon>
+              &nbsp; Popis inicijalnih osmosmjerki
+            </router-link>
+          </va-tab>
           </template>
-        </va-tabs>
-      </div>
-    </va-card>
-    <br /><br /> 
-    <va-card>
+        </va-tabs>  
+    <va-divider></va-divider>  
       <h4 class="display-4">Zagonetka</h4>
       <va-divider></va-divider> 
-    <div class="my_row" v-if="current_x != null && current_y != null">
-      <va-chip
-        ><va-icon name="my_location" /> &nbsp; Zadnja lokacija ({{ current_x }},
-        {{ current_y }})</va-chip
-      >
-    </div>
     <div class="my_row">
       <MyCounter
         :min_value="1"
@@ -930,9 +964,15 @@ export default {
             zoom_number();
           }
         "
-        :some_text="'Povećanje'"
+        :some_text="'Povećanje %'"
         :is_zoom="true"
       ></MyCounter>
+    </div>
+    <div class="my_row" v-if="current_x != null && current_y != null">
+      <va-chip
+        ><va-icon name="my_location" /> &nbsp;  Zadnja lokacija ({{ current_x }},
+        {{ current_y }})</va-chip
+      >
     </div>
     <div class="my_row" style="max-height: 400px">
       <va-infinite-scroll disabled :load="() => {}">
@@ -963,15 +1003,11 @@ export default {
           </table>
         </div>
       </va-infinite-scroll>
-    </div>
-    </va-card>
-    <span v-if="count_special()">
-    <br /><br />
-    </span> 
-    <va-card v-if="count_special()">
-      <h4 class="display-4">Rješenje</h4>
-      <va-divider></va-divider>
-    <div class="my_row"> 
+    </div>  
+      <va-divider v-if="count_special()"></va-divider>
+      <h4 class="display-4" v-if="count_special()">Rješenje</h4>
+      <va-divider v-if="count_special()"></va-divider>
+    <div class="my_row" v-if="count_special()"> 
       <span v-for="i in rows" v-bind:key="i">
         <span v-for="j in columns" v-bind:key="j">
           <va-chip
@@ -987,8 +1023,7 @@ export default {
           </va-chip>
         </span>
       </span>
-    </div> 
-    </va-card> 
+    </div>  
     <span 
       v-if="
         words_by_dir[0].length +
@@ -1002,30 +1037,14 @@ export default {
         0
       ">
     <br />
-    <br /></span>
-    <va-card
-      v-if="
-        words_by_dir[0].length +
-          words_by_dir[1].length +
-          words_by_dir[2].length +
-          words_by_dir[3].length +
-          words_by_dir[4].length +
-          words_by_dir[5].length +
-          words_by_dir[6].length +
-          words_by_dir[7].length >
-        0
-      ">
-      <h4 class="display-4">Riječi po smjerovima</h4>
+    <br /></span> 
       <va-divider></va-divider>
-    <div class="my_row">
+      <h4 class="display-4">Riječi po smjerovima</h4>
+      <va-divider></va-divider> 
       <va-button style="overflow-wrap: anywhere" @click="reset()">
         <va-icon name="delete" />
-        &nbsp;Izbriši sve</va-button
-      >
-    </div>
-    <div
-      class="my_row"
-    >
+        &nbsp; Izbriši sve</va-button
+      > 
       <va-tabs v-model="dir_to_display">
         <template #tabs>
           <va-tab v-if="words_by_dir[0].length > 0" name="0">
@@ -1043,20 +1062,11 @@ export default {
             </va-tab>
           </span>
         </template>
-      </va-tabs>
-    </div>
+      </va-tabs> 
     <div
       class="my_row"
       v-if="
-        words_by_dir[0].length +
-          words_by_dir[1].length +
-          words_by_dir[2].length +
-          words_by_dir[3].length +
-          words_by_dir[4].length +
-          words_by_dir[5].length +
-          words_by_dir[6].length +
-          words_by_dir[7].length >
-        0
+        dir_to_display != null && words_by_dir[dir_to_display].length  > 0
       "
     >
       <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
@@ -1066,15 +1076,15 @@ export default {
           style="padding: 20px; margin-left: 20px; margin-top: 20px"
         >
           <span>
-            <va-chip v-if="i == 0">&#8598;</va-chip>
-            <va-chip v-if="i == 1">&#8592;</va-chip>
-            <va-chip v-if="i == 2">&#8601;</va-chip>
-            <va-chip v-if="i == 3">&#8593;</va-chip>
-            <va-chip v-if="i == 4">&#8595;</va-chip>
-            <va-chip v-if="i == 5">&#8599;</va-chip>
-            <va-chip v-if="i == 6">&#8594;</va-chip>
-            <va-chip v-if="i == 7">&#8600;</va-chip>
-            &nbsp;
+            <span v-if="i == 0">&#8598;</span>
+            <span v-if="i == 1">&#8592;</span>
+            <span v-if="i == 2">&#8601;</span>
+            <span v-if="i == 3">&#8593;</span>
+            <span v-if="i == 4">&#8595;</span>
+            <span v-if="i == 5">&#8599;</span>
+            <span v-if="i == 6">&#8594;</span>
+            <span v-if="i == 7">&#8600;</span>
+            &nbsp; 
             <va-icon @click="remove_dir(i)" name="delete" />
             <br />
             <br />
@@ -1090,7 +1100,7 @@ export default {
                   >
                     {{ word[2] }}
                   </span>
-                  &nbsp;
+                  &nbsp; 
                   <va-icon @click="remove_word(i, j)" name="delete" />
                 </div>
               </va-infinite-scroll>
@@ -1098,10 +1108,8 @@ export default {
           </span>
         </va-chip>
       </span>
-    </div>
-  </va-card>
-  <br /><br />
-    <va-card>
+    </div>  
+      <va-divider></va-divider>
       <h4 class="display-4">Podaci o zagonetci</h4>
       <va-divider></va-divider>
       <div class="my_row" v-if="image">
@@ -1175,8 +1183,7 @@ export default {
         <span class="display-6" style="margin-left: 10px">
           Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
         >
-      </div>
-    </va-card>
+      </div> 
   </body>
   <va-modal
     :mobile-fullscreen="false"

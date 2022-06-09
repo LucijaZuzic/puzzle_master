@@ -54,7 +54,7 @@ export default {
         color="#ffffff"
         @click="visible_menu = !visible_menu"
       />
-      &nbsp;
+      &nbsp; 
       <router-link v-if="user != null" :to="'/profile/' + user.email">
         <span style="color: #ffffff">
           <va-icon name="person" />
@@ -62,7 +62,7 @@ export default {
             {{ user.displayName }}
           </span>
         </span>
-        &nbsp;
+        &nbsp; 
       </router-link>
       <span v-if="user != null" @click="signOut()" style="color: #ffffff">
         <va-icon name="logout" />
