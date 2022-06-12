@@ -1013,38 +1013,90 @@ export default {
           }
         });
     },
+    zero_start_horizontal(i, j) {
+      if (i >= this.rows || i <= -1 || j >= this.columns || j <= -1) {
+        return false;
+      }
+      let seq = this.solution[i][j] + '';
+      let index = j + 1;
+      while (index < this.columns && this.solution[i][index] != -1 && this.solution[i][index] != 10) {
+        seq = seq + "" + this.solution[i][index];
+        index += 1;
+      }
+      index = j - 1;
+      while (index > -1 && this.solution[i][index] != -1 && this.solution[i][index] != 10) {
+        seq = this.solution[i][index] + "" + seq;
+        index -= 1;
+      }
+      if (seq[0] == "0" && seq.length > 1) {
+        return true;
+      }
+      return false;
+    },
+    zero_start_vertical(i, j) {
+      if (i >= this.rows || i <= -1 || j >= this.columns || j <= -1) {
+        return false;
+      }
+      let seq = this.solution[i][j] + '';
+      let index = i + 1;
+      while (index < this.rows && this.solution[index][j] != -1 && this.solution[index][j] != 10) {
+        seq = seq + "" + this.solution[index][j];
+        index += 1;
+      }
+      index = i - 1;
+      while (index > -1 && this.solution[index][j] != -1 && this.solution[index][j] != 10) {
+        seq = this.solution[index][j] + "" + seq;
+        index -= 1;
+      }
+      if (seq[0] == "0" && seq.length > 1) {
+        return true;
+      }
+      return false;
+    },
     change_number(i, j) {
-      if (
-        this.mode == 0 &&
-        (i == 0 ||
-          j == 0 ||
-          (j > 0 && this.solution[i][j - 1] == -1) ||
-          (i > 0 && this.solution[i - 1][j] == -1))
-      ) {
-        this.$vaToast.init("Broj ne može započinjati znamenkom 0.");
-        return;
-      }
-      if (
-        this.mode == -1 &&
-        ((j < this.columns - 1 && this.solution[i][j + 1] == 0) ||
-          (i < this.rows - 1 && this.solution[i + 1][j] == 0))
-      ) {
-        this.$vaToast.init("Broj ne može započinjati znamenkom 0.");
-        return;
-      }
-      if (this.mode >= -1 && this.mode <= 10) {
-        if (this.mode == -1) {
-          if (this.is_revealed[i][j]) {
-            this.$vaToast.init("Pomoćno polje ne može biti barijera.");
-            return;
-          }
-          if (this.is_special[i][j]) {
-            this.$vaToast.init(
-              "Polje koje je dio rješenja ne može biti barijera."
-            );
-            return;
-          }
+      if (this.mode == 0) {
+        let old = this.solution[i][j];
+        this.solution[i][j] = 0;
+        if (
+          this.zero_start_horizontal(i, j) ||
+          this.zero_start_vertical(i, j)
+        ) {
+          this.solution[i][j] = old;
+          this.$vaToast.init("Broj ne može započinjati znamenkom 0.");
+          return;
+        } else {
+          this.parse_numbers();
         }
+        return;
+      }
+      if (this.mode == -1) {
+        if (this.is_revealed[i][j]) {
+          this.$vaToast.init("Pomoćno polje ne može biti barijera.");
+          return;
+        }
+        if (this.is_special[i][j]) {
+          this.$vaToast.init(
+            "Polje koje je dio rješenja ne može biti barijera."
+          );
+          return;
+        }
+        let old = this.solution[i][j];
+        this.solution[i][j] = -1;
+        if (
+          this.zero_start_horizontal(i + 1, j) ||
+          this.zero_start_vertical(i, j + 1) ||
+          this.zero_start_horizontal(i - 1, j) ||
+          this.zero_start_vertical(i, j - 1)
+        ) {
+          this.solution[i][j] = old;
+          this.$vaToast.init("Broj ne može započinjati znamenkom 0.");
+          return;
+        } else {
+          this.parse_numbers();
+        }
+        return;
+      }
+      if (this.mode > 0 && this.mode <= 10) {
         this.solution[i][j] = this.mode;
         this.parse_numbers();
       } else {
@@ -1370,7 +1422,7 @@ export default {
           &nbsp; Zadnja lokacija ({{ current_x }}, {{ current_y }})
         </va-chip>
       </div>
-      <br v-if="current_x != null && current_y != null" /> 
+      <br v-if="current_x != null && current_y != null" />
       <div style="max-height: 400px; overflow-x: scroll; overflow-y: scroll">
         <table class="numbers_table" id="table_zoom">
           <tr v-for="i in rows" v-bind:key="i">
@@ -1404,7 +1456,9 @@ export default {
         </table>
       </div>
       <br v-if="warning" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="warning"
         style="white-space: pre-wrap; border: none"
         color="danger"
@@ -1541,7 +1595,9 @@ export default {
         style="width: 100%"
       />
       <br v-if="image" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="!image"
         style="white-space: pre-wrap; border: none"
         color="warning"
@@ -1620,8 +1676,8 @@ export default {
       <h6
         @click="value[6] = !value[6]"
         class="display-6"
-    
-        v-if="permission_to_edit_visibility || !edit" style="text-align: start" 
+        v-if="permission_to_edit_visibility || !edit"
+        style="text-align: start"
       >
         Dozvola uređivanja &nbsp;
         <va-icon v-if="!value[6]" name="expand_more"></va-icon>
@@ -1635,8 +1691,6 @@ export default {
           :rounded="false"
           style="border: none"
           @click="is_public = !is_public"
-          
-    
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
