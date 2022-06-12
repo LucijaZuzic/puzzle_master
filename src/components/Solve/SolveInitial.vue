@@ -1311,6 +1311,8 @@ export default {
 }
 .special {
   background-color: salmon;
+  font-weight: bold;
+  color: #DE1041; 
 }
 
 .help {
@@ -1318,7 +1320,7 @@ export default {
   background-color: #90beee;
 }
 .wrong {
-  color: #de1041;
+  color: #DE1041;
 }
 .placed {
   text-decoration: line-through;

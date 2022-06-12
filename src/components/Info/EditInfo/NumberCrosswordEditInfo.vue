@@ -58,7 +58,7 @@ export default {
   <br />
   <span class="tab"></span>
   Brojevi su razvrstani po broju znamenki te rastuće unutar skupine brojeva s istim brojem znamenki.  
-  Automatski se generira popis kako se upisuju znamenke i barijer u mrežu. Broj ne može započeti znamenkom 0,
+  Automatski se generira popis kako se upisuju znamenke i barijere u mrežu. Broj ne može započeti znamenkom 0,
    pa ju nije dozvoljeno upisati u prvi redak, prvi stupac niti neposredno nakon barijere u retku ili stupcu, osim
    ako i iduće polje nije barijera.  
   <br />

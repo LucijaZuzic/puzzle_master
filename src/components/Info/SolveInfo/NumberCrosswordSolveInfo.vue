@@ -20,11 +20,16 @@ export default {
 
   <br />
   <br />
+  <h6 class="display-6">Pomoćna polja</h6>
+  <br />
+  <span class="tab"></span>
+  Znamenke koja su osjenčane plavom bojom i podebljane otkrivene su kao pomoć rješavaču i ne mogu se mijenjati. 
+  <br />
+  <br />
   <h6 class="display-6">Rješenje</h6>
   <br />
   <span class="tab"></span>
-  Brojevi su razvrstani po broju znamenki te rastuće unutar skupine brojeva s istim brojem znamenki. 
-  U mrežu se smještaju brojevi vodoravno ili okomito ukoliko u odabranom smjeru ima dovoljno mjesta i ako se znamenke poklapaju.    
+  Znamenke koja su osjenčane tamnijom ružičastom bojom dio su rješenja koje je opisano prilikom zadavanja zagonetke. 
   <br />
   <br />
   <h6 class="display-6">Brojevi po duljini</h6>

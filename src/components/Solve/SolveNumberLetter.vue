@@ -1066,8 +1066,10 @@ export default {
 }
 .special {
   background-color: salmon;
+  font-weight: bold;
+  color: #DE1041; 
 }
 .wrong {
-  color: #de1041;
+  color: #DE1041;
 }
 </style>
