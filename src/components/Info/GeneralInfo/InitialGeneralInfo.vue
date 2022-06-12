@@ -14,7 +14,7 @@ export default {
   </h6>
   <br />
   <span>
-    <span class="tab"></span>Inicijalna osmosmjerka je vrsta zagonetke u kojoj su u pravokutnoj mreži ispunjena samo početna slova riječi. U
+    <span class="tab"></span>Inicijalna osmosmjerka je vrsta zagonetke u kojoj su u pravokutnoj mreži ispunjena samo početna slova riječi. 
     U toj mreži moguće je smjestiti sve riječi
     s popisa pojmova.
 
@@ -26,7 +26,7 @@ export default {
 
   <span class="tab"></span>
     Više riječi može započinjati na istom slovu. Ista riječ može se pojaviti u
-    mreži više puta, ali u tom slučaju ponoviti će se na popisu pojmova onoliko
+    mreži više puta, ali u tom slučaju ponovit će se na popisu pojmova onoliko
     puta koliko se pojavljuje i u mreži.
 
     <br />

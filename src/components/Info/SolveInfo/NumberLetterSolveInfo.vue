@@ -13,9 +13,8 @@ export default {
   <br />
   <span class="tab"></span>
   Ukoliko korisnik želi da se označavaju greške, crvenom bojom će se naznačiti
-  polja kojima   kojima slovo
-  koje broj predstavlja ne odgovara slovu koje broj predstavlja u rješenju.
-  Svaki put kada se zagoneta rješava redoslijed slova   se nasumično
+  polja kojima kojima slovo koje broj predstavlja ne odgovara slovu koje broj predstavlja u rješenju.
+  Svaki put kada se zagonetka rješava redoslijed slova se nasumično
   generira.
 
   <br />

@@ -1414,4 +1414,16 @@ export default {
 .wrong {
   color: #DE1041;
 }
+.bordertop {
+  border-top: dashed !important;
+}
+.borderbottom {
+  border-bottom: dashed !important;
+}
+.borderleft {
+  border-left: dashed !important;
+}
+.borderright {
+  border-right: dashed !important;
+}
 </style>

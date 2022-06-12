@@ -48,14 +48,14 @@ export default {
   <br />
   <span class="tab"></span> 
 
-  Slova koje su označena kao dio rješenja tvore pojam koji je opisan prilikom zadavanja zagonetke i osjenčana su tamnijom ružičastom bojom.
+  Slova koja su označena kao dio rješenja tvore pojam koji je opisan prilikom zadavanja zagonetke i osjenčana su tamnijom ružičastom bojom.
   <br />
   <br /> 
   <h6 class="display-6">Riječi po smjerovima</h6>
   <br />
   <span class="tab"></span> 
 
-  Prilikom zadavanja riječ se postavlja u zagonetku u jednom od osam smjerova koji
+  Prilikom zadavanja riječ se postavlja u zagonetku u jednom od osam smjerova
    ukoliko ima dovoljno slobodnih mjesta i ako se slova u
   poljima poklapaju.
   Riječi u svakom od osam smjerova koje su dodane kao dio inicijalne osmosmjerke mogu se pregledati i može se ukloniti samo jedna ili sve riječi u smjeru.

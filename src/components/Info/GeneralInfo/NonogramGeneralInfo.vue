@@ -17,7 +17,7 @@ export default {
     Nonogram je vrsta zagonetke u kojoj su sva polja
     pravokutne mreže ispunjena bojom ili prazna. Na rubovima mreže upisane su 
     duljine uzastopnih segmenata određene boje u svakom retku i stupcu. Duljine bijelih segmenata
-     nisu upisane. Granice segmenta mogu biti na granici s drugom bojom ili bijelm poljima.
+     nisu upisane. Granice segmenta mogu biti na granici s drugom bojom ili bijelim poljima.
  
 </template>
 

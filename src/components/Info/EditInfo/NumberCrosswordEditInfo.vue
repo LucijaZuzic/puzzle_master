@@ -51,7 +51,7 @@ export default {
   <h6 class="display-6">Rješenje</h6>
   <br />
   <span class="tab"></span>
-  Znamenke koja su osjenčane tamnijom ružičastom bojom dio su rješenja koje je opisano prilikom zadavanja zagonetke. 
+  Znamenke koje su osjenčane tamnijom ružičastom bojom dio su rješenja koje je opisano prilikom zadavanja zagonetke. 
 <br />
   <br />
   <h6 class="display-6">Brojevi po duljini</h6>

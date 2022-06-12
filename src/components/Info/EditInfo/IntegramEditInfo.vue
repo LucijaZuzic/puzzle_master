@@ -13,7 +13,7 @@ export default {
   <br />
   <span class="tab"></span>
   Integramu zadajemo broj kategorija, vrijednosti i uputa.
-  Kategorija i vrijednosti ima imeđu 3 i 5, a uputa između 5 i 10.  
+  Kategorija i vrijednosti ima između 3 i 5, a uputa između 5 i 10.  
   <br />
   <br />  
   <h6 class="display-6">Upute</h6>
@@ -28,7 +28,7 @@ export default {
   <br />
 
   <span class="tab"></span>
-  U tablici unosimo naslove za svaku kategoriju i u redcima unosima vrijednosti koje svaki pojam poprima za svaku kategoriju. Umjesto teksta određena kategorija može biti predstavljena slikom.
+  U tablici unosimo naslove za svaku kategoriju i u redcima unosimo vrijednosti koje svaki pojam poprima za svaku kategoriju. Umjesto teksta određena kategorija može biti predstavljena slikom.
 
   <br />
   <br />

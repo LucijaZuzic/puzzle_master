@@ -46,7 +46,7 @@ export default {
   <span class="tab"></span> 
   U pomoćnu tablicu upisujemo kvačicu u polja gdje se križaju vrijednosti koje dvije kategorije poprimaju za isti pojam. 
   Upisujemo križić ako je nemoguće da za pojam jedna kategorija poprimi jednu, a druga kategorija drugu vrijednost. 
-  Ako nismo sigurni, upisuje se upitnik. Jedna kategorija poprima točno jednu vrijednosti za svaki pojam.
+  Ako nismo sigurni, upisuje se upitnik. Jedna kategorija poprima točno jednu vrijednost za svaki pojam.
   Više pojmova nema istu vrijednost za istu kategoriju. 
  
   <br />
