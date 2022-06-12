@@ -11,10 +11,11 @@ export default {
   components: {
     MyCounter,
     LoadingBar,
-    NonogramInfo
+    NonogramInfo,
   },
   data() {
     return {
+      value: [false, false, false],
       zoom: 100,
       max_zoom: 200,
       allow_mouseover: false,
@@ -56,10 +57,31 @@ export default {
       show_error: false,
       colors: ["#ffffff", "#000000"],
       current_x: null,
+      reset_all: false,
       current_y: null,
     };
   },
   methods: {
+    reset_current_color() {
+      let old_mode = this.mode;
+      this.mode = 0;
+      for (let i = 0; i < this.solution.length; i++) {
+        for (let j = 0; j < this.solution[i].length; j++) {
+          if (this.values[i][j] == old_mode) {
+            this.increment(i, j, false);
+          }
+        }
+      }
+      this.mode = old_mode;
+      this.$forceUpdate();
+    },
+    reset_choose_mode() {
+      if (this.reset_all == true) {
+        this.reset();
+      } else {
+        this.reset_current_color();
+      }
+    },
     checkIdentity() {
       if (this.author == this.user.uid) {
         return true;
@@ -312,8 +334,11 @@ export default {
       if (is_mouseover) {
         if (this.allow_mouseover) {
           this.values[x][y] = this.mode;
-          document.getElementById("cell" + x + ":" + y).style.backgroundColor =
-            this.mode;
+          if (document.getElementById("cell" + x + ":" + y)) {
+            document.getElementById(
+              "cell" + x + ":" + y
+            ).style.backgroundColor = this.mode;
+          }
           this.values = [...this.values];
           this.prev_x = null;
           this.prev_y = null;
@@ -325,8 +350,10 @@ export default {
       }
       if (!this.drag) {
         this.values[x][y] = this.mode;
-        document.getElementById("cell" + x + ":" + y).style.backgroundColor =
-          this.mode;
+        if (document.getElementById("cell" + x + ":" + y)) {
+          document.getElementById("cell" + x + ":" + y).style.backgroundColor =
+            this.mode;
+        }
         this.values = [...this.values];
         this.prev_x = null;
         this.prev_y = null;
@@ -345,9 +372,11 @@ export default {
               j++
             ) {
               this.values[i][j] = this.mode;
-              document.getElementById(
-                "cell" + i + ":" + j
-              ).style.backgroundColor = this.mode;
+              if (document.getElementById("cell" + i + ":" + j)) {
+                document.getElementById(
+                  "cell" + i + ":" + j
+                ).style.backgroundColor = this.mode;
+              }
             }
           }
           this.values = [...this.values];
@@ -905,8 +934,10 @@ export default {
   updated() {
     this.update_colors();
     for (let i = 0; i < this.num_colors; i++) {
-      document.getElementById("colorbutton" + i).style.backgroundColor =
-        this.colors[i];
+      if (document.getElementById("colorbutton" + i)) {
+        document.getElementById("colorbutton" + i).style.backgroundColor =
+          this.colors[i];
+      }
     }
     //this.colorcol();
     //this.colorrow();
@@ -919,125 +950,139 @@ export default {
     <LoadingBar></LoadingBar>
   </body>
   <body class="my_body" v-else>
-    
-      <div class="my_row">
-        <h4 class="display-4">
-          <va-icon size="large" name="draw"></va-icon>
-          &nbsp; Igraj nonogram
-        </h4>
-      </div>
-    
-    <br /><br />
-    
-      <div class="my_row">
-        <va-tabs>
-          <template #tabs>
-            <va-tab disabled  
-              ><va-icon name="timer" />&nbsp; {{ format(time_elapsed) }}</va-tab
-            >
-            <va-tab @click="$refs.description.show()"
-              ><va-icon name="info"></va-icon>&nbsp;  Pomoć
-            </va-tab>
-            <va-tab
-              @click="
-                show_error = !show_error;
-                $forceUpdate();
-              "
-            >
-              <span v-if="show_error == false">
-                <va-icon name="report_off" />
-                &nbsp; Ne prikazuj greške</span
-              >
-              <span v-else><va-icon name="report" /> &nbsp; Prikaži greške</span>
-            </va-tab>
-            <va-tab @click="$refs.show_solution_modal.show()">
-              <va-icon name="help" />
-              &nbsp; Otkrij sva polja
-            </va-tab>
-          </template>
-        </va-tabs>
-      </div>
-    
-    <br /><br /> 
-
-    
-      <h4 class="display-4">Boje</h4>
-      <va-divider></va-divider>
-      <div class="my_row">
-        <va-tabs>
-          <template #tabs>
-            <va-tab
-              @click="
-                drag = !drag;
-                if (allow_mouseover) {
-                  drag = false;
-                }
-              "
-              :disabled="allow_mouseover"
-            >
-              <span v-if="drag == false">
-                <va-icon name="grid_off" />
-                &nbsp; Bojanje jedan po jedan
-              </span>
-              <span v-else
-                ><va-icon name="grid_on" /> &nbsp; Bojanje segmenta</span
-              >
-            </va-tab>
-            <va-tab
-              @click="
-                allow_mouseover = !allow_mouseover;
-                if (allow_mouseover) {
-                  drag = false;
-                }
-              "
-            >
-              <span v-if="allow_mouseover == false">
-                <va-icon name="grid_view" />
-                &nbsp; Bojanje gestom isključeno
-              </span>
-              <span v-else
-                ><va-icon name="gesture" /> &nbsp; Bojanje gestom uključeno</span
-              >
-            </va-tab>
-            <va-tab @click="reset()">
-              <va-icon name="delete" />
-              &nbsp; Izbriši
-            </va-tab>
-          </template>
-        </va-tabs>
-      </div>
-   
-    <div class="my_row">
-      <va-icon
-        style="
-          border-radius: 50%;
-          display: inline-block;
-          position: absolute;
-          background-color: black;
-        "
-        v-if="mode == 0"
-        name="check_circle"
-        color="success"
+    <h4 class="display-4">
+      <va-icon size="large" name="draw"></va-icon>
+      &nbsp; Igraj nonogram
+    </h4>
+    <br />
+    <va-divider></va-divider>
+    <va-tabs>
+      <template #tabs>
+        <va-tab disabled
+          ><va-icon name="timer" />&nbsp; {{ format(time_elapsed) }}</va-tab
+        >
+        <va-tab @click="$refs.description.show()"
+          ><va-icon name="info"></va-icon>&nbsp; Pomoć
+        </va-tab>
+        <va-tab
+          @click="
+            show_error = !show_error;
+            $forceUpdate();
+          "
+        >
+          <span v-if="show_error == false">
+            <va-icon name="report_off" />
+            &nbsp; Ne prikazuj greške</span
+          >
+          <span v-else><va-icon name="report" /> &nbsp; Prikaži greške</span>
+        </va-tab>
+        <va-tab @click="$refs.show_solution_modal.show()">
+          <va-icon name="help" />
+          &nbsp; Otkrij sva polja
+        </va-tab>
+        <va-tab>
+          <router-link
+            v-bind:to="{
+              name: 'search_nonogram',
+            }"
+          >
+            <va-icon name="search"></va-icon>
+            &nbsp; Popis zagonetki
+          </router-link>
+        </va-tab>
+        <va-tab v-if="checkIdentity()">
+          <router-link
+            v-bind:to="{
+              name: 'edit_nonogram',
+              params: { id: $route.params.id },
+            }"
+          >
+            <va-icon name="edit"></va-icon>
+            &nbsp; Uredi
+          </router-link>
+        </va-tab>
+        <va-tab>
+          <router-link
+            v-bind:to="{
+              name: 'create_nonogram',
+              params: { id: $route.params.id },
+            }"
+          >
+            <va-icon name="add_circle"></va-icon>
+            &nbsp; Nova zagonetka
+          </router-link>
+        </va-tab>
+        <va-tab :name="10000" disabled></va-tab>
+      </template>
+    </va-tabs>
+    <va-divider></va-divider>
+    <br />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[0] = !value[0]"
+        class="display-6"
+        style="text-align: start"
       >
-      </va-icon>
-      <button
-        class="mr-2"
-        style="
-          width: 28px;
-          height: 28px;
-          display: inline-block;
-          background-color: white;
-          border-radius: 50%;
-          margin: 10px;
-        "
-        :id="'colorbutton' + 0"
-        @click="mode = 0"
-      ></button>
-      <div
-        style="display: inline-block"
-        v-for="i in num_colors - 1"
-        v-bind:key="i"
-      >
+        Boje &nbsp;
+        <va-icon v-if="!value[0]" name="expand_more"></va-icon>
+        <va-icon v-if="value[0]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[0]">
+      <h6 class="display-6" style="text-align: start">Način bojanja</h6>
+      <br />
+      <va-tabs>
+        <template #tabs>
+          <va-tab
+            @click="
+              drag = !drag;
+              if (allow_mouseover) {
+                drag = false;
+              }
+            "
+            :disabled="allow_mouseover"
+          >
+            <span v-if="drag == false">
+              <va-icon name="grid_off" />
+              &nbsp; Bojanje segmenta isključeno
+            </span>
+            <span v-else
+              ><va-icon name="grid_on" /> &nbsp; Bojanje segmenta uključeno
+            </span>
+          </va-tab>
+          <va-tab
+            @click="
+              allow_mouseover = !allow_mouseover;
+              if (allow_mouseover) {
+                drag = false;
+              }
+            "
+          >
+            <span v-if="allow_mouseover == false">
+              <va-icon name="grid_view" />
+              &nbsp; Bojanje gestom isključeno
+            </span>
+            <span v-else
+              ><va-icon name="gesture" /> &nbsp; Bojanje gestom uključeno</span
+            >
+          </va-tab>
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+      </va-tabs>
+      <br />
+      <h6 class="display-6" style="text-align: start">Način brisanja</h6>
+      <br />
+      <va-tabs>
+        <template #tabs>
+          <va-tab @click="reset()"> Izbriši sve </va-tab>
+          <va-tab @click="reset_current_color()">
+            Izbriši odabranu boju
+          </va-tab>
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+      </va-tabs>
+      <br />
+      <div>
         <va-icon
           style="
             border-radius: 50%;
@@ -1045,7 +1090,7 @@ export default {
             position: absolute;
             background-color: black;
           "
-          v-if="mode == i"
+          v-if="mode == 0"
           name="check_circle"
           color="success"
         >
@@ -1056,259 +1101,298 @@ export default {
             width: 28px;
             height: 28px;
             display: inline-block;
-            background-color: black;
+            background-color: white;
             border-radius: 50%;
             margin: 10px;
           "
-          @click="after_click(i)"
-          :id="'colorbutton' + i"
+          :id="'colorbutton' + 0"
+          @click="mode = 0"
         ></button>
+        <div
+          style="display: inline-block"
+          v-for="i in num_colors - 1"
+          v-bind:key="i"
+        >
+          <va-icon
+            style="
+              border-radius: 50%;
+              display: inline-block;
+              position: absolute;
+              background-color: black;
+            "
+            v-if="mode == i"
+            name="check_circle"
+            color="success"
+          >
+          </va-icon>
+          <button
+            class="mr-2"
+            style="
+              width: 28px;
+              height: 28px;
+              display: inline-block;
+              background-color: black;
+              border-radius: 50%;
+              margin: 10px;
+            "
+            @click="after_click(i)"
+            :id="'colorbutton' + i"
+          ></button>
+        </div>
       </div>
-    </div> 
-    
-    <br/><br/>
-    
-      <h4 class="display-4">Zagonetka</h4>
-      <va-divider></va-divider>
-    <div class="my_row" v-if="current_x != null && current_y != null">
-      <va-chip
-        ><va-icon name="my_location" /> &nbsp;  Zadnja lokacija ({{ current_x }},
-        {{ current_y }})</va-chip
+      <br v-if="warning" />
+      <va-alert dense outline
+        v-if="warning"
+        color="danger"
+        :title="'Postoje boje koje se ponavljaju'"
+        center
       >
+        Boje moraju biti jedinstvene.
+      </va-alert>
     </div>
-    <div class="my_row">
-      <MyCounter
-        :min_value="1"
-        :max_value="max_zoom"
-        v-bind:value="zoom"
-        @input="
-          (n) => {
-            zoom = n;
-            zoom_number();
-          }
-        "
-        :some_text="'Povećanje %'"
-        :is_zoom="true"
-      ></MyCounter>
-    </div>
-    <div class="my_row" v-if="prev_x != null && prev_y != null && drag">
-      <va-chip>
-        <va-icon name="texture"></va-icon>
-        ({{ prev_x }}, {{ prev_y }}) &nbsp; 
-        <va-icon name="close" @click="(prev_x = null), (prev_y = null)">
-        </va-icon>
-      </va-chip>
-    </div>
-    <div class="my_row" style="max-height: 500px">
-      <va-infinite-scroll disabled :load="() => {}">
-        <div>
-          <table style="border: 5px solid black" id="table_zoom">
-            <tr
-              v-for="column_number in maxrow"
-              v-bind:key="column_number"
+    <br v-else />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[1] = !value[1]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Zagonetka &nbsp;
+        <va-icon v-if="!value[1]" name="expand_more"></va-icon>
+        <va-icon v-if="value[1]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[1]">
+      <div>
+        <MyCounter
+          :min_value="1"
+          :max_value="max_zoom"
+          v-bind:value="zoom"
+          @input="
+            (n) => {
+              zoom = n;
+              zoom_number();
+            }
+          "
+          :some_text="' Povećanje'"
+          :is_zoom="true"
+        ></MyCounter>
+      </div>
+      <div v-if="current_x != null && current_y != null">
+        <va-chip outline :rounded="false" style="border: none">
+          <va-icon name="my_location" />
+          &nbsp; Zadnja lokacija ({{ current_x }}, {{ current_y }})
+        </va-chip>
+      </div>
+      <br v-if="current_x != null && current_y != null" />
+      <div style="max-height: 500px; overflow-y: scroll; overflow-x: scroll">
+        <table style="border: 5px solid black" id="table_zoom">
+          <tr
+            v-for="column_number in maxrow"
+            v-bind:key="column_number"
+            style="border: none !important"
+          >
+            <td
+              v-if="column_number == 1"
+              :colspan="maxcol"
+              :rowspan="maxrow"
+              style="
+                background-color: #2c82e0;
+                border-bottom: 5px solid black;
+                border-right: 5px solid black;
+              "
+            ></td>
+            <td
+              v-for="column_index in colnum"
+              v-bind:key="column_index"
               style="border: none !important"
             >
-              <td
-                v-if="column_number == 1"
-                :colspan="maxcol"
-                :rowspan="maxrow"
-                style="
-                  background-color: #2c82e0;
-                  border-bottom: 5px solid black;
-                  border-right: 5px solid black;
+              <va-chip
+                square
+                class="numbers"
+                v-if="
+                  columns[column_index - 1][
+                    column_number -
+                      1 -
+                      maxrow +
+                      columns[column_index - 1].length
+                  ]
                 "
-              ></td>
-              <td
-                v-for="column_index in colnum"
-                v-bind:key="column_index"
-                style="border: none !important"
+                :color="
+                  colors[
+                    col_colors[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]
+                  ]
+                "
               >
-                <va-chip
-                  square
-                  class="numbers"
+                <span
+                  style="text-decoration: line-through"
                   v-if="
                     columns[column_index - 1][
                       column_number -
                         1 -
                         maxrow +
                         columns[column_index - 1].length
-                    ]
-                  "
-                  :color="
-                    colors[
+                    ] ==
+                      user_columns[column_index - 1][
+                        column_number -
+                          1 -
+                          maxrow +
+                          columns[column_index - 1].length
+                      ] &&
+                    user_col_colors[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ] ==
                       col_colors[column_index - 1][
                         column_number -
                           1 -
                           maxrow +
                           columns[column_index - 1].length
                       ]
-                    ]
                   "
                 >
-                  <span
-                    style="text-decoration: line-through"
-                    v-if="
-                      columns[column_index - 1][
-                        column_number -
-                          1 -
-                          maxrow +
-                          columns[column_index - 1].length
-                      ] ==
-                        user_columns[column_index - 1][
-                          column_number -
-                            1 -
-                            maxrow +
-                            columns[column_index - 1].length
-                        ] &&
-                      user_col_colors[column_index - 1][
-                        column_number -
-                          1 -
-                          maxrow +
-                          columns[column_index - 1].length
-                      ] ==
-                        col_colors[column_index - 1][
-                          column_number -
-                            1 -
-                            maxrow +
-                            columns[column_index - 1].length
-                        ]
-                    "
-                  >
-                    {{
-                      columns[column_index - 1][
-                        column_number -
-                          1 -
-                          maxrow +
-                          columns[column_index - 1].length
-                      ]
-                    }}
-                  </span>
-                  <span v-else>
-                    {{
-                      columns[column_index - 1][
-                        column_number -
-                          1 -
-                          maxrow +
-                          columns[column_index - 1].length
-                      ]
-                    }}
-                  </span>
-                </va-chip>
-              </td>
-            </tr>
-            <tr v-if="maxrow == 0">
-              <td
-                :colspan="maxcol"
-                style="
-                  background-color: #2c82e0;
-                  border-bottom: 5px solid black;
-                  border-right: 5px solid black;
-                "
-              />
-              <td
-                v-for="column_index in colnum - 1"
-                v-bind:key="column_index"
-                style="border: none !important"
-              >
-                &nbsp; 
-              </td>
-            </tr>
-            <tr
-              v-for="row_index in rownum"
-              v-bind:key="row_index"
+                  {{
+                    columns[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]
+                  }}
+                </span>
+                <span v-else>
+                  {{
+                    columns[column_index - 1][
+                      column_number -
+                        1 -
+                        maxrow +
+                        columns[column_index - 1].length
+                    ]
+                  }}
+                </span>
+              </va-chip>
+            </td>
+          </tr>
+          <tr v-if="maxrow == 0">
+            <td
+              :colspan="maxcol"
+              style="
+                background-color: #2c82e0;
+                border-bottom: 5px solid black;
+                border-right: 5px solid black;
+              "
+            />
+            <td
+              v-for="column_index in colnum - 1"
+              v-bind:key="column_index"
               style="border: none !important"
             >
-              <td
-                v-for="row_number in maxcol"
-                v-bind:key="row_number"
-                style="border: none !important"
+              &nbsp;
+            </td>
+          </tr>
+          <tr
+            v-for="row_index in rownum"
+            v-bind:key="row_index"
+            style="border: none !important"
+          >
+            <td
+              v-for="row_number in maxcol"
+              v-bind:key="row_number"
+              style="border: none !important"
+            >
+              <va-chip
+                square
+                class="numbers"
+                v-if="
+                  rows[row_index - 1][
+                    row_number - 1 - maxcol + rows[row_index - 1].length
+                  ]
+                "
+                :color="
+                  colors[
+                    row_colors[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]
+                  ]
+                "
               >
-                <va-chip
-                  square
-                  class="numbers"
+                <span
+                  style="text-decoration: line-through"
                   v-if="
                     rows[row_index - 1][
                       row_number - 1 - maxcol + rows[row_index - 1].length
-                    ]
-                  "
-                  :color="
-                    colors[
-                      row_colors[row_index - 1][
+                    ] ==
+                      user_rows[row_index - 1][
+                        row_number - 1 - maxcol + rows[row_index - 1].length
+                      ] &&
+                    row_colors[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ] ==
+                      user_row_colors[row_index - 1][
                         row_number - 1 - maxcol + rows[row_index - 1].length
                       ]
-                    ]
-                  "
-                >
-                  <span
-                    style="text-decoration: line-through"
-                    v-if="
-                      rows[row_index - 1][
-                        row_number - 1 - maxcol + rows[row_index - 1].length
-                      ] ==
-                        user_rows[row_index - 1][
-                          row_number - 1 - maxcol + rows[row_index - 1].length
-                        ] &&
-                      row_colors[row_index - 1][
-                        row_number - 1 - maxcol + rows[row_index - 1].length
-                      ] ==
-                        user_row_colors[row_index - 1][
-                          row_number - 1 - maxcol + rows[row_index - 1].length
-                        ]
-                    "
-                  >
-                    {{
-                      rows[row_index - 1][
-                        row_number - 1 - maxcol + rows[row_index - 1].length
-                      ]
-                    }}
-                  </span>
-                  <span v-else>
-                    {{
-                      rows[row_index - 1][
-                        row_number - 1 - maxcol + rows[row_index - 1].length
-                      ]
-                    }}
-                  </span>
-                </va-chip>
-              </td>
-              <td v-if="maxcol == 0" style="border: none !important"></td>
-              <td
-                v-for="column_index in colnum"
-                v-bind:key="column_index"
-                @mouseover="
-                  current_x = row_index;
-                  current_y = column_index;
-                  increment(row_index - 1, column_index - 1, true);
-                "
-                @click="increment(row_index - 1, column_index - 1, false)"
-                :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
-                :class="{
-                  upthick: row_index == 1,
-                  leftthick: column_index == 1,
-                }"
-              >
-                <span
-                  class="numbers"
-                  v-if="
-                    !(prev_x == row_index - 1 && prev_y == column_index - 1) &&
-                    show_error &&
-                    solution[row_index - 1][column_index - 1] !=
-                      values[row_index - 1][column_index - 1] &&
-                    values[row_index - 1][column_index - 1] != 0
                   "
                 >
-                  <va-icon
-                    size="48px"
-                    :color="
-                      returnMostReadable(
-                        colors[values[row_index - 1][column_index - 1]]
-                      )
-                    "
-                    name="warning"
-                  >
-                  </va-icon>
+                  {{
+                    rows[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]
+                  }}
                 </span>
-                <!--
+                <span v-else>
+                  {{
+                    rows[row_index - 1][
+                      row_number - 1 - maxcol + rows[row_index - 1].length
+                    ]
+                  }}
+                </span>
+              </va-chip>
+            </td>
+            <td v-if="maxcol == 0" style="border: none !important"></td>
+            <td
+              v-for="column_index in colnum"
+              v-bind:key="column_index"
+              @mouseover="
+                current_x = row_index;
+                current_y = column_index;
+                increment(row_index - 1, column_index - 1, true);
+              "
+              @click="increment(row_index - 1, column_index - 1, false)"
+              :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
+              :class="{
+                upthick: row_index == 1,
+                leftthick: column_index == 1,
+              }"
+            >
+              <span
+                class="numbers"
+                v-if="
+                  !(prev_x == row_index - 1 && prev_y == column_index - 1) &&
+                  show_error &&
+                  solution[row_index - 1][column_index - 1] !=
+                    values[row_index - 1][column_index - 1] &&
+                  values[row_index - 1][column_index - 1] != 0
+                "
+              >
+                <va-icon
+                  size="48px"
+                  :color="
+                    returnMostReadable(
+                      colors[values[row_index - 1][column_index - 1]]
+                    )
+                  "
+                  name="warning"
+                >
+                </va-icon>
+              </span>
+              <!--
                 <span
                   class="numbers"
                   v-if="
@@ -1330,104 +1414,102 @@ export default {
 </va-icon
                 >
 </span>-->
-                <span
-                  class="numbers"
-                  v-if="
-                    !(prev_x == row_index - 1 && prev_y == column_index - 1) &&
-                    !(
-                      show_error &&
-                      solution[row_index - 1][column_index - 1] !=
-                        values[row_index - 1][column_index - 1] &&
-                      values[row_index - 1][column_index - 1] != 0
+              <span
+                class="numbers"
+                v-if="
+                  !(prev_x == row_index - 1 && prev_y == column_index - 1) &&
+                  !(
+                    show_error &&
+                    solution[row_index - 1][column_index - 1] !=
+                      values[row_index - 1][column_index - 1] &&
+                    values[row_index - 1][column_index - 1] != 0
+                  )
+                "
+                >&nbsp;
+              </span>
+              <span
+                class="numbers"
+                v-if="prev_x == row_index - 1 && prev_y == column_index - 1"
+              >
+                <va-icon
+                  size="48px"
+                  name="texture"
+                  :color="
+                    returnMostReadable(
+                      colors[values[row_index - 1][column_index - 1]]
                     )
                   "
-                  >&nbsp; </span
                 >
-                <span
-                  class="numbers"
-                  v-if="prev_x == row_index - 1 && prev_y == column_index - 1"
-                >
-                  <va-icon
-                    size="48px"
-                    name="texture"
-                    :color="
-                      returnMostReadable(
-                        colors[values[row_index - 1][column_index - 1]]
-                      )
-                    "
-                  >
-                  </va-icon>
-                </span>
-              </td>
-            </tr>
-          </table>
-        </div>
-      </va-infinite-scroll>
+                </va-icon>
+              </span>
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
-    
-    <br/><br/>
-    
-      <h4 class="display-4">Podaci o zagonetci</h4>
-      <va-divider></va-divider> 
-      <div class="text-block" style="margin: 20px">
-        <h6
-          class="title"
-          color="info"
-          style="margin-bottom: 10px; text-align: start"
-        >
-          Naslov
-        </h6>
-        <p style="text-align: start">
-          {{ title }}
-        </p>
+    <br v-else />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[2] = !value[2]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Podaci o zagonetci &nbsp;
+        <va-icon v-if="!value[2]" name="expand_more"></va-icon>
+        <va-icon v-if="value[2]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[2]">
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Naslov zagonetke
+      </h6>
+      <br />
+      <div class="text-block" style="text-align: start">
+        {{ title }}
       </div>
-      <div class="text-block" style="margin: 20px">
-        <h6
-          class="title"
-          color="info"
-          style="margin-bottom: 10px; text-align: start"
-        >
-          Opis
-        </h6>
-        <p style="text-align: start">
-          {{ description }}
-        </p>
+      <br />
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Opis zagonetke
+      </h6>
+      <br />
+      <div class="text-block" style="text-align: start">
+        {{ description }}
       </div>
-      <div class="text-block" style="margin: 20px">
-        <h6
-          class="title"
-          color="info"
-          style="margin-bottom: 10px; text-align: start"
-        >
-          Izvor
-        </h6>
-        <p style="text-align: start">
-          {{ source }}
-        </p>
+      <br />
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Izvor zagonetke
+      </h6>
+      <br />
+      <div class="text-block" style="text-align: start">
+        {{ source }}
       </div>
-      <div class="my_row">
-        <span class="display-6" style="margin-left: 10px"
-          >Autor zagonetke: {{ authorUserRecord.displayName }}
-          <router-link :to="'/profile/' + authorUserRecord.email"
-            >({{ authorUserRecord.email }})</router-link
-          >
-        </span>
-        <span class="display-6" style="margin-left: 10px">
-          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
-        >
+      <br />
+      <div style="text-align: start">
+        <router-link :to="'/profile/' + authorUserRecord.email">
+          <span style="font-weight: bold"> Autor zagonetke: </span>
+          {{ authorUserRecord.displayName }}
+          ({{ authorUserRecord.email }})
+        </router-link>
       </div>
-      <div class="my_row">
-        <span class="display-6" style="margin-left: 10px"
-          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
-          <router-link :to="'/profile/' + updaterUserRecord.email"
-            >({{ updaterUserRecord.email }})</router-link
-          >
-        </span>
-        <span class="display-6" style="margin-left: 10px">
-          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
-        >
+      <br />
+      <div style="text-align: start">
+        <span style="font-weight: bold"> Vrijeme kreiranja: </span>
+        {{ time_created.toLocaleString() }}
       </div>
-    
+      <br />
+      <div style="text-align: start">
+        <router-link :to="'/profile/' + updaterUserRecord.email">
+          <span style="font-weight: bold"> Zadnji ažurirao: </span>
+          {{ updaterUserRecord.displayName }}
+          ({{ updaterUserRecord.email }})
+        </router-link>
+      </div>
+      <br />
+      <div style="text-align: start">
+        <span style="font-weight: bold"> Vrijeme zadnje izmjene: </span>
+        {{ last_updated.toLocaleString() }}
+      </div>
+    </div>
   </body>
   <va-modal
     :mobile-fullscreen="false"

@@ -50,6 +50,7 @@ export default {
       cryptogramsRecordsRef: cryptogramsRecordsRef,
       cryptogramsRatingsRef: cryptogramsRatingsRef,
       puzzles: [],
+      show_details: false,
       selectedItemsEmitted: [],
       new_item: "",
       new_item_tag: "",
@@ -610,6 +611,8 @@ export default {
 </script>
 
 <template>
+  <br />
+  <va-divider></va-divider>
   <va-tabs>
     <template #tabs>
       <va-tab>
@@ -624,47 +627,53 @@ export default {
           <va-icon name="add_circle" />&nbsp; Nova zagonetka
         </router-link>
       </va-tab>
+      <va-tab :name="10000" disabled></va-tab>
     </template>
   </va-tabs>
   <va-divider></va-divider>
+  <br />
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
     <span v-if="puzzles.length > 0">
-      <va-input
-        style="display: inline-block"
-        placeholder="Unesite pojam za pretragu"
-        v-model="filter"
-      />
-      &nbsp; 
-      <va-checkbox
-        style="display: inline-block"
-        label="Traži cijelu riječ"
-        v-model="useCustomFilteringFn"
-      />
-      <va-divider></va-divider>
-      <div style="display: inline-block">
-        <MyCounter
-          :min_value="1"
-          :max_value="Math.ceil(this.filtered.length)"
-          v-bind:value="perPage"
-          @input="(n) => (perPage = n)"
-          :is_page_size="true"
-          :some_text="'Po stranici'"
-        >
-        </MyCounter>
+      <div>
+        <va-input
+          style="display: inline-block"
+          placeholder="Unesite pojam za pretragu"
+          v-model="filter"
+        />
+        &nbsp;
+        <va-checkbox
+          style="display: inline-block"
+          label="Traži cijelu riječ"
+          v-model="useCustomFilteringFn"
+        />
       </div>
-      <div style="display: inline-block; margin-left: 10px">
-        <MyCounter
-          :min_value="1"
-          :max_value="Math.floor(puzzles.length / perPage)"
-          v-bind:value="currentPage"
-          @input="(n) => (currentPage = n)"
-          :is_page_number="true"
-          :some_text="'Stranica'"
-        >
-        </MyCounter>
+      <br />
+      <div>
+        <div style="display: inline-block">
+          <MyCounter
+            :min_value="1"
+            :max_value="Math.ceil(this.filtered.length)"
+            v-bind:value="perPage"
+            @input="(n) => (perPage = n)"
+            :is_page_size="true"
+            :some_text="'Po stranici'"
+          >
+          </MyCounter>
+        </div>
+        <div style="display: inline-block; margin-left: 10px">
+          <MyCounter
+            :min_value="1"
+            :max_value="Math.floor(this.filtered.length / perPage)"
+            v-bind:value="currentPage"
+            @input="(n) => (currentPage = n)"
+            :is_page_number="true"
+            :some_text="'Stranica'"
+          >
+          </MyCounter>
+        </div>
       </div>
-      <va-divider></va-divider>
+      <br />
       <va-data-table
         :items="puzzles"
         :filter="filter"
@@ -764,139 +773,152 @@ export default {
           <span v-if="is_public">Svi</span>
           <span v-else>Samo suradnici</span>
         </template>
-        <!--<template #bodyAppend>
-          <tr>
-            <td colspan="16">
-              <div style="display: inline-block; margin-top: 10px">
-                <va-pagination v-model="currentPage" input :pages="pages" />
-              </div>
-            </td>
-          </tr>
-        </template>-->
       </va-data-table>
-      <va-divider></va-divider>
     </span>
     <NoDataToDisplay v-else customMessage="Nema zagonetki"></NoDataToDisplay>
-    <div
-      class="my_row"
-      v-if="!start_time && !end_time && selectMode == 'single'"
-    >
-      <div class="my_row" v-if="selectedItemsEmitted.length > 0">
-        <h4 class="display-4">
-          <va-icon size="large" name="extension"></va-icon>
-          &nbsp;  Podaci o zagonetci
-        </h4>
+    <br v-if="!start_time && !end_time && selectMode == 'single'" />
+    <div v-if="!start_time && !end_time && selectMode == 'single'">
+      <va-card
+        v-if="selectedItemsEmitted.length > 0"
+        color="background"
+        style="padding: 10px"
+      >
+        <h6
+          @click="show_details = !show_details"
+          class="display-6"
+          style="text-align: start"
+        >
+          &nbsp; Podaci o zagonetci
+          <va-icon v-if="!show_details" name="expand_more"></va-icon>
+          <va-icon v-if="show_details" name="expand_less"></va-icon>
+        </h6>
+      </va-card>
+      <div class="my_row" v-if="show_details">
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value">
+          <template #tabs>
+            <va-tab name="all"
+              ><va-icon name="browse_gallery" />&nbsp; Svi rezultati</va-tab
+            >
+            <va-tab name="mine"
+              ><va-icon name="schedule" />&nbsp; Rezultati korisnika</va-tab
+            >
+            <va-tab name="rate"
+              ><va-icon name="hotel_class" />&nbsp; Sve ocjene</va-tab
+            >
+            <va-tab name="rate_mine"
+              ><va-icon name="star" />&nbsp; Ocjena korisnika</va-tab
+            >
+            <va-tab :name="10000" disabled></va-tab>
+          </template>
+        </va-tabs>
+        <br v-if="selectedItemsEmitted.length > 0" />
+        <span v-for="item in selectedItemsEmitted" :key="item.id">
+          <RatingsTable
+            v-if="value == 'rate'"
+            :type="'all'"
+            :dbRef="cryptogramsRatingsRef"
+            :puzzleId="selectedItemsEmitted[0].id"
+          >
+          </RatingsTable>
+          <RatingsTable
+            v-if="value == 'rate_mine'"
+            :type="'mine'"
+            :dbRef="cryptogramsRatingsRef"
+            :puzzleId="selectedItemsEmitted[0].id"
+            :userId="$props.friend.uid"
+          >
+          </RatingsTable>
+          <RecordsTable
+            v-if="value == 'all'"
+            :type="'all'"
+            :dbRef="cryptogramsRecordsRef"
+            :puzzleId="selectedItemsEmitted[0].id"
+          >
+          </RecordsTable>
+          <RecordsTable
+            v-if="value == 'mine'"
+            :type="'mine'"
+            :dbRef="cryptogramsRecordsRef"
+            :puzzleId="selectedItemsEmitted[0].id"
+            :userId="$props.friend.uid"
+          >
+          </RecordsTable>
+        </span>
       </div>
-      <va-tabs
-        v-if="selectedItemsEmitted.length > 0"
-        v-model="value"
-        style="width: 100%"
-      >
-        <template #tabs>
-          <va-tab name="all"
-            ><va-icon name="browse_gallery" />&nbsp; Svi rezultati</va-tab
-          >
-          <va-tab name="mine"
-            ><va-icon name="schedule" />&nbsp; Rezultati korisnika</va-tab
-          >
-          <va-tab name="rate"
-            ><va-icon name="hotel_class" />&nbsp; Sve ocjene</va-tab
-          >
-          <va-tab name="rate_mine"
-            ><va-icon name="star" />&nbsp; Ocjena korisnika</va-tab
-          >
-        </template>
-      </va-tabs>
-      <span v-for="item in selectedItemsEmitted" :key="item.id">
-        <RatingsTable
-          v-if="value == 'rate'"
-          :type="'all'"
-          :dbRef="cryptogramsRatingsRef"
-          :puzzleId="selectedItemsEmitted[0].id"
-        >
-        </RatingsTable>
-        <RatingsTable
-          v-if="value == 'rate_mine'"
-          :type="'mine'"
-          :dbRef="cryptogramsRatingsRef"
-          :puzzleId="selectedItemsEmitted[0].id"
-          :userId="$props.friend.uid"
-        >
-        </RatingsTable>
-        <RecordsTable
-          v-if="value == 'all'"
-          :type="'all'"
-          :dbRef="cryptogramsRecordsRef"
-          :puzzleId="selectedItemsEmitted[0].id"
-        >
-        </RecordsTable>
-        <RecordsTable
-          v-if="value == 'mine'"
-          :type="'mine'"
-          :dbRef="cryptogramsRecordsRef"
-          :puzzleId="selectedItemsEmitted[0].id"
-          :userId="$props.friend.uid"
-        >
-        </RecordsTable>
-      </span>
     </div>
-    <div class="my_row" v-if="start_time && end_time && selectMode == 'single'">
-      <va-tabs
+    <br v-if="start_time && end_time && selectMode == 'single'" />
+    <div v-if="start_time && end_time && selectMode == 'single'">
+      <va-card
         v-if="selectedItemsEmitted.length > 0"
-        v-model="value"
-        style="width: 100%"
+        color="background"
+        style="padding: 10px"
       >
-        <template #tabs>
-          <va-tab name="all"
-            ><va-icon name="browse_gallery" />&nbsp; Svi rezultati</va-tab
-          >
-          <va-tab name="mine"
-            ><va-icon name="schedule" />&nbsp; Rezultati korisnika</va-tab
-          >
-          <va-tab name="rate"
-            ><va-icon name="hotel_class" />&nbsp; Sve ocjene</va-tab
-          >
-          <va-tab name="rate_mine"
-            ><va-icon name="star" />&nbsp; Ocjena korisnika</va-tab
-          >
-        </template>
-      </va-tabs>
-      <span v-for="item in selectedItemsEmitted" :key="item.id">
-        <RatingsTable
-          v-if="value == 'rate'"
-          :type="'all'"
-          :dbRef="cryptogramsRatingsRef"
-          :puzzleId="selectedItemsEmitted[0].id"
+        <h6
+          @click="show_details = !show_details"
+          class="display-6"
+          style="text-align: start"
         >
-        </RatingsTable>
-        <RatingsTable
-          v-if="value == 'rate_mine'"
-          :type="'mine'"
-          :dbRef="cryptogramsRatingsRef"
-          :puzzleId="selectedItemsEmitted[0].id"
-          :userId="$props.friend.uid"
-        >
-        </RatingsTable>
-        <RecordsTable
-          v-if="value == 'all'"
-          :type="'all'"
-          :dbRef="cryptogramsRecordsRef"
-          :puzzleId="selectedItemsEmitted[0].id"
-          :start_time="start_time"
-          :end_time="end_time"
-        >
-        </RecordsTable>
-        <RecordsTable
-          v-if="value == 'mine'"
-          :type="'mine'"
-          :dbRef="cryptogramsRecordsRef"
-          :puzzleId="selectedItemsEmitted[0].id"
-          :userId="$props.friend.uid"
-          :start_time="start_time"
-          :end_time="end_time"
-        >
-        </RecordsTable>
-      </span>
+          &nbsp; Podaci o zagonetci
+          <va-icon v-if="!show_details" name="expand_more"></va-icon>
+          <va-icon v-if="show_details" name="expand_less"></va-icon>
+        </h6>
+      </va-card>
+      <div class="my_row" v-if="show_details">
+        <va-tabs v-if="selectedItemsEmitted.length > 0" v-model="value">
+          <template #tabs>
+            <va-tab name="all"
+              ><va-icon name="browse_gallery" />&nbsp; Svi rezultati</va-tab
+            >
+            <va-tab name="mine"
+              ><va-icon name="schedule" />&nbsp; Rezultati korisnika</va-tab
+            >
+            <va-tab name="rate"
+              ><va-icon name="hotel_class" />&nbsp; Sve ocjene</va-tab
+            >
+            <va-tab name="rate_mine"
+              ><va-icon name="star" />&nbsp; Ocjena korisnika</va-tab
+            >
+            <va-tab :name="10000" disabled></va-tab>
+          </template>
+        </va-tabs>
+        <br v-if="selectedItemsEmitted.length > 0" />
+        <span v-for="item in selectedItemsEmitted" :key="item.id">
+          <RatingsTable
+            v-if="value == 'rate'"
+            :type="'all'"
+            :dbRef="cryptogramsRatingsRef"
+            :puzzleId="selectedItemsEmitted[0].id"
+          >
+          </RatingsTable>
+          <RatingsTable
+            v-if="value == 'rate_mine'"
+            :type="'mine'"
+            :dbRef="cryptogramsRatingsRef"
+            :puzzleId="selectedItemsEmitted[0].id"
+            :userId="$props.friend.uid"
+          >
+          </RatingsTable>
+          <RecordsTable
+            v-if="value == 'all'"
+            :type="'all'"
+            :dbRef="cryptogramsRecordsRef"
+            :puzzleId="selectedItemsEmitted[0].id"
+            :start_time="start_time"
+            :end_time="end_time"
+          >
+          </RecordsTable>
+          <RecordsTable
+            v-if="value == 'mine'"
+            :type="'mine'"
+            :dbRef="cryptogramsRecordsRef"
+            :puzzleId="selectedItemsEmitted[0].id"
+            :userId="$props.friend.uid"
+            :start_time="start_time"
+            :end_time="end_time"
+          >
+          </RecordsTable>
+        </span>
+      </div>
     </div>
   </span>
   <va-modal

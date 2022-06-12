@@ -23,9 +23,10 @@ export default {
   },
   data() {
     return {
-      value: [false, false, false, false],
+      permission_to_edit_visibility: false,
+      value: [false, false, false, false, false, false, false],
       delete_type: 0,
-      place_special: false,
+      place_special: 0,
       zoom: 100,
       max_zoom: 200,
       row_counter_min: 1,
@@ -858,18 +859,18 @@ export default {
     },
     place_word(x, y, new_word, dirx, diry, special_place, show_warning) {
       if (!new_word) {
-        if (special_place && this.is_special[y][x] == 1) {
+        if (special_place == 1 && this.is_special[y][x] == 1) {
           this.solution[y][x] = "";
         }
         return;
       }
       if (new_word.length == 0) {
-        if (special_place && this.is_special[y][x] == 1) {
+        if (special_place == 1 && this.is_special[y][x] == 1) {
           this.solution[y][x] = "";
         }
         return;
       }
-      if (special_place) {
+      if (special_place == 1) {
         if (
           this.check_dir_part_of_solution(
             x,
@@ -1336,20 +1337,18 @@ export default {
     <LoadingBar></LoadingBar>
   </body>
   <body class="my_body" v-else>
-    <div class="my_row">
-      <h4 class="display-4">
-        <va-icon size="large" name="pattern"></va-icon>
-        
-        &nbsp; 
-        <span v-if="edit">Uredi</span>
-        <span v-else>Stvori</span> osmosmjerku
-      </h4>
-    </div>
+    <h4 class="display-4">
+      <va-icon size="large" name="pattern"></va-icon>
+      &nbsp;
+      <span v-if="edit">Uredi</span>
+      <span v-else>Stvori</span> osmosmjerku
+    </h4>
+    <br />
     <va-divider></va-divider>
     <va-tabs>
       <template #tabs>
-        <va-tab>
-          <va-icon name="info" @click="$refs.description.show()"></va-icon>
+        <va-tab @click="$refs.description.show()">
+          <va-icon name="info"></va-icon>
           &nbsp; Pomoć
         </va-tab>
         <va-tab v-if="edit">
@@ -1363,248 +1362,351 @@ export default {
             &nbsp; Igraj
           </router-link>
         </va-tab>
+        <va-tab v-if="edit">
+          <router-link
+            v-bind:to="{
+              name: 'create_eight',
+              params: { id: $route.params.id },
+            }"
+          >
+            <va-icon name="add_circle"></va-icon>
+            &nbsp; Nova zagonetka
+          </router-link>
+        </va-tab>
+        <va-tab>
+          <router-link
+            v-bind:to="{
+              name: 'search_eight',
+            }"
+          >
+            <va-icon name="search"></va-icon>
+            &nbsp; Popis osmosmjerki
+          </router-link>
+        </va-tab>
+        <va-tab
+          v-if="edit"
+          :disabled="
+            !(
+              edit &&
+              !warning &&
+              title.length > 0 &&
+              description.length > 0 &&
+              source.length > 0
+            )
+          "
+          @click="store()"
+        >
+          <va-icon name="mode_edit" /> &nbsp; Izmijeni zagonetku
+        </va-tab>
+        <va-tab
+          :disabled="
+            !(
+              !warning &&
+              title.length > 0 &&
+              description.length > 0 &&
+              source.length > 0
+            )
+          "
+          @click="duplicate()"
+        >
+          <va-icon v-if="edit" name="control_point_duplicate" /><va-icon
+            v-else
+            name="add_circle"
+          />
+          &nbsp;
+          <span v-if="edit">Udvostruči zagonetku</span>
+          <span v-else>Spremi novu zagonetku</span>
+        </va-tab>
+        <va-tab :name="10000" disabled></va-tab>
       </template>
     </va-tabs>
     <va-divider></va-divider>
     <br />
-    <va-collapse
-      v-model="value[0]"
-      class="display-6"
-      style="text-align: start; margin-left: 10px"
-      header="Dimenzije"
-    >
-      <div class="my_row">
-        <div style="display: inline-block">
-          <MyCounter
-            :min_value="row_counter_min"
-            :max_value="row_counter_max"
-            v-bind:value="rows"
-            @input="(n) => (rows = n) /*, $forceUpdate()*/"
-            :some_text="'Broj redaka'"
-          ></MyCounter>
-        </div>
-        <div style="margin-left: 10px; display: inline-block">
-          <MyCounter
-            :min_value="column_counter_min"
-            :max_value="column_counter_max"
-            v-bind:value="columns"
-            @input="(n) => (columns = n) /*, $forceUpdate()*/"
-            :some_text="'Broj stupaca'"
-          ></MyCounter>
-        </div>
-      </div>
-    </va-collapse>
-    <br />
-    <va-collapse
-      v-model="value[1]"
-      class="display-6"
-      style="text-align: start; margin-left: 10px"
-      header="Ispuna mreže"
-    >
+    <va-card color="background" style="padding: 10px">
       <h6
+        @click="value[0] = !value[0]"
         class="display-6"
-        style="text-align: start; margin-left: 10px; margin-top: 20px"
+        style="text-align: start"
       >
-        Smjer
+        Dimenzije &nbsp;
+        <va-icon v-if="!value[0]" name="expand_more"></va-icon>
+        <va-icon v-if="value[0]" name="expand_less"></va-icon>
       </h6>
-      <div class="my_row">
-        <va-tabs v-model="current_dir">
-          <template #tabs>
-            <va-tab
-              name="0"
-              @click="
-                mode_x = -1;
-                mode_y = -1;
-              "
-            >
-              &#8598;
-            </va-tab>
-            <va-tab
-              name="1"
-              @click="
-                mode_x = -1;
-                mode_y = 0;
-              "
-            >
-              &#8592;
-            </va-tab>
-            <va-tab
-              name="2"
-              @click="
-                mode_x = -1;
-                mode_y = 1;
-              "
-            >
-              &#8601;
-            </va-tab>
-            <va-tab
-              name="3"
-              @click="
-                mode_x = 0;
-                mode_y = -1;
-              "
-            >
-              &#8593;
-            </va-tab>
-            <va-tab
-              name="4"
-              @click="
-                mode_x = 0;
-                mode_y = 1;
-              "
-            >
-              &#8595;
-            </va-tab>
-            <va-tab
-              name="5"
-              @click="
-                mode_x = 1;
-                mode_y = -1;
-              "
-            >
-              &#8599;
-            </va-tab>
-            <va-tab
-              name="6"
-              @click="
-                mode_x = 1;
-                mode_y = 0;
-              "
-            >
-              &#8594;
-            </va-tab>
-            <va-tab
-              name="7"
-              @click="
-                mode_x = 1;
-                mode_y = 1;
-              "
-            >
-              &#8600;
-            </va-tab>
-          </template>
-        </va-tabs>
-      </div>
-      <h6 class="display-6" style="text-align: start; margin-left: 10px">
-        Riječi
-      </h6>
-      <div class="my_row">
-        <va-tabs>
-          <template #tabs>
-            <va-tab @click="place_special = !place_special">
-              <span v-if="place_special"
-                ><va-icon color="#FA8072" name="contrast"></va-icon>&nbsp; Dio
-                rješenja</span
-              >
-              <span v-else
-                ><va-icon color="#000000" name="contrast"></va-icon>&nbsp; Dio
-                osmosmjerke</span
-              >
-            </va-tab>
-            <va-tab @click="word += 'Ǆ'"> Ǆ </va-tab>
-            <va-tab @click="word += 'Ǉ'"> Ǉ </va-tab>
-            <va-tab @click="word += 'Ǌ'"> Ǌ </va-tab>
-            <va-tab>
-              <va-icon @click="delete_action()" name="delete"> </va-icon>&nbsp; 
-              <span @click="delete_type = (delete_type + 1) % 3">
-                <span v-if="delete_type == 0">Izbriši sve</span>
-                <span v-if="delete_type == 1"
-                  >Izbriši samo dijelove rješenja</span
-                >
-                <span v-if="delete_type == 2"
-                  >Izbriši samo dijelove osmosmjerke</span
-                >
-              </span>
-            </va-tab>
-          </template>
-        </va-tabs>
-        <va-input
-          immediate-validation
-          :rules="[(value) => word_warning == '' || 'Nedozvoljena slova.']"
-          style="display: inline-block; margin-left: 10px; margin-top: 10px"
-          type="text"
-          v-model="word"
-          placeholder="Nova riječ"
-          label="Dodaj riječ"
-          @update:model-value="check_word()"
-        />
-        <br />
-      </div>
-    </va-collapse>
-    <br />
-    <va-divider></va-divider>
-    <h4 class="display-4" style="text-align: center">Zagonetka</h4>
-    <va-divider></va-divider>
-    <div class="my_row">
+    </va-card>
+    <div class="my_row" v-if="value[0]">
       <MyCounter
-        :min_value="1"
-        :max_value="max_zoom"
-        v-bind:value="zoom"
-        @input="
-          (n) => {
-            zoom = n;
-            zoom_number();
-          }
-        "
-        :some_text="'Povećanje %'"
-        :is_zoom="true"
+        :min_value="row_counter_min"
+        :max_value="row_counter_max"
+        v-bind:value="rows"
+        @input="(n) => (rows = n) /*, $forceUpdate()*/"
+        :some_text="'Broj redaka'"
+      ></MyCounter>
+      <MyCounter
+        :min_value="column_counter_min"
+        :max_value="column_counter_max"
+        v-bind:value="columns"
+        @input="(n) => (columns = n) /*, $forceUpdate()*/"
+        :some_text="'Broj stupaca'"
+      ></MyCounter>
+    </div>
+    <br v-else />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[1] = !value[1]"
+        class="display-6"
+        style="text-align: start"
       >
-      </MyCounter>
+        Ispuna mreže &nbsp;
+        <va-icon v-if="!value[1]" name="expand_more"></va-icon>
+        <va-icon v-if="value[1]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[1]">
+      <h6 class="display-6" style="text-align: start">Smjer</h6>
+      <br />
+      <va-tabs v-model="current_dir">
+        <template #tabs>
+          <va-tab
+            name="0"
+            @click="
+              mode_x = -1;
+              mode_y = -1;
+            "
+          >
+            &#8598;
+          </va-tab>
+          <va-tab
+            name="1"
+            @click="
+              mode_x = -1;
+              mode_y = 0;
+            "
+          >
+            &#8592;
+          </va-tab>
+          <va-tab
+            name="2"
+            @click="
+              mode_x = -1;
+              mode_y = 1;
+            "
+          >
+            &#8601;
+          </va-tab>
+          <va-tab
+            name="3"
+            @click="
+              mode_x = 0;
+              mode_y = -1;
+            "
+          >
+            &#8593;
+          </va-tab>
+          <va-tab
+            name="4"
+            @click="
+              mode_x = 0;
+              mode_y = 1;
+            "
+          >
+            &#8595;
+          </va-tab>
+          <va-tab
+            name="5"
+            @click="
+              mode_x = 1;
+              mode_y = -1;
+            "
+          >
+            &#8599;
+          </va-tab>
+          <va-tab
+            name="6"
+            @click="
+              mode_x = 1;
+              mode_y = 0;
+            "
+          >
+            &#8594;
+          </va-tab>
+          <va-tab
+            name="7"
+            @click="
+              mode_x = 1;
+              mode_y = 1;
+            "
+          >
+            &#8600;
+          </va-tab>
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+      </va-tabs>
+      <br />
+      <h6 class="display-6" style="text-align: start">Način dodavanja</h6>
+      <br />
+      <va-tabs v-model="place_special">
+        <template #tabs>
+          <va-tab name="0"
+            ><va-icon color="#000000" name="contrast"></va-icon>&nbsp; Dio
+            osmosmjerke
+          </va-tab>
+          <va-tab name="1"
+            ><va-icon color="#FA8072" name="contrast"></va-icon>&nbsp; Dio
+            rješenja
+          </va-tab>
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+      </va-tabs>
+      <br />
+      <h6 class="display-6" style="text-align: start">Posebna slova</h6>
+      <br />
+      <va-tabs>
+        <template #tabs>
+          <va-tab @click="word += 'Ǆ'"> Ǆ </va-tab>
+          <va-tab @click="word += 'Ǉ'"> Ǉ </va-tab>
+          <va-tab @click="word += 'Ǌ'"> Ǌ </va-tab>
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+      </va-tabs>
+      <br />
+      <h6 class="display-6" style="text-align: start">Brisanje</h6>
+      <br />
+      <va-tabs>
+        <template #tabs>
+          <va-tab
+            @click="
+              delete_type = 0;
+              delete_action();
+            "
+          >
+            Izbriši sve
+          </va-tab>
+          <va-tab
+            @click="
+              delete_type = 1;
+              delete_action();
+            "
+          >
+            Izbriši rješenje
+          </va-tab>
+          <va-tab
+            @click="
+              delete_type = 2;
+              delete_action();
+            "
+          >
+            Izbriši osmosmjerku
+          </va-tab>
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+      </va-tabs>
+      <br />
+      <va-input
+        immediate-validation
+        :rules="[(value) => word_warning == '' || 'Nedozvoljena slova.']"
+        style="display: inline-block; margin-left: 10px; margin-top: 10px"
+        type="text"
+        v-model="word"
+        placeholder="Nova riječ"
+        label="Dodaj riječ"
+        @update:model-value="check_word()"
+      />
     </div>
-    <div class="my_row" v-if="current_x != null && current_y != null">
-      <va-chip
-        ><va-icon name="my_location" />&nbsp; Zadnja lokacija ({{ current_x }},
-        {{ current_y }})</va-chip
+    <br v-else />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[2] = !value[2]"
+        class="display-6"
+        style="text-align: start"
       >
-    </div>
-    <div class="my_row" style="max-height: 400px">
-      <va-infinite-scroll disabled :load="() => {}">
-        <div>
-          <table class="words_table" id="table_zoom">
-            <tr v-for="i in rows" v-bind:key="i">
-              <td
-                v-for="j in columns"
-                v-bind:key="j"
-                style="cursor: pointer"
-                @click="
-                  place_word(
-                    j - 1,
-                    i - 1,
-                    word,
-                    mode_x,
-                    mode_y,
-                    place_special,
-                    true
-                  )
-                "
-                @mouseover="
-                  current_x = i;
-                  current_y = j;
-                "
-                :class="{ special: is_special[i - 1][j - 1] }"
-              >
-                {{ solution[i - 1][j - 1] }}
-              </td>
-            </tr>
-          </table>
-        </div>
-      </va-infinite-scroll>
-    </div>
-    <div class="my_row" v-if="warning">
-      <va-alert color="danger" :title="'Nisu unesena sva slova'" center>
+        Zagonetka &nbsp;
+        <va-icon v-if="!value[2]" name="expand_more"></va-icon>
+        <va-icon v-if="value[2]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[2]">
+      <div>
+        <MyCounter
+          :min_value="1"
+          :max_value="max_zoom"
+          v-bind:value="zoom"
+          @input="
+            (n) => {
+              zoom = n;
+              zoom_number();
+            }
+          "
+          :some_text="' Povećanje'"
+          :is_zoom="true"
+        ></MyCounter>
+      </div>
+      <div v-if="current_x != null && current_y != null">
+        <va-chip outline :rounded="false" style="border: none">
+          <va-icon name="my_location" />
+          &nbsp; Zadnja lokacija ({{ current_x }}, {{ current_y }})
+        </va-chip>
+      </div>
+      <br v-if="current_x != null && current_y != null" />
+      <div style="max-height: 400px; overflow-x: scroll; overflow-y: scroll">
+        <table class="words_table" id="table_zoom">
+          <tr v-for="i in rows" v-bind:key="i">
+            <td
+              v-for="j in columns"
+              v-bind:key="j"
+              style="cursor: pointer"
+              @click="
+                place_word(
+                  j - 1,
+                  i - 1,
+                  word,
+                  mode_x,
+                  mode_y,
+                  place_special,
+                  true
+                )
+              "
+              @mouseover="
+                current_x = i;
+                current_y = j;
+              "
+              :class="{ special: is_special[i - 1][j - 1] }"
+            >
+              {{ solution[i - 1][j - 1] }}
+            </td>
+          </tr>
+        </table>
+      </div>
+      <br v-if="warning" />
+      <va-alert
+        dense
+        outline
+        v-if="warning"
+        style="white-space: pre-wrap; border: none"
+        color="danger"
+        :title="'Nisu unesena sva slova'"
+        center
+      >
         Morate unesti dovoljno riječi i slova u osmosmjerku tako da sva polja
         budu definirana.
       </va-alert>
     </div>
-    <va-divider v-if="count_special()"></va-divider>
-    <h4 class="display-4" v-if="count_special()" style="text-align: center">
-      Rješenje
-    </h4>
-    <va-divider v-if="count_special()"></va-divider>
-    <div v-if="count_special()" class="my_row">
+    <br v-else />
+    <va-card color="background" style="padding: 10px" v-if="count_special()">
+      <h6
+        @click="value[3] = !value[3]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Rješenje &nbsp;
+        <va-icon v-if="!value[3]" name="expand_more"></va-icon>
+        <va-icon v-if="value[3]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[3] && count_special()">
       <span v-for="i in rows" v-bind:key="i">
         <span v-for="j in columns" v-bind:key="j">
           <va-chip
+            color="#FA8072"
             outline
             square
             style="margin-left: 5px; margin-top: 5px"
@@ -1618,22 +1720,10 @@ export default {
         </span>
       </span>
     </div>
-    <va-divider
-      v-if="
-        words_by_dir[0].length +
-          words_by_dir[1].length +
-          words_by_dir[2].length +
-          words_by_dir[3].length +
-          words_by_dir[4].length +
-          words_by_dir[5].length +
-          words_by_dir[6].length +
-          words_by_dir[7].length >
-        0
-      "
-    ></va-divider>
-    <h4
-      class="display-4"
-      style="text-align: center"
+    <br v-if="!value[3] && count_special()" />
+    <va-card
+      color="background"
+      style="padding: 10px"
       v-if="
         words_by_dir[0].length +
           words_by_dir[1].length +
@@ -1646,99 +1736,122 @@ export default {
         0
       "
     >
-      Riječi po smjerovima
-    </h4>
-    <va-divider
-      v-if="
-        words_by_dir[0].length +
-          words_by_dir[1].length +
-          words_by_dir[2].length +
-          words_by_dir[3].length +
-          words_by_dir[4].length +
-          words_by_dir[5].length +
-          words_by_dir[6].length +
-          words_by_dir[7].length >
-        0
-      "
-    ></va-divider>
-    <va-tabs
-      v-model="dir_to_display"
-      v-if="
-        words_by_dir[0].length +
-          words_by_dir[1].length +
-          words_by_dir[2].length +
-          words_by_dir[3].length +
-          words_by_dir[4].length +
-          words_by_dir[5].length +
-          words_by_dir[6].length +
-          words_by_dir[7].length >
-        0
-      "
-    >
-      <template #tabs>
-        <va-tab v-if="words_by_dir[0].length > 0" name="0">
-          <span>&#8598;</span>
-        </va-tab>
-        <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
-          <va-tab v-if="words_in_dir.length > 0 && i > 0" :name="i">
-            <span v-if="i == 1">&#8592;</span>
-            <span v-if="i == 2">&#8601;</span>
-            <span v-if="i == 3">&#8593;</span>
-            <span v-if="i == 4">&#8595;</span>
-            <span v-if="i == 5">&#8599;</span>
-            <span v-if="i == 6">&#8594;</span>
-            <span v-if="i == 7">&#8600;</span>
-          </va-tab>
-        </span>
-      </template>
-    </va-tabs>
+      <h6
+        @click="value[4] = !value[4]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Riječi po smjerovima &nbsp;
+        <va-icon v-if="!value[4]" name="expand_more"></va-icon>
+        <va-icon v-if="value[4]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
     <div
       class="my_row"
-      v-if="dir_to_display != null && words_by_dir[dir_to_display].length > 0"
+      v-if="
+        value[4] &&
+        words_by_dir[0].length +
+          words_by_dir[1].length +
+          words_by_dir[2].length +
+          words_by_dir[3].length +
+          words_by_dir[4].length +
+          words_by_dir[5].length +
+          words_by_dir[6].length +
+          words_by_dir[7].length >
+          0
+      "
     >
-      <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
+      <va-tabs v-model="dir_to_display">
+        <template #tabs>
+          <va-tab v-if="words_by_dir[0].length > 0" name="0">
+            <span>&#8598;</span>
+          </va-tab>
+          <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
+            <va-tab v-if="words_in_dir.length > 0 && i > 0" :name="i">
+              <span v-if="i == 1">&#8592;</span>
+              <span v-if="i == 2">&#8601;</span>
+              <span v-if="i == 3">&#8593;</span>
+              <span v-if="i == 4">&#8595;</span>
+              <span v-if="i == 5">&#8599;</span>
+              <span v-if="i == 6">&#8594;</span>
+              <span v-if="i == 7">&#8600;</span>
+            </va-tab>
+          </span>
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+      </va-tabs>
+      <div
+        v-if="dir_to_display != null && words_by_dir[dir_to_display].length > 0"
+      >
         <va-chip
           outline
-          v-if="words_in_dir.length > 0 && i == dir_to_display"
           style="padding: 20px; margin-left: 20px; margin-top: 20px"
         >
           <span>
-            <span v-if="i == 0">&#8598;</span>
-            <span v-if="i == 1">&#8592;</span>
-            <span v-if="i == 2">&#8601;</span>
-            <span v-if="i == 3">&#8593;</span>
-            <span v-if="i == 4">&#8595;</span>
-            <span v-if="i == 5">&#8599;</span>
-            <span v-if="i == 6">&#8594;</span>
-            <span v-if="i == 7">&#8600;</span>
-            &nbsp; 
-            <va-icon @click="remove_dir(i)" name="delete" />
+            <span v-if="dir_to_display == 0">&#8598;</span>
+            <span v-if="dir_to_display == 1">&#8592;</span>
+            <span v-if="dir_to_display == 2">&#8601;</span>
+            <span v-if="dir_to_display == 3">&#8593;</span>
+            <span v-if="dir_to_display == 4">&#8595;</span>
+            <span v-if="dir_to_display == 5">&#8599;</span>
+            <span v-if="dir_to_display == 6">&#8594;</span>
+            <span v-if="dir_to_display == 7">&#8600;</span>
+            &nbsp;
+            <va-icon @click="remove_dir(dir_to_display)" name="delete" />
             <br />
             <br />
-            <div style="max-height: 200px">
-              <va-infinite-scroll disabled :load="() => {}">
-                <div v-for="(word, j) in words_in_dir" v-bind:key="j">
-                  {{ word[2] }}&nbsp; ({{ word[1] + 1 }},{{ word[0] + 1 }})
-                  &nbsp; 
-                  <va-icon @click="remove_word(i, j)" name="delete" />
-                </div>
-              </va-infinite-scroll>
+            <div style="max-height: 200px; overflow-y: scroll">
+              <div
+                v-for="(word, j) in words_by_dir[dir_to_display]"
+                v-bind:key="j"
+              >
+                {{ word[2] }}&nbsp; ({{ word[1] + 1 }},{{ word[0] + 1 }}) &nbsp;
+                <va-icon
+                  @click="remove_word(dir_to_display, j)"
+                  name="delete"
+                />
+              </div>
             </div>
           </span>
         </va-chip>
-      </span>
+      </div>
     </div>
-    <va-divider></va-divider>
-    <h4 class="display-4" style="text-align: center">Podaci o zagonetci</h4>
-    <va-divider></va-divider>
-    <div class="my_row">
+    <br
+      v-if="
+        !value[4] &&
+        words_by_dir[0].length +
+          words_by_dir[1].length +
+          words_by_dir[2].length +
+          words_by_dir[3].length +
+          words_by_dir[4].length +
+          words_by_dir[5].length +
+          words_by_dir[6].length +
+          words_by_dir[7].length >
+          0
+      "
+    />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[5] = !value[5]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Podaci o zagonetci &nbsp;
+        <va-icon v-if="!value[5]" name="expand_more"></va-icon>
+        <va-icon v-if="value[5]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[5]">
       <va-button
-        style="display: inline-block; overflow-wrap: anywhere"
+        outline
+        :rounded="false"
+        style="border: none"
         @click="click_file()"
       >
         <span v-if="this.imageURL != ''"> {{ this.imageURL }} </span>
         <span v-else><va-icon name="photo" /> &nbsp; Odaberi sliku </span>
       </va-button>
+      <br />
       <input
         file-types="image/*"
         type="file"
@@ -1746,104 +1859,135 @@ export default {
         style="display: none; visibility: hidden; width: 0%"
         @input="image_uploaded()"
       />
-    </div>
-    <div class="my_row" v-if="image">
-      <img id="img" :src="imageURL" alt="Nema slike" style="width: 100%" />
-    </div>
-    <div class="my_row" v-if="!image">
+      <br />
+      <img
+        v-if="image"
+        id="img"
+        :src="imageURL"
+        alt="Nema slike"
+        style="width: 100%"
+      />
+      <br v-if="image" />
       <va-alert
-        style="white-space: pre-wrap"
+        dense
+        outline
+        v-if="!image"
+        style="white-space: pre-wrap; border: none"
         color="warning"
-        title="Prazna slika"
+        title="Nema slike"
         center
       >
         Niste dodali sliku uz zagonetku.
       </va-alert>
-    </div>
-    <div class="my_row">
+      <br />
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Naslov zagonetke
+      </h6>
+      <br />
       <va-input
         v-model="title"
         immediate-validation
         type="text"
-        label="Naslov zagonetke"
         :rules="[(value) => value.length > 0 || 'Unesite naslov.']"
       />
-    </div>
-    <div class="my_row">
+      <br />
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Opis zagonetke
+      </h6>
+      <br />
       <va-input
         v-model="description"
         immediate-validation
         type="textarea"
-        label="Opis zagonetke"
         :min-rows="3"
         :max-rows="5"
         :rules="[(value) => value.length > 0 || 'Unesite opis.']"
       />
-    </div>
-    <div class="my_row">
+      <br />
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Izvor zagonetke
+      </h6>
+      <br />
       <va-input
         v-model="source"
         immediate-validation
         type="textarea"
-        label="Izvor zagonetke"
         :min-rows="3"
         :max-rows="5"
         :rules="[(value) => value.length > 0 || 'Unesite izvor.']"
       />
+
+      <br v-if="edit" />
+      <div v-if="edit" style="text-align: start">
+        <router-link :to="'/profile/' + authorUserRecord.email">
+          <span style="font-weight: bold"> Autor zagonetke: </span>
+          {{ authorUserRecord.displayName }}
+          ({{ authorUserRecord.email }})
+        </router-link>
+      </div>
+      <br v-if="edit" />
+      <div v-if="edit" style="text-align: start">
+        <span style="font-weight: bold"> Vrijeme kreiranja: </span>
+        {{ time_created.toLocaleString() }}
+      </div>
+      <br v-if="edit" />
+      <div v-if="edit" style="text-align: start">
+        <router-link :to="'/profile/' + updaterUserRecord.email">
+          <span style="font-weight: bold"> Zadnji ažurirao: </span>
+          {{ updaterUserRecord.displayName }}
+          ({{ updaterUserRecord.email }})
+        </router-link>
+      </div>
+      <br v-if="edit" />
+      <div v-if="edit" style="text-align: start">
+        <span style="font-weight: bold"> Vrijeme zadnje izmjene: </span>
+        {{ last_updated.toLocaleString() }}
+      </div>
     </div>
-    <div class="my_row" v-if="edit">
-      <span class="display-6" style="margin-left: 10px"
-        >Autor zagonetke: {{ authorUserRecord.displayName }}
-        <router-link :to="'/profile/' + authorUserRecord.email"
-          >({{ authorUserRecord.email }})</router-link
+    <br v-else />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[6] = !value[6]"
+        class="display-6"
+    
+        v-if="permission_to_edit_visibility || !edit" style="text-align: start" 
+      >
+        Dozvola uređivanja &nbsp;
+        <va-icon v-if="!value[6]" name="expand_more"></va-icon>
+        <va-icon v-if="value[6]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[6]">
+      <div>
+        <va-button
+          outline
+          :rounded="false"
+          style="border: none"
+          @click="is_public = !is_public"
+          
+    
         >
-      </span>
-      <span class="display-6" style="margin-left: 10px">
-        Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
-      >
-    </div>
-    <div class="my_row" v-if="edit">
-      <span class="display-6" style="margin-left: 10px"
-        >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
-        <router-link :to="'/profile/' + updaterUserRecord.email"
-          >({{ updaterUserRecord.email }})</router-link
-        >
-      </span>
-      <span class="display-6" style="margin-left: 10px">
-        Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
-      >
-    </div>
-    <br />
-    <va-divider></va-divider>
-    <h4 class="display-4" style="text-align: center">Dozvola uređivanja</h4>
-    <va-divider></va-divider>
-    <div class="my_row">
-      <va-button
-        style="overflow-wrap: anywhere"
-        @click="is_public = !is_public"
-        :disabled="!permission_to_edit_visibility && edit"
-      >
-        <span v-if="is_public == false">
-          <va-icon name="public_off" />
-          &nbsp; Samo suradnici
-        </span>
-        <span v-else><va-icon name="public" /> &nbsp; Svi</span>
-      </va-button>
-    </div>
-    <div class="my_row">
+          <span v-if="is_public == false">
+            <va-icon name="public_off" />
+            &nbsp; Samo suradnici
+          </span>
+          <span v-else><va-icon name="public" /> &nbsp; Svi</span>
+        </va-button>
+      </div>
+      <br />
       <va-input
-        style="display: inline-block; margin-left: 10px; margin-top: 10px"
+        style="display: inline-block"
         type="text"
         v-model="collaborator"
         placeholder="Email adresa"
         label="Email adresa suradnika"
       >
         <template #append>
-          &nbsp; 
+          &nbsp;
           <va-icon
             @click="
-              checkIfUserExists()
-              //$forceUpdate();
+              checkIfUserExists();
+              $forceUpdate();
             "
             color="primary"
             class="mr-4"
@@ -1851,65 +1995,29 @@ export default {
           />
         </template>
       </va-input>
+      <br v-if="permissionsUserRecords.length > 0" />
+      <div v-if="permissionsUserRecords.length > 0">
+        <va-chip
+          style="
+            overflow-wrap: anywhere;
+            display: inline-block;
+            margin-left: 10px;
+            margin-top: 10px;
+          "
+          v-for="(permission, i) in permissionsUserRecords"
+          :key="i"
+        >
+          <va-icon
+            style="display: inline-block"
+            @click="permissions.splice(i, 1)"
+            name="remove_moderator"
+            class="mr-2"
+          />
+          &nbsp; {{ permission.displayName }} ({{ permission.email }})
+        </va-chip>
+      </div>
     </div>
-    <va-divider></va-divider>
-    <div class="my_row" v-if="permissionsUserRecords.length > 0">
-      <va-chip
-        style="
-          overflow-wrap: anywhere;
-          display: inline-block;
-          margin-left: 10px;
-          margin-top: 10px;
-        "
-        v-for="(permission, i) in permissionsUserRecords"
-        :key="i"
-      >
-        <va-icon
-          style="display: inline-block"
-          @click="permissions.splice(i, 1)"
-          name="remove_moderator"
-          class="mr-2"
-        />
-        &nbsp; {{ permission.displayName }} ({{ permission.email }})
-      </va-chip>
-    </div>
-    <div class="my_row">
-      <va-button
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
-        v-if="edit"
-        :disabled="
-          !(
-            edit &&
-            !warning &&
-            title.length > 0 &&
-            description.length > 0 &&
-            source.length > 0
-          )
-        "
-        @click="store()"
-      >
-        <va-icon name="mode_edit" />
-        &nbsp; Izmijeni postojeću zagonetku</va-button
-      >&nbsp; 
-      <va-button
-        style="overflow-wrap: anywhere; margin-left: 10px; margin-top: 10px"
-        :disabled="
-          !(
-            !warning &&
-            title.length > 0 &&
-            description.length > 0 &&
-            source.length > 0
-          )
-        "
-        @click="duplicate()"
-      >
-        <va-icon v-if="edit" name="control_point_duplicate" /><va-icon v-else name="add_circle" />
-        
-        &nbsp; 
-        <span v-if="edit">Spremi izmjene kao novu zagonetku</span>
-        <span v-else>Spremi novu zagonetku</span></va-button
-      >
-    </div>
+    <br v-else />
   </body>
   <va-modal
     :mobile-fullscreen="false"

@@ -12,6 +12,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 export default {
   data() {
     return {
+      values_toggle: [false, false, false],
       value: "integram",
       user: null,
       start_time: new Date(),
@@ -188,163 +189,198 @@ export default {
 
 <template>
   <body class="my_body">
-    <div class="my_row">
-      <h4 class="display-4">
-        <va-icon size="large" name="edit_calendar"></va-icon>&nbsp; Novi turnir
-      </h4>
-    </div>
-    <div class="my_row">
-      <h4 class="display-4">
-        <va-icon size="large" name="hourglass_top"></va-icon>&nbsp; Početak
-        turnira
-      </h4>
-    </div>
-    <div class="my_row">
+    <h4 class="display-4">
+      <va-icon size="large" name="edit_calendar"></va-icon>&nbsp; Novi turnir
+    </h4>
+    <br />
+    <va-divider></va-divider>  
+      <va-button outline :rounded="false" style="border: none">
+        <router-link to="/search-tournament">
+          <va-icon class="mr-4" name="search" /> Popis turnira
+        </router-link>
+      </va-button> 
+    <br />
+    <va-divider></va-divider>
+    <br />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="values_toggle[0] = !values_toggle[0]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Vrijeme turnira &nbsp;
+        <va-icon v-if="!values_toggle[0]" name="expand_more"></va-icon>
+        <va-icon v-if="values_toggle[0]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="values_toggle[0]">
+      <h6 class="display-6" style="text-align: start">
+        Početak turnira &nbsp;
+      </h6>
+      <br />
       <va-time-input
         v-model="start_time"
         @update:model-value="writeTimeToStart()"
       />
-    </div>
-    <div class="my_row">
+      <br />
       <va-date-input
         v-model="start_date"
         @update:model-value="writeDateToStart()"
       />
-    </div>
-    <div class="my_row">
-      <h4 class="display-4">
-        <va-icon size="large" name="hourglass_bottom"></va-icon>&nbsp; Kraj
-        turnira
-      </h4>
-    </div>
-    <div class="my_row">
+      <br />
+      <h6 class="display-6" style="text-align: start">Kraj turnira &nbsp;</h6>
+      <br />
       <va-time-input
         v-model="end_time"
         @update:model-value="writeTimeToEnd()"
       />
-    </div>
-    <div class="my_row">
+      <br />
       <va-date-input
         v-model="end_date"
         @update:model-value="writeDateToEnd()"
       />
-    </div>
-    <div class="my_row" v-if="!is_correct_time">
+      <br v-if="!is_correct_time" />
       <va-alert
-        style="white-space: pre-wrap"
+        dense
+        v-if="!is_correct_time"
+        outline
+        style="white-space: pre-wrap; border: none"
         color="danger"
         title="Nije odabrano ispravno vrijeme"
         center
-        
       >
         {{ time_alert }}
       </va-alert>
     </div>
-    <div class="my_row">
-      <h4 class="display-4">
-        <va-icon size="large" name="extension"> </va-icon>&nbsp; Odabir zagonetki
-      </h4>
-    </div>
-    <va-tabs v-model="value" style="width: 100%">
-      <template #tabs>
-        <va-tab name="cryptogram"
-          ><va-icon name="multiple_stop"></va-icon>Kriptogrami</va-tab
-        >
-        <va-tab name="eight"
-          ><va-icon name="pattern"></va-icon>Osmosmjerke</va-tab
-        >
-        <va-tab name="initial"
-          ><va-icon name="text_rotation_none"></va-icon>Inicijalne
-          osmosmjerke</va-tab
-        >
-        <va-tab name="integram"
-          ><va-icon name="rule_folder"></va-icon>Integrami</va-tab
-        >
-        <va-tab name="nonogram"
-          ><va-icon name="draw"></va-icon>Nonogrami</va-tab
-        >
-        <va-tab name="numberCrossword"
-          ><va-icon name="format_list_numbered"></va-icon>Brojevne
-          križaljke</va-tab
-        >
-        <va-tab name="numberLetter"
-          ><va-icon name="sync_alt"></va-icon>Isti broj - isto slovo</va-tab
-        >
-      </template>
-    </va-tabs>
-    <IntegramTable
-      v-if="value == 'integram'"
-      @selected-integrams="selectIntegrams"
-      selectMode="multiple"
-    >
-    </IntegramTable>
+    <br v-else />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="values_toggle[1] = !values_toggle[1]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Odabir zagonetki &nbsp;
+        <va-icon v-if="!values_toggle[1]" name="expand_more"></va-icon>
+        <va-icon v-if="values_toggle[1]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="values_toggle[1]">
+      <h6 class="display-6" style="text-align: start">Vrsta zagonetke</h6>
+      <br />
+      <va-tabs v-model="value">
+        <template #tabs>
+          <va-tab name="cryptogram"
+            ><va-icon name="multiple_stop"></va-icon>Kriptogrami</va-tab
+          >
+          <va-tab name="eight"
+            ><va-icon name="pattern"></va-icon>Osmosmjerke</va-tab
+          >
+          <va-tab name="initial"
+            ><va-icon name="text_rotation_none"></va-icon>Inicijalne
+            osmosmjerke</va-tab
+          >
+          <va-tab name="integram"
+            ><va-icon name="rule_folder"></va-icon>Integrami</va-tab
+          >
+          <va-tab name="nonogram"
+            ><va-icon name="draw"></va-icon>Nonogrami</va-tab
+          >
+          <va-tab name="numberCrossword"
+            ><va-icon name="format_list_numbered"></va-icon>Brojevne
+            križaljke</va-tab
+          >
+          <va-tab name="numberLetter"
+            ><va-icon name="sync_alt"></va-icon>Isti broj - isto slovo</va-tab
+          >
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+      </va-tabs>
+      <IntegramTable
+        v-if="value == 'integram'"
+        @selected-integrams="selectIntegrams"
+        selectMode="multiple"
+      >
+      </IntegramTable>
 
-    <NonogramTable
-      v-if="value == 'nonogram'"
-      @selected-nonograms="selectNonograms"
-      selectMode="multiple"
-    >
-    </NonogramTable>
+      <NonogramTable
+        v-if="value == 'nonogram'"
+        @selected-nonograms="selectNonograms"
+        selectMode="multiple"
+      >
+      </NonogramTable>
 
-    <NumberCrosswordTable
-      v-if="value == 'numberCrossword'"
-      @selected-number-crosswords="selectNumberCrosswords"
-      selectMode="multiple"
-    >
-    </NumberCrosswordTable>
+      <NumberCrosswordTable
+        v-if="value == 'numberCrossword'"
+        @selected-number-crosswords="selectNumberCrosswords"
+        selectMode="multiple"
+      >
+      </NumberCrosswordTable>
 
-    <CryptogramTable
-      v-if="value == 'cryptogram'"
-      @selected-cryptograms="selectCryptograms"
-      selectMode="multiple"
-    >
-    </CryptogramTable>
+      <CryptogramTable
+        v-if="value == 'cryptogram'"
+        @selected-cryptograms="selectCryptograms"
+        selectMode="multiple"
+      >
+      </CryptogramTable>
 
-    <NumberLetterTable
-      v-if="value == 'numberLetter'"
-      @selected-number-letters="selectNumberLetters"
-      selectMode="multiple"
-    >
-    </NumberLetterTable>
+      <NumberLetterTable
+        v-if="value == 'numberLetter'"
+        @selected-number-letters="selectNumberLetters"
+        selectMode="multiple"
+      >
+      </NumberLetterTable>
 
-    <InitialTable
-      v-if="value == 'initial'"
-      @selected-initials="selectInitials"
-      selectMode="multiple"
-    >
-    </InitialTable>
+      <InitialTable
+        v-if="value == 'initial'"
+        @selected-initials="selectInitials"
+        selectMode="multiple"
+      >
+      </InitialTable>
 
-    <EightTable
-      v-if="value == 'eight'"
-      @selected-eights="selectEights"
-      selectMode="multiple"
-    >
-    </EightTable>
+      <EightTable
+        v-if="value == 'eight'"
+        @selected-eights="selectEights"
+        selectMode="multiple"
+      >
+      </EightTable>
 
-    <div
-      class="my_row"
-      v-if="
-        !(
-          selectedIntegrams.length > 0 ||
-          selectedNonograms.length > 0 ||
-          selectedNumberCrosswords.length > 0 ||
-          selectedCryptograms.length > 0 ||
-          selectedInitials.length > 0
-        )
-      "
-    >
+      <br
+        v-if="
+          !(
+            selectedIntegrams.length > 0 ||
+            selectedNonograms.length > 0 ||
+            selectedNumberCrosswords.length > 0 ||
+            selectedCryptograms.length > 0 ||
+            selectedInitials.length > 0
+          )
+        "
+      />
       <va-alert
-        style="white-space: pre-wrap"
+        v-if="
+          !(
+            selectedIntegrams.length > 0 ||
+            selectedNonograms.length > 0 ||
+            selectedNumberCrosswords.length > 0 ||
+            selectedCryptograms.length > 0 ||
+            selectedInitials.length > 0
+          )
+        "
+        dense
+        outline
+        style="white-space: pre-wrap; border: none"
         color="danger"
         title="Nije odabrana niti jedna zagonetka"
         center
-        
       >
         Odaberite barem jednu zagonetku da biste organizirali turnir.
       </va-alert>
     </div>
-    <div class="my_row">
+    <br v-else />
+    <div>
       <va-button
+        outline
+        :rounded="false"
+        style="border: none"
         :disabled="
           !user ||
           !is_correct_time ||

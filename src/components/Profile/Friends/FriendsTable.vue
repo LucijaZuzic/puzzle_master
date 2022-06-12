@@ -160,30 +160,47 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
-    <span v-if="friends.length > 0">
-      <div class="my_row">
+    <span v-if="friends.length > 0">  
+    <br/>
+      <div>
         <va-input
           style="display: inline-block"
           placeholder="Unesite pojam za pretragu"
           v-model="filter"
         />
-        &nbsp; 
+        &nbsp;
         <va-checkbox
           style="display: inline-block"
           label="Traži cijelu riječ"
           v-model="useCustomFilteringFn"
         />
       </div>
-      <div class="my_row">
-        <MyCounter
-          :min_value="1"
-          :max_value="Math.ceil(this.filtered.length)"
-          v-bind:value="perPage"
-          @input="(n) => (perPage = n)"
-          :is_page_size="true"
-          :some_text="'Broj rezultata na stranici'"
-        ></MyCounter>
+      <br />
+      <div>
+        <div style="display: inline-block">
+          <MyCounter
+            :min_value="1"
+            :max_value="Math.ceil(this.filtered.length)"
+            v-bind:value="perPage"
+            @input="(n) => (perPage = n)"
+            :is_page_size="true"
+            :some_text="'Po stranici'"
+          >
+          </MyCounter>
+        </div>
+        <div style="display: inline-block; margin-left: 10px">
+          <MyCounter
+            :min_value="1"
+            :max_value="Math.floor(this.filtered.length / perPage)"
+            v-bind:value="currentPage"
+            @input="(n) => (currentPage = n)"
+            :is_page_number="true"
+            :some_text="'Stranica'"
+          >
+          </MyCounter>
+        </div>
       </div>
+      <br />
       <va-data-table
         :items="friends"
         :filter="filter"

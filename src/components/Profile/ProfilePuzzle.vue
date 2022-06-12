@@ -132,7 +132,9 @@ export default {
       <va-tab name="record"
         ><va-icon name="schedule"></va-icon>&nbsp; Rezultati</va-tab
       >
-      <va-tab name="rating"><va-icon name="star"></va-icon>&nbsp; Ocjene</va-tab>
+      <va-tab name="rating"
+        ><va-icon name="star"></va-icon>&nbsp; Ocjene</va-tab
+      >
       <va-tab name="favorite"
         ><va-icon name="favorite"></va-icon>&nbsp; Spremljeno</va-tab
       >

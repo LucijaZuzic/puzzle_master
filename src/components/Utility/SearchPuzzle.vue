@@ -43,14 +43,11 @@ export default {
 </script>
 
 <template>
-  <body class="my_body"> 
-      <div class="my_row">
-        <h4 class="display-4">
-          <va-icon size="large" :name="icon"></va-icon>
-          &nbsp;  {{ title }}
-        </h4>
-      </div>  
-    <va-divider></va-divider>
+  <body class="my_body">
+    <h4 class="display-4">
+      <va-icon size="large" :name="icon"></va-icon>
+      &nbsp; {{ title }}
+    </h4>
     <component :is="component_name" selectMode="single" :friend="user">
     </component>
   </body>

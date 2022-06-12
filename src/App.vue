@@ -43,16 +43,7 @@ export default {
   text-align: center;
   vertical-align: middle;
   padding: 20px;
-}
-.small_row {
-  width: 100%;
-  display: inline-block;
-  font-size: initial;
-  font-weight: normal;
-  text-align: center;
-  vertical-align: middle;
-  padding: 10px;
-}
+} 
 a,
 a:hover,
 a:focus,

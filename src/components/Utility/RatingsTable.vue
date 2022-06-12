@@ -230,11 +230,12 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
-    <div class="my_row" v-if="user">
+    <br v-if="user" />
+    <div v-if="user">
       <va-list-item>
         <va-list-item-section avatar>
-          <va-chip>
-            <va-icon name="star" size="large"></va-icon>&nbsp; 
+          <va-chip outline style="border: none">
+            <va-icon name="star" size="large"></va-icon>&nbsp;
             {{ value }}
           </va-chip>
         </va-list-item-section>
@@ -245,7 +246,8 @@ export default {
         </va-list-item-section>
       </va-list-item>
     </div>
-    <div class="my_row" v-if="user">
+    <br v-if="user" />
+    <div v-if="user">
       <va-form>
         <va-input
           type="textarea"
@@ -260,41 +262,66 @@ export default {
         </va-input>
       </va-form>
     </div>
-    <div class="my_row" v-if="user">
-      <va-button :disabled="comment.length < 1" @click="submit()">
+    <br v-if="user" />
+    <div v-if="user">
+      <va-button
+        outline
+        :rounded="false"
+        style="border: none"
+        :disabled="comment.length < 1"
+        @click="submit()"
+      >
         <va-icon name="rate_review"></va-icon>&nbsp; Ocjenite</va-button
       >
     </div>
-    <div class="my_row" v-if="user_ratings.length > 0">
+    <br v-if="user_ratings.length > 0" />
+    <div v-if="user_ratings.length > 0">
       <va-chip>
         <va-icon name="stars"></va-icon>&nbsp; Ocjena:
         {{ sum_ratings / user_ratings.length }}
       </va-chip>
     </div>
+    <br v-if="user_ratings.length > 0" />
     <span v-if="user_ratings.length > 0">
-      <div class="my_row">
+      <div>
         <va-input
           style="display: inline-block"
           placeholder="Unesite pojam za pretragu"
           v-model="filter"
         />
-        &nbsp; 
+        &nbsp;
         <va-checkbox
           style="display: inline-block"
           label="Traži cijelu riječ"
           v-model="useCustomFilteringFn"
         />
       </div>
-      <div class="my_row">
-        <MyCounter
-          :min_value="1"
-          :max_value="Math.ceil(this.filtered.length)"
-          v-bind:value="perPage"
-          @input="(n) => (perPage = n)"
-          :is_page_size="true"
-          :some_text="'Broj rezultata na stranici'"
-        ></MyCounter>
+      <br />
+      <div>
+        <div style="display: inline-block">
+          <MyCounter
+            :min_value="1"
+            :max_value="Math.ceil(this.filtered.length)"
+            v-bind:value="perPage"
+            @input="(n) => (perPage = n)"
+            :is_page_size="true"
+            :some_text="'Po stranici'"
+          >
+          </MyCounter>
+        </div>
+        <div style="display: inline-block; margin-left: 10px">
+          <MyCounter
+            :min_value="1"
+            :max_value="Math.floor(this.filtered.length / perPage)"
+            v-bind:value="currentPage"
+            @input="(n) => (currentPage = n)"
+            :is_page_number="true"
+            :some_text="'Stranica'"
+          >
+          </MyCounter>
+        </div>
       </div>
+      <br />
       <va-data-table
         :items="user_ratings"
         :filter="filter"

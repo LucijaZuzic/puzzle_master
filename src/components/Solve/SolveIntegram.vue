@@ -6,6 +6,7 @@ import { usersRef } from "../../firebase_main.js";
 import { integramsRecordsRef, friendsRef } from "../../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
+import tinycolor from "tinycolor2/tinycolor";
 import MyCounter from "../Utility/MyCounter.vue";
 import LoadingBar from "../Utility/LoadingBar.vue";
 import IntegramInfo from "../Info/IntegramInfo.vue";
@@ -17,15 +18,17 @@ export default {
     IntegramInfo,
   },
   data() {
-    return { 
+    return {
+      value: [false, false, false, false, false, false],
       category_counter_min: 1,
       category_counter_max: 5,
       value_counter_min: 1,
       value_counter_max: 5,
       instruction_counter_min: 5,
       instruction_coutner_max: 10,
-      category_to_display: 1,
-      value_to_display: 1,
+      category_for_image: null,
+      value_to_display: null,
+      category_for_long: null,
       urls: [],
       fully_loaded: false,
       title: "",
@@ -91,6 +94,19 @@ export default {
     );
   },
   methods: {
+    find_in_category(text, some_category) {
+      for (let i = 0; i < this.numvalues; i++) {
+        if (this.category_values[i][some_category] == text) {
+          return i;
+        }
+      }
+      return null;
+    },
+    getColorDarker(starting_color, amount) {
+      return tinycolor(starting_color)
+        .darken(amount * 10)
+        .toString();
+    },
     checkIdentity() {
       if (this.author == this.user.uid) {
         return true;
@@ -541,25 +557,25 @@ export default {
           this.values.push(values_row);
         }
       }
-    }, 
-    clear_cell(x, y) {  
+    },
+    clear_cell(x, y) {
       if (this.values[x][y] != 1) {
         return;
-      } 
+      }
       for (let i = 0; i < this.numcategories; i++) {
-        for (let j = 0; j < this.numvalues; j++) { 
-          this.values[x][i * this.numvalues + j] = -1;  
-          this.values[i * this.numvalues + j][x] = -1;   
-          this.values[y][i * this.numvalues + j] = -1;  
-          this.values[i * this.numvalues + j][y] = -1;   
+        for (let j = 0; j < this.numvalues; j++) {
+          this.values[x][i * this.numvalues + j] = -1;
+          this.values[i * this.numvalues + j][x] = -1;
+          this.values[y][i * this.numvalues + j] = -1;
+          this.values[i * this.numvalues + j][y] = -1;
         }
       }
     },
-    click_cell(x, y) {   
+    click_cell(x, y) {
       if (this.values[x][y] == this.mode) {
         return;
       }
-      if (this.values[x][y] == 1){
+      if (this.values[x][y] == 1) {
         return;
       }
       let oldvalues = [];
@@ -575,34 +591,38 @@ export default {
           }
           oldvalues.push(old_row);
         }
-      }    
+      }
       if (this.mode == 1) {
         let row_start = x - (x % this.numvalues);
-        let col_start = y - (y % this.numvalues); 
-        for (let i = 0; i < this.numvalues; i++) { 
-          this.clear_cell(x, col_start + i);  
-          this.clear_cell(col_start + i, x); 
-          this.clear_cell(row_start + i, y); 
-          this.clear_cell(y, row_start + i); 
-        } 
-      } 
-      if (this.mode == 0 && this.values[x][y] == 1){
+        let col_start = y - (y % this.numvalues);
+        for (let i = 0; i < this.numvalues; i++) {
+          this.clear_cell(x, col_start + i);
+          this.clear_cell(col_start + i, x);
+          this.clear_cell(row_start + i, y);
+          this.clear_cell(y, row_start + i);
+        }
+      }
+      if (this.mode == 0 && this.values[x][y] == 1) {
         this.values[x][y] = -1;
         this.values[y][x] = -1;
       } else {
         this.values[x][y] = this.mode;
-        this.values[y][x] = this.mode;   
+        this.values[y][x] = this.mode;
       }
-      for (let i = 0; i < Math.max(this.numcategories, this.numvalues) + 1; i++) { 
+      for (
+        let i = 0;
+        i < Math.max(this.numcategories, this.numvalues) + 1;
+        i++
+      ) {
         if (!this.update_values()) {
           this.$vaToast.init("Neispravan zaključak.");
           this.values = oldvalues;
         }
-      } 
-      if (!this.find_single()) { 
-        this.$vaToast.init("Neispravan zaključak."); 
+      }
+      if (!this.find_single()) {
+        this.$vaToast.init("Neispravan zaključak.");
         this.values = oldvalues;
-      }    
+      }
       this.generate_my_solution();
       this.$forceUpdate();
     },
@@ -1245,7 +1265,7 @@ export default {
       }
       this.fully_loaded = true;
     },
-  }, 
+  },
   beforeMount() {
     this.my_solution = [];
     for (let j = 0; j < this.numvalues; j++) {
@@ -1272,568 +1292,774 @@ export default {
     <LoadingBar></LoadingBar>
   </body>
   <body class="my_body" v-else> 
-      <div class="my_row">
-        <h4 class="display-4">
-          <va-icon size="large" name="rule_folder"></va-icon>
-          &nbsp; Igraj integram
-        </h4>
-      </div> 
-    <br /><br /> 
-      <div class="my_row">
-        <va-tabs>
-          <template #tabs>
-            <va-tab disabled
-              ><va-icon name="timer" />&nbsp; {{ format(time_elapsed) }}</va-tab
+      <h4 class="display-4">
+        <va-icon size="large" name="rule_folder"></va-icon>
+        &nbsp; Igraj integram
+    </h4>
+    <br />
+    <va-divider></va-divider>
+    <va-tabs>
+      <template #tabs>
+        <va-tab disabled
+          ><va-icon name="timer" />&nbsp; {{ format(time_elapsed) }}</va-tab
+        >
+        <va-tab @click="$refs.description.show()"
+          ><va-icon name="info"></va-icon>&nbsp; Pomoć
+        </va-tab>
+        <va-tab
+          @click="
+            show_error = !show_error;
+            $forceUpdate();
+          "
+        >
+          <span v-if="show_error == false">
+            <va-icon name="report_off" />
+            &nbsp; Ne prikazuj greške</span
+          >
+          <span v-else><va-icon name="report" /> &nbsp; Prikaži greške</span>
+        </va-tab>
+        <va-tab @click="$refs.show_solution_modal.show()">
+          <va-icon name="help" />
+          &nbsp; Otkrij sva polja
+        </va-tab>
+        <va-tab>
+          <router-link
+            v-bind:to="{
+              name: 'search_integram',
+            }"
+          >
+            <va-icon name="search"></va-icon>
+            &nbsp; Popis zagonetki
+          </router-link>
+        </va-tab>
+        <va-tab v-if="checkIdentity()">
+          <router-link
+            v-bind:to="{
+              name: 'edit_integram',
+              params: { id: $route.params.id },
+            }"
+          >
+            <va-icon name="edit"></va-icon>
+            &nbsp; Uredi
+          </router-link>
+        </va-tab>
+        <va-tab>
+          <router-link
+            v-bind:to="{
+              name: 'create_integram',
+              params: { id: $route.params.id },
+            }"
+          >
+            <va-icon name="add_circle"></va-icon>
+            &nbsp; Nova zagonetka
+          </router-link>
+        </va-tab>
+        <va-tab :name="10000" disabled></va-tab>
+      </template>
+    </va-tabs>
+    <va-divider></va-divider>
+    <br />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[0] = !value[0]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Upute &nbsp;
+        <va-icon v-if="!value[0]" name="expand_more"></va-icon>
+        <va-icon v-if="value[0]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[0]">
+      <span v-for="i in numinstructions" v-bind:key="i">
+        <h6 class="display-6" style="text-align: start; color: #2c82e0">
+          {{ i }} . uputa
+        </h6>
+        <br />
+        <div class="text-block" style="text-align: start">
+          {{ instructions[i - 1] }}
+        </div>
+        <br v-if="numinstructions != i" />
+      </span>
+      <!--<br v-if="alert_instruction" />
+      <va-alert dense outline
+        v-if="alert_instruction"
+        style="white-space: pre-wrap; border: none"
+        color="danger"
+        :title="'Greške u unosu uputa'"
+        center
+      >
+        Neke upute nisu popunjene ili nisu jedinstvene.
+      </va-alert>-->
+    </div>
+    <br v-else />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[1] = !value[1]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Pomoćna tablica &nbsp;
+        <va-icon v-if="!value[1]" name="expand_more"></va-icon>
+        <va-icon v-if="value[1]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[1]">
+      <h6 class="display-6" style="text-align: start">Oznaka</h6>
+      <br />
+      <va-tabs v-model="mode">
+        <template #tabs>
+          <va-tab name="-1"> ? </va-tab>
+          <va-tab name="1"> &#128504; </va-tab>
+          <va-tab name="0"> &#215; </va-tab>
+          <va-tab :name="10000" disabled></va-tab>
+        </template>
+        <br />
+      </va-tabs>
+      <div style="max-height: 650px; overflow-y: scroll; overflow-x: scroll">
+        <table class="integram_solve">
+          <tr>
+            <td>&nbsp;</td>
+            <td
+              class="rotated_text"
+              v-for="i in numvalues * (numcategories - 1)"
+              v-bind:key="i"
+              :class="{
+                second: Math.floor((i - 1) / numvalues) + 1 == 1,
+                third: Math.floor((i - 1) / numvalues) + 1 == 2,
+                fourth: Math.floor((i - 1) / numvalues) + 1 == 3,
+                fifth: Math.floor((i - 1) / numvalues) + 1 == 4,
+              }"
             >
-            <va-tab @click="$refs.description.show()"
-              ><va-icon name="info"></va-icon>&nbsp;  Pomoć
-            </va-tab>
-            <va-tab
+              <span
+                class="checkmark, text_column"
+                v-if="
+                  is_image[Math.floor((i - 1) / numvalues) + 1] == false &&
+                  too_long[Math.floor((i - 1) / numvalues) + 1] == false
+                "
+              >
+                {{
+                  category_values[
+                    order[Math.floor((i - 1) / numvalues) + 1][
+                      (i - 1) % numvalues
+                    ]
+                  ][Math.floor((i - 1) / numvalues) + 1]
+                }}
+              </span>
+              <span class="checkmark, text_column" v-else>
+                {{ Math.floor((i - 1) / numvalues) + 2
+                }}{{
+                  alphabet[
+                    order[Math.floor((i - 1) / numvalues) + 1][
+                      (i - 1) % numvalues
+                    ]
+                  ]
+                }}
+              </span>
+            </td>
+          </tr>
+          <tr v-for="j in numvalues" v-bind:key="j">
+            <td class="first">
+              <span
+                class="checkmark, text_row"
+                v-if="is_image[0] == false && too_long[0] == false"
+              >
+                {{ category_values[order[0][j - 1]][0] }}
+              </span>
+              <span class="checkmark, text_row" v-else>
+                {{ 1 }}{{ alphabet[order[0][j - 1]] }}
+              </span>
+            </td>
+            <td
+              v-for="i in numvalues * (numcategories - 1)"
+              v-bind:key="i"
               @click="
-                show_error = !show_error;
+                click_cell(
+                  j - 1,
+                  (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                    ((i - 1) % numvalues)
+                );
                 $forceUpdate();
               "
-            >
-              <span v-if="show_error == false">
-                <va-icon name="report_off" />
-                &nbsp; Ne prikazuj greške</span
-              >
-              <span v-else><va-icon name="report" /> &nbsp; Prikaži greške</span>
-            </va-tab>
-            <va-tab @click="$refs.show_solution_modal.show()">
-              <va-icon name="help" />
-              &nbsp; Otkrij sva polja
-            </va-tab>
-          </template>
-        </va-tabs>
-      </div> 
-    <br /><br /> 
-      <h4 class="display-4">Upute</h4>
-      <va-divider></va-divider>
-      <div
-        v-for="i in numinstructions"
-        v-bind:key="i"
-        class="text-block"
-        style="margin: 20px"
-      >
-        <h6
-          class="title"
-          color="info"
-          style="margin-bottom: 10px; text-align: start"
-        >
-          {{ i }}. uputa
-        </h6>
-        <p style="text-align: start">
-          {{ instructions[i - 1] }}
-        </p>
-      </div>
-      <div class="my_row" v-if="alert">
-        <va-alert
-          style="white-space: pre-wrap"
-          color="danger"
-          :title="'Greške u unosu kategorija i vrijednosti'"
-          center
-        >
-          {{ alert }}
-        </va-alert>
-      </div>
-    <br />  
-    <br /> 
-    <br />  
-      <h4 class="display-4">Opcija</h4>
-      <va-divider></va-divider>
-      <div class="my_row">
-        <va-tabs v-model="mode">
-          <template #tabs> 
-            <va-tab name="-1"> ? </va-tab>
-            <va-tab name="1"> &#128504; </va-tab>
-            <va-tab name="0"> &#215; </va-tab>
-          </template>
-        </va-tabs> 
-      </div>  
-    <br /> 
-    <br />  
-      <div class="my_row" style="max-height: 650px">
-        <va-infinite-scroll disabled :load="() => {}">
-          <div class="my_row">
-            <table class="integram_solve">
-              <tr>
-                <td>&nbsp; </td>
-                <td
-                  class="rotated_text"
-                  v-for="i in numvalues * (numcategories - 1)"
-                  v-bind:key="i"
-                  :class="{
-                    second: Math.floor((i - 1) / numvalues) + 1 == 1,
-                    third: Math.floor((i - 1) / numvalues) + 1 == 2,
-                    fourth: Math.floor((i - 1) / numvalues) + 1 == 3,
-                    fifth: Math.floor((i - 1) / numvalues) + 1 == 4,
-                  }"
-                >
-                  <span
-                    class="checkmark, text_column"
-                    v-if="
-                      is_image[Math.floor((i - 1) / numvalues) + 1] == false &&
-                      too_long[Math.floor((i - 1) / numvalues) + 1] == false
-                    "
-                  >
-                    {{
-                      category_values[
-                        order[Math.floor((i - 1) / numvalues) + 1][
-                          (i - 1) % numvalues
-                        ]
-                      ][Math.floor((i - 1) / numvalues) + 1]
-                    }}
-                  </span>
-                  <span class="checkmark, text_column" v-else>
-                    {{ Math.floor((i - 1) / numvalues) + 2
-                    }}{{
-                      alphabet[
-                        order[Math.floor((i - 1) / numvalues) + 1][
-                          (i - 1) % numvalues
-                        ]
-                      ]
-                    }}
-                  </span>
-                </td>
-              </tr>
-              <tr v-for="j in numvalues" v-bind:key="j">
-                <td class="first">
-                  <span
-                    class="checkmark, text_row"
-                    v-if="is_image[0] == false && too_long[0] == false"
-                  >
-                    {{ category_values[order[0][j - 1]][0] }}
-                  </span>
-                  <span class="checkmark, text_row" v-else>
-                    {{ 1 }}{{ alphabet[order[0][j - 1]] }}
-                  </span>
-                </td>
-                <td
-                  v-for="i in numvalues * (numcategories - 1)"
-                  v-bind:key="i"
-                  @click="
-                    click_cell(
-                      j - 1,
+              :class="{
+                wrong:
+                  values[j - 1][
+                    (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                      ((i - 1) % numvalues)
+                  ] !=
+                    solution[j - 1][
                       (Math.floor((i - 1) / numvalues) + 1) * numvalues +
                         ((i - 1) % numvalues)
-                    )
-                    $forceUpdate();
-                  "
-                  :class="{
-                    wrong:
-                      values[j - 1][
-                        (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                          ((i - 1) % numvalues)
-                      ] !=
-                        solution[j - 1][
-                          (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                            ((i - 1) % numvalues)
-                        ] &&
-                      values[j - 1][
-                        (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                          ((i - 1) % numvalues)
-                      ] != -1 &&
-                      show_error,
-                  }"
-                >
-                  <span
-                    class="checkmark"
-                    v-if="
-                      values[j - 1][
-                        (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                          ((i - 1) % numvalues)
-                      ] == 1
-                    "
-                    >&#128504;</span
-                  >
-                  <span
-                    class="checkmark"
-                    v-else-if="
-                      values[j - 1][
-                        (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                          ((i - 1) % numvalues)
-                      ] == 0
-                    "
-                    >&#215;</span
-                  >
-                  <span class="checkmark" v-else>?</span>
-                </td>
-              </tr>
-              <tr v-for="j in numvalues * (numcategories - 2)" v-bind:key="j">
-                <td
-                  :class="{
-                    second:
-                      numcategories - 1 - Math.floor((j - 1) / numvalues) == 1,
-                    third:
-                      numcategories - 1 - Math.floor((j - 1) / numvalues) == 2,
-                    fourth:
-                      numcategories - 1 - Math.floor((j - 1) / numvalues) == 3,
-                    fifth:
-                      numcategories - 1 - Math.floor((j - 1) / numvalues) == 4,
-                  }"
-                >
-                  <span
-                    class="checkmark, text_row"
-                    v-if="
-                      is_image[
-                        numcategories - 1 - Math.floor((j - 1) / numvalues)
-                      ] == false &&
-                      too_long[
-                        numcategories - 1 - Math.floor((j - 1) / numvalues)
-                      ] == false
-                    "
-                  >
-                    {{
-                      category_values[
-                        order[
-                          numcategories - 1 - Math.floor((j - 1) / numvalues)
-                        ][(j - 1) % numvalues]
-                      ][numcategories - 1 - Math.floor((j - 1) / numvalues)]
-                    }}
-                  </span>
-                  <span class="checkmark, text_row" v-else>
-                    {{ numcategories - Math.floor((j - 1) / numvalues)
-                    }}{{
-                      alphabet[
-                        order[Math.floor((j - 1) / numvalues) + 1][
-                          (j - 1) % numvalues
-                        ]
-                      ]
-                    }}
-                  </span>
-                </td>
-                <td
-                  v-for="i in numvalues *
-                  (numcategories - Math.floor((j - 1) / numvalues) - 2)"
-                  v-bind:key="i"
-                  @click="
-                    click_cell(
+                    ] &&
+                  values[j - 1][
+                    (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                      ((i - 1) % numvalues)
+                  ] != -1 &&
+                  show_error,
+              }"
+            >
+              <span
+                class="checkmark"
+                v-if="
+                  values[j - 1][
+                    (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                      ((i - 1) % numvalues)
+                  ] == 1
+                "
+                >&#128504;</span
+              >
+              <span
+                class="checkmark"
+                v-else-if="
+                  values[j - 1][
+                    (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                      ((i - 1) % numvalues)
+                  ] == 0
+                "
+                >&#215;</span
+              >
+              <span class="checkmark" v-else>?</span>
+            </td>
+          </tr>
+          <tr v-for="j in numvalues * (numcategories - 2)" v-bind:key="j">
+            <td
+              :class="{
+                second:
+                  numcategories - 1 - Math.floor((j - 1) / numvalues) == 1,
+                third: numcategories - 1 - Math.floor((j - 1) / numvalues) == 2,
+                fourth:
+                  numcategories - 1 - Math.floor((j - 1) / numvalues) == 3,
+                fifth: numcategories - 1 - Math.floor((j - 1) / numvalues) == 4,
+              }"
+            >
+              <span
+                class="checkmark, text_row"
+                v-if="
+                  is_image[
+                    numcategories - 1 - Math.floor((j - 1) / numvalues)
+                  ] == false &&
+                  too_long[
+                    numcategories - 1 - Math.floor((j - 1) / numvalues)
+                  ] == false
+                "
+              >
+                {{
+                  category_values[
+                    order[numcategories - 1 - Math.floor((j - 1) / numvalues)][
+                      (j - 1) % numvalues
+                    ]
+                  ][numcategories - 1 - Math.floor((j - 1) / numvalues)]
+                }}
+              </span>
+              <span class="checkmark, text_row" v-else>
+                {{ numcategories - Math.floor((j - 1) / numvalues)
+                }}{{
+                  alphabet[
+                    order[Math.floor((j - 1) / numvalues) + 1][
+                      (j - 1) % numvalues
+                    ]
+                  ]
+                }}
+              </span>
+            </td>
+            <td
+              v-for="i in numvalues *
+              (numcategories - Math.floor((j - 1) / numvalues) - 2)"
+              v-bind:key="i"
+              @click="
+                click_cell(
+                  (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
+                    numvalues +
+                    ((j - 1) % numvalues),
+                  (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                    ((i - 1) % numvalues)
+                );
+                $forceUpdate();
+              "
+              :class="{
+                wrong:
+                  values[
+                    (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
+                      numvalues +
+                      ((j - 1) % numvalues)
+                  ][
+                    (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                      ((i - 1) % numvalues)
+                  ] !=
+                    solution[
                       (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
                         numvalues +
-                        ((j - 1) % numvalues),
+                        ((j - 1) % numvalues)
+                    ][
                       (Math.floor((i - 1) / numvalues) + 1) * numvalues +
                         ((i - 1) % numvalues)
-                    )
-                    $forceUpdate();
-                  "
-                  :class="{
-                    wrong:
-                      values[
-                        (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
-                          numvalues +
-                          ((j - 1) % numvalues)
-                      ][
-                        (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                          ((i - 1) % numvalues)
-                      ] !=
-                        solution[
-                          (numcategories -
-                            1 -
-                            Math.floor((j - 1) / numvalues)) *
-                            numvalues +
-                            ((j - 1) % numvalues)
-                        ][
-                          (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                            ((i - 1) % numvalues)
-                        ] &&
-                      values[
-                        (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
-                          numvalues +
-                          ((j - 1) % numvalues)
-                      ][
-                        (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                          ((i - 1) % numvalues)
-                      ] != -1 &&
-                      show_error,
-                  }"
-                >
-                  <span
-                    class="checkmark"
-                    v-if="
-                      values[
-                        (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
-                          numvalues +
-                          ((j - 1) % numvalues)
-                      ][
-                        (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                          ((i - 1) % numvalues)
-                      ] == 1
-                    "
-                  >
-                    &#128504;</span
-                  >
-                  <span
-                    class="checkmark"
-                    v-else-if="
-                      values[
-                        (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
-                          numvalues +
-                          ((j - 1) % numvalues)
-                      ][
-                        (Math.floor((i - 1) / numvalues) + 1) * numvalues +
-                          ((i - 1) % numvalues)
-                      ] == 0
-                    "
-                    >&#215;</span
-                  >
-                  <span class="checkmark" v-else>?</span>
-                </td>
-              </tr>
-            </table>
-          </div>
-        </va-infinite-scroll>
-      </div> 
-    <br />
-    <br />
-    <span
-      v-for="j in numcategories"
-      v-bind:key="j"
-      :color="colors_for_number[j - 1]"
-      style="margin-bottom: 20px"
-    >
-      <va-card
-        v-if="j == category_to_display"
-        :color="colors_for_number[j - 1]"
+                    ] &&
+                  values[
+                    (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
+                      numvalues +
+                      ((j - 1) % numvalues)
+                  ][
+                    (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                      ((i - 1) % numvalues)
+                  ] != -1 &&
+                  show_error,
+              }"
+            >
+              <span
+                class="checkmark"
+                v-if="
+                  values[
+                    (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
+                      numvalues +
+                      ((j - 1) % numvalues)
+                  ][
+                    (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                      ((i - 1) % numvalues)
+                  ] == 1
+                "
+              >
+                &#128504;</span
+              >
+              <span
+                class="checkmark"
+                v-else-if="
+                  values[
+                    (numcategories - 1 - Math.floor((j - 1) / numvalues)) *
+                      numvalues +
+                      ((j - 1) % numvalues)
+                  ][
+                    (Math.floor((i - 1) / numvalues) + 1) * numvalues +
+                      ((i - 1) % numvalues)
+                  ] == 0
+                "
+                >&#215;</span
+              >
+              <span class="checkmark" v-else>?</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <br v-else />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[2] = !value[2]"
+        class="display-6"
+        style="text-align: start"
       >
-        <h4 class="display-4">
-          <va-chip
-            :color="colors_for_number[j - 1]"
-            class="display-4"
-            style="overflow-wrap: anywhere"
-          >
-            {{ j }}. kategorija&nbsp; 
-            <span
-              @click="
-                clear_category(j - 1);
-                is_image[j - 1] = !is_image[j - 1];
-                clear_category(j - 1);
-                $forceUpdate();
+        Kategorije &nbsp;
+        <va-icon v-if="!value[2]" name="expand_more"></va-icon>
+        <va-icon v-if="value[2]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[2]">
+      <div style="overflow-y: scroll; overflow-x: scroll">
+        <table
+          style="display: inline-table; border-collapse: collapse; border: none"
+        >
+          <tr>
+            <td
+              v-for="j in numcategories"
+              v-bind:key="j"
+              style="
+                width: 250px;
+                min-width: 250px;
+                max-width: 250px;
+                padding: 10px;
               "
             >
-              <va-icon
-                size="large"
-                v-if="is_image[j - 1] == false"
-                name="title"
-              />
-              <va-icon size="large" v-else name="photo" />
-            </span>
-          </va-chip>
-        </h4>
-        <va-card-content style="background-color: white">
-          <br />
-          <div class="my_row">
-            <va-chip :color="colors_for_number[j - 1]">
-              {{ category_names[j - 1] }}
-            </va-chip>
-          </div>
-          <va-divider></va-divider>
-          <span v-for="k in numvalues" v-bind:key="k">
-            <div
-              class="my_row"
-              v-if="my_solution[order[0][k - 1]][j - 1] != ''"
+              <va-chip
+                outline
+                square
+                style="border: none; font-weight: bold"
+                :color="getColorDarker('#2C82E0', j - 1)"
+              >
+                {{ j }}. kategorija&nbsp;
+                <span>
+                  <va-icon v-if="is_image[j - 1] == false" name="title" />
+                  <va-icon size="large" v-else name="photo" />
+                </span>
+              </va-chip>
+            </td>
+          </tr>
+          <tr>
+            <td
+              v-for="j in numcategories"
+              v-bind:key="j"
+              style="
+                width: 250px;
+                min-width: 250px;
+                max-width: 250px;
+                padding: 10px;
+              "
             >
               <va-chip
-                :color="colors_for_number[j - 1]"
-                style="display: inline-block; overflow-wrap: anywhere"
-                v-if="
-                  my_solution[order[0][k - 1]][j - 1] != '' &&
-                  (my_solution[order[0][k - 1]][j - 1] ==
-                    category_values[order[0][k - 1]][j - 1] ||
-                    (my_solution[order[0][k - 1]][j - 1] !=
+                outline
+                square
+                style="border: none; font-weight: bold"
+                :color="getColorDarker('#2C82E0', j - 1)"
+              >
+                {{ category_names[j - 1] }}
+              </va-chip>
+            </td>
+          </tr>
+          <tr v-for="k in numvalues" v-bind:key="k">
+            <td
+              v-for="j in numcategories"
+              v-bind:key="j"
+              style="
+                width: 250px;
+                min-width: 250px;
+                max-width: 250px;
+                padding: 10px;
+              "
+            >
+              <span v-if="my_solution[order[0][k - 1]][j - 1] != ''">
+                <va-chip
+                  outline
+                  square
+                  style="border: none; font-weight: bold"
+                  :color="getColorDarker('#2C82E0', j - 1)"
+                  v-if="
+                    my_solution[order[0][k - 1]][j - 1] != '' &&
+                    (my_solution[order[0][k - 1]][j - 1] ==
+                      category_values[order[0][k - 1]][j - 1] ||
+                      (my_solution[order[0][k - 1]][j - 1] !=
+                        category_values[order[0][k - 1]][j - 1] &&
+                        !show_error))
+                  "
+                >
+                  <span
+                    v-if="is_image[j - 1] == true || too_long[j - 1] == true"
+                  >
+                    {{ j
+                    }}{{
+                      alphabet[
+                        find_in_category(
+                          my_solution[order[0][k - 1]][j - 1],
+                          j - 1
+                        )
+                      ]
+                    }}
+                  </span>
+                  <span v-else>
+                    {{ my_solution[order[0][k - 1]][j - 1] }}
+                  </span>
+                </va-chip>
+                <va-chip
+                  outline
+                  square
+                  style="border: none; font-weight: bold"
+                  color="danger"
+                  v-if="
+                    my_solution[order[0][k - 1]][j - 1] != '' &&
+                    my_solution[order[0][k - 1]][j - 1] !=
                       category_values[order[0][k - 1]][j - 1] &&
-                      !show_error))
-                "
+                    show_error
+                  "
+                >
+                  <span
+                    v-if="is_image[j - 1] == true || too_long[j - 1] == true"
+                  >
+                    {{ j
+                    }}{{
+                      alphabet[
+                        find_in_category(
+                          my_solution[order[0][k - 1]][j - 1],
+                          j - 1
+                        )
+                      ]
+                    }}
+                  </span>
+                  <span v-else>
+                    {{ my_solution[order[0][k - 1]][j - 1] }}
+                  </span>
+                </va-chip>
+              </span>
+              <span v-else>
+                <va-chip
+                  outline
+                  square
+                  style="border: none; font-weight: bold"
+                  color="warning"
+                  >?</va-chip
+                >
+              </span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <br v-else />
+    <va-card
+      color="background"
+      style="padding: 10px"
+      v-if="
+        is_image[0] == true ||
+        is_image[1] == true ||
+        is_image[2] == true ||
+        is_image[3] == true ||
+        is_image[4] == true
+      "
+    >
+      <h6
+        @click="value[3] = !value[3]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Slike &nbsp;
+        <va-icon v-if="!value[3]" name="expand_more"></va-icon>
+        <va-icon v-if="value[3]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div
+      class="my_row"
+      v-if="
+        value[3] &&
+        (is_image[0] == true ||
+          is_image[1] == true ||
+          is_image[2] == true ||
+          is_image[3] == true ||
+          is_image[4] == true)
+      "
+    >
+      <h6 class="display-6" style="text-align: start">Kategorija</h6>
+      <br />
+      <div>
+        <va-tabs v-model="category_for_image">
+          <template #tabs>
+            <span v-for="category in numcategories" v-bind:key="category">
+              <va-tab
+                :name="category"
+                v-if="is_image[category - 1] == true"
+                :color="getColorDarker('#2C82E0', category)"
               >
-                <span v-if="is_image[j - 1] == true">
-                  {{
-                    my_solution[order[0][k - 1]][j - 1]
-                      .split("/")
-                      [
-                        my_solution[order[0][k - 1]][j - 1].split("/").length -
-                          1
-                      ].split(".")[0]
-                  }}
-                </span>
-                <span v-else>
-                  {{ my_solution[order[0][k - 1]][j - 1] }}
-                </span>
-              </va-chip>
-              <va-chip
-                style="display: inline-block; overflow-wrap: anywhere"
-                color="danger"
-                v-if="
-                  my_solution[order[0][k - 1]][j - 1] != '' &&
-                  my_solution[order[0][k - 1]][j - 1] !=
-                    category_values[order[0][k - 1]][j - 1] &&
-                  show_error
-                "
+                <span> {{ category }} </span>
+              </va-tab>
+            </span>
+            <va-tab :name="10000" disabled></va-tab>
+          </template>
+        </va-tabs>
+      </div>
+      <br />
+      <h6
+        class="display-6"
+        style="text-align: start"
+        v-if="category_for_image != null && is_image[category_for_image - 1]"
+      >
+        Pojam
+      </h6>
+      <br
+        v-if="category_for_image != null && is_image[category_for_image - 1]"
+      />
+      <div>
+        <va-tabs
+          v-if="category_for_image != null && is_image[category_for_image - 1]"
+          v-model="value_to_display"
+          :color="getColorDarker('#2C82E0', category_for_image)"
+        >
+          <template #tabs>
+            <span v-for="val in numvalues" v-bind:key="val">
+              <va-tab
+                :name="val"
+                :color="getColorDarker('#2C82E0', category_for_image)"
               >
-                <span v-if="is_image[j - 1] == true">
-                  {{
-                    my_solution[order[0][k - 1]][j - 1]
-                      .split("/")
-                      [
-                        my_solution[order[0][k - 1]][j - 1].split("/").length -
-                          1
-                      ].split(".")[0]
-                  }}
-                </span>
-                <span v-else>
-                  {{ my_solution[order[0][k - 1]][j - 1] }}
-                </span>
-              </va-chip>
-            </div>
-            <div class="my_row" v-else>
-              <va-chip color="warning">?</va-chip>
-            </div>
-          </span>
-          <MyCounter
-            :min_value="category_counter_min"
-            :max_value="numcategories"
-            v-bind:value="category_to_display"
-            @input="(n) => ((category_to_display = n), $forceUpdate())"
-            :some_text="''"
-          ></MyCounter>
-        </va-card-content>
-      </va-card>
-    </span>
-    <span v-for="i in numcategories" v-bind:key="i">
+                <span> {{ category_for_image }}{{ alphabet[val - 1] }} </span>
+              </va-tab>
+            </span>
+            <va-tab :name="10000" disabled></va-tab>
+          </template>
+        </va-tabs>
+      </div>
+      <br
+        v-if="category_for_image != null && is_image[category_for_image - 1]"
+      />
       <div
-        class="my_row"
         v-if="
-          too_long[i - 1] == true &&
-          is_image[i - 1] == false &&
-          i == category_to_display
+          value_to_display != null &&
+          category_for_image != null &&
+          is_image[category_for_image - 1] &&
+          urls[value_to_display - 1][category_for_image - 1] != ''
         "
       >
-        <va-card :color="colors_for_number[i - 1]">
-          <va-card-content style="background-color: white">
-            <va-list v-if="too_long[i - 1] == true && is_image[i - 1] == false">
-              <va-list-item v-for="j in numvalues" v-bind:key="j">
-                <va-list-item-section avatar>
-                  <span
-                    :class="{
-                      padded: true,
-                      first: i == 1,
-                      second: i == 2,
-                      third: i == 3,
-                      fourth: i == 4,
-                      fifth: i == 5,
-                    }"
-                  >
-                    {{ i }}{{ alphabet[j - 1] }}
-                  </span>
-                </va-list-item-section>
-
-                <va-list-item-section style="overflow-wrap: anywhere">
-                  {{ category_values[j - 1][i - 1] }}
-                </va-list-item-section>
-              </va-list-item>
-            </va-list>
-            <MyCounter
-              :min_value="category_counter_min"
-              :max_value="numcategories"
-              v-bind:value="category_to_display"
-              @input="(n) => ((category_to_display = n), $forceUpdate())"
-              :some_text="''"
-            ></MyCounter>
-          </va-card-content>
-        </va-card>
+        <img
+          :id="'img' + (value_to_display - 1) + ':' + (category_for_image - 1)"
+          :src="urls[value_to_display - 1][category_for_image - 1]"
+          alt=""
+          style="width: 100%"
+        />
       </div>
       <div
-        class="my_row"
-        v-if="is_image[i - 1] == true && i == category_to_display"
+        v-if="
+          value_to_display != null &&
+          category_for_image != null &&
+          is_image[category_for_image - 1] &&
+          urls[value_to_display - 1][category_for_image - 1] == ''
+        "
+        style="color: #de1041"
       >
-        <va-card :color="colors_for_number[i - 1]">
-          <va-card-content style="background-color: white">
-            <va-tabs
-              v-model="value_to_display"
-              :color="colors_for_number[i - 1]"
-            >
-              <template #tabs>
-                <span v-for="val in numvalues" v-bind:key="val">
-                  <va-tab :name="val">
-                    <span> {{ i }}{{ alphabet[val - 1] }} </span>
-                  </va-tab>
-                </span>
-              </template>
-            </va-tabs>
-            <span v-for="j in numvalues" v-bind:key="j">
-              <div v-if="j == value_to_display" class="image_container">
-                <img
-                  :id="'img' + (j - 1) + ':' + (i - 1)"
-                  alt="Nema slike"
-                  :src="urls[j - 1][i - 1]"
-                  style="width: 100%"
-                />
-              </div>
+        Nema slike
+      </div>
+    </div>
+    <br
+      v-if="
+        !value[3] &&
+        (is_image[0] == true ||
+          is_image[1] == true ||
+          is_image[2] == true ||
+          is_image[3] == true ||
+          is_image[4] == true)
+      "
+    />
+    <va-card
+      color="background"
+      style="padding: 10px"
+      v-if="
+        (too_long[0] && !is_image[0] == true) ||
+        (too_long[1] && !is_image[1] == true) ||
+        (too_long[2] && !is_image[2] == true) ||
+        (too_long[3] && !is_image[3] == true) ||
+        (too_long[4] && !is_image[4] == true)
+      "
+    >
+      <h6
+        @click="value[4] = !value[4]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Kratice &nbsp;
+        <va-icon v-if="!value[4]" name="expand_more"></va-icon>
+        <va-icon v-if="value[4]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div
+      class="my_row"
+      v-if="
+        value[4] &&
+        ((too_long[0] && !is_image[0] == true) ||
+          (too_long[1] && !is_image[1] == true) ||
+          (too_long[2] && !is_image[2] == true) ||
+          (too_long[3] && !is_image[3] == true) ||
+          (too_long[4] && !is_image[4] == true))
+      "
+    >
+      <h6 class="display-6" style="text-align: start">Kategorija</h6>
+      <br />
+      <div>
+        <va-tabs v-model="category_for_long">
+          <template #tabs>
+            <span v-for="category in numcategories" v-bind:key="category">
+              <va-tab
+                :name="category"
+                :color="getColorDarker('#2C82E0', category)"
+                v-if="too_long[category - 1] && !is_image[category - 1] == true"
+              >
+                <span> {{ category }} </span>
+              </va-tab>
             </span>
-          </va-card-content>
-        </va-card>
+            <va-tab :name="10000" disabled></va-tab>
+          </template>
+        </va-tabs>
       </div>
-    </span>
-    <br /><br /> 
-      <h4 class="display-4">Podaci o zagonetci</h4>
-      <va-divider></va-divider>
-      <div class="text-block" style="margin: 20px">
-        <h6
-          class="title"
-          color="info"
-          style="margin-bottom: 10px; text-align: start"
-        >
-          Naslov
-        </h6>
-        <p style="text-align: start">
-          {{ title }}
-        </p>
-      </div>
-      <div class="text-block" style="margin: 20px">
-        <h6
-          class="title"
-          color="info"
-          style="margin-bottom: 10px; text-align: start"
-        >
-          Opis
-        </h6>
-        <p style="text-align: start">
-          {{ description }}
-        </p>
-      </div>
-      <div class="text-block" style="margin: 20px">
-        <h6
-          class="title"
-          color="info"
-          style="margin-bottom: 10px; text-align: start"
-        >
-          Izvor
-        </h6>
-        <p style="text-align: start">
-          {{ source }}
-        </p>
-      </div>
-      <div class="my_row">
-        <span class="display-6" style="margin-left: 10px"
-          >Autor zagonetke: {{ authorUserRecord.displayName }}
-          <router-link :to="'/profile/' + authorUserRecord.email"
-            >({{ authorUserRecord.email }})</router-link
-          >
+      <span
+        v-if="
+          category_for_long != null &&
+          too_long[category_for_long - 1] &&
+          !is_image[category_for_long - 1] == true
+        "
+      >
+        <br />
+        <span v-for="j in numvalues" v-bind:key="j">
+          <div style="text-align: start">
+            <va-chip
+              outline
+              square
+              style="border: none; font-weight: bold"
+              :color="getColorDarker('#2C82E0', category_for_long)"
+            >
+              {{ category_for_long }}{{ alphabet[j - 1] }}
+            </va-chip>
+          </div>
+          <br />
+          <div class="text-block" style="text-align: start">
+            {{ category_values[j - 1][category_for_long - 1] }}
+          </div>
+          <br v-if="numvalues != j" />
         </span>
-        <span class="display-6" style="margin-left: 10px">
-          Vrijeme kreiranja: {{ time_created.toLocaleString() }}</span
-        >
+      </span>
+    </div>
+    <br
+      v-if="
+        !value[4] &&
+        ((too_long[0] && !is_image[0] == true) ||
+          (too_long[1] && !is_image[1] == true) ||
+          (too_long[2] && !is_image[2] == true) ||
+          (too_long[3] && !is_image[3] == true) ||
+          (too_long[4] && !is_image[4] == true))
+      "
+    />
+    <va-card color="background" style="padding: 10px">
+      <h6
+        @click="value[5] = !value[5]"
+        class="display-6"
+        style="text-align: start"
+      >
+        Podaci o zagonetci &nbsp;
+        <va-icon v-if="!value[5]" name="expand_more"></va-icon>
+        <va-icon v-if="value[5]" name="expand_less"></va-icon>
+      </h6>
+    </va-card>
+    <div class="my_row" v-if="value[5]">
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Naslov zagonetke
+      </h6>
+      <br />
+      <div class="text-block" style="text-align: start">
+        {{ title }}
       </div>
-      <div class="my_row">
-        <span class="display-6" style="margin-left: 10px"
-          >Zadnji ažurirao: {{ updaterUserRecord.displayName }}
-          <router-link :to="'/profile/' + updaterUserRecord.email"
-            >({{ updaterUserRecord.email }})</router-link
-          >
-        </span>
-        <span class="display-6" style="margin-left: 10px">
-          Vrijeme zadnje izmjene: {{ last_updated.toLocaleString() }}</span
-        >
-      </div> 
+      <br />
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Opis zagonetke
+      </h6>
+      <br />
+      <div class="text-block" style="text-align: start">
+        {{ description }}
+      </div>
+      <br />
+      <h6 class="display-6" style="text-align: start; color: #2c82e0">
+        Izvor zagonetke
+      </h6>
+      <br />
+      <div class="text-block" style="text-align: start">
+        {{ source }}
+      </div>
+      <br />
+      <div style="text-align: start">
+        <router-link :to="'/profile/' + authorUserRecord.email">
+          <span style="font-weight: bold"> Autor zagonetke: </span>
+          {{ authorUserRecord.displayName }}
+          ({{ authorUserRecord.email }})
+        </router-link>
+      </div>
+      <br />
+      <div style="text-align: start">
+        <span style="font-weight: bold"> Vrijeme kreiranja: </span>
+        {{ time_created.toLocaleString() }}
+      </div>
+      <br />
+      <div style="text-align: start">
+        <router-link :to="'/profile/' + updaterUserRecord.email">
+          <span style="font-weight: bold"> Zadnji ažurirao: </span>
+          {{ updaterUserRecord.displayName }}
+          ({{ updaterUserRecord.email }})
+        </router-link>
+      </div>
+      <br />
+      <div style="text-align: start">
+        <span style="font-weight: bold"> Vrijeme zadnje izmjene: </span>
+        {{ last_updated.toLocaleString() }}
+      </div>
+    </div>
   </body>
   <va-modal
     :mobile-fullscreen="false"
@@ -1900,7 +2126,17 @@ th {
   writing-mode: vertical-rl;
 }
 table {
+  border-collapse: collapse;
+}
+td,
+tr {
+  text-align: center;
+  border-collapse: collapse;
+  border: none;
+}
+table {
   display: inline-table;
+  border: none;
 }
 .integram_solve td,
 th {
@@ -1915,15 +2151,23 @@ th {
 .text_column {
   padding-top: 5px;
   padding-bottom: 5px;
+  display: inline-block;
+  min-height: 240px !important;
+  max-height: 240px !important;
+  height: 240px !important;
 }
 .text_row {
   padding-left: 5px;
   padding-right: 5px;
+  display: inline-block;
+  min-width: 240px !important;
+  max-width: 240px !important;
+  width: 240px !important;
 }
 .image_container {
   display: inline-block;
   position: relative;
-  width: 100%;
+width: 100%;
   margin-right: 1%;
   text-align: center;
 }

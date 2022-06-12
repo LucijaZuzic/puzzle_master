@@ -196,6 +196,8 @@ export default {
   },
   data() {
     return {
+      puzzle_toggle: false,
+      friends_toggle: false,
       fully_loaded: false,
       integramsRatingsRef: integramsRatingsRef,
       integramsRecordsRef: integramsRecordsRef,
@@ -246,75 +248,74 @@ export default {
       v-if="friend.email != '' || friend.displayName != '' || friend.uid != ''"
     >
       <span v-if="user.email != friend.email">
-        <div class="my_row">
-          <h4 class="display-4">
-            <va-icon name="account_box"></va-icon>&nbsp;  Profil korisnika
-          </h4>
+        <h4 class="display-4">
+          <va-icon size="large" name="account_box"></va-icon>&nbsp; Profil
+          korisnika
+        </h4>
+        <br />
+        <va-divider></va-divider>
+        <div style="font-weight: bold">
+          <va-icon name="person"></va-icon> &nbsp;
+          {{ friend.displayName }} &nbsp;
+          <va-icon name="email"></va-icon> &nbsp;
+          {{ friend.email }}
         </div>
-        <div class="my_row">
-          <h4 class="display-4">
-            <va-icon name="person"></va-icon>&nbsp; 
-            {{ friend.displayName }}
-          </h4>
-        </div>
-        <div class="my_row">
-          <span>
-            <va-icon name="email"></va-icon>&nbsp; 
-            {{ friend.email }}
-          </span>
-        </div>
-        <div class="my_row" v-if="user.uid != ''">
-          <va-button>
+        <va-divider></va-divider>
+        <br />
+        <div v-if="user.uid != ''">
+          <va-button
+            :disabled="!areFriends && requestSent"
+            outline
+            :rounded="false"
+            style="border: none"
+          >
             <span v-if="areFriends">
               <va-icon
                 @click="removeFriend(user.uid, friend.uid)"
                 name="person_remove"
-                size="large"
               >
               </va-icon>
-              &nbsp;  Prekini prijateljstvo
+              &nbsp; Prekini prijateljstvo
             </span>
             <span v-if="!areFriends && !requestSent">
               <va-icon
                 @click="sendFriendRequest(user.uid, friend.uid)"
                 name="person_add"
-                size="large"
               >
               </va-icon>
-              &nbsp;  Pošalji zahtjev za prijateljstvo
+              &nbsp; Pošalji zahtjev za prijateljstvo
             </span>
             <span v-if="!areFriends && requestSent">
-              <va-icon name="person_add_disabled" size="large"> </va-icon>
-              &nbsp;  Već je poslan zahtjev za prijateljstvo
+              <va-icon name="person_add_disabled"> </va-icon>
+              &nbsp; Već je poslan zahtjev za prijateljstvo
             </span>
           </va-button>
         </div>
+        <br v-if="user.uid != ''" />
       </span>
       <span v-else>
-        <div class="my_row">
-          <h4 class="display-4">
-            <va-icon name="account_box"></va-icon>&nbsp;  Moj profil
-          </h4>
+        <h4 class="display-4">
+          <va-icon size="large" name="account_box"></va-icon>&nbsp; Moj profil
+        </h4>
+        <br />
+        <va-divider></va-divider>
+        <div style="font-weight: bold">
+          <va-icon name="person"></va-icon> &nbsp;
+          {{ friend.displayName }} &nbsp;
+          <va-icon name="email"></va-icon> &nbsp;
+          {{ friend.email }}
         </div>
-        <div class="my_row">
-          <h4 class="display-4">
-            <va-icon name="person"></va-icon>&nbsp; 
-            {{ friend.displayName }}
-          </h4>
-        </div>
-        <div class="my_row">
-          <span>
-            <va-icon name="email"></va-icon>&nbsp; 
-            {{ friend.email }}
-          </span>
-        </div>
-        <div class="my_row">
+        <va-divider></va-divider>
+        <br />
+        <div>
           <va-button
+            outline
+            :rounded="false"
+            style="border: none"
             @click="
               friend.visible = !friend.visible;
               $forceUpdate();
             "
-            style="margin-left: 10px; margin-top: 10px; display: inline-block"
           >
             <span v-if="friend.visible == true">
               <va-icon name="lock_open" />
@@ -322,139 +323,202 @@ export default {
             >
             <span v-else><va-icon name="lock" /> &nbsp; Privatno</span>
           </va-button>
+          &nbsp;
           <va-button
             @click="setVisibility()"
-            style="margin-left: 10px; margin-top: 10px; display: inline-block"
+            outline
+            :rounded="false"
+            style="border: none"
           >
-            <va-icon name="settings"></va-icon>&nbsp;  Izmjeni vidljivost profila
+            <va-icon name="settings"></va-icon>&nbsp; Izmjeni vidljivost profila
           </va-button>
         </div>
+        <br />
       </span>
       <span v-if="user.email == friend.email || friend.visible || areFriends">
-        <va-tabs v-model="value" style="width: 100%">
-          <template #tabs>
-            <va-tab name="cryptogram"
-              ><va-icon name="multiple_stop"></va-icon>Kriptogrami</va-tab
-            >
-            <va-tab name="eight"
-              ><va-icon name="pattern"></va-icon>Osmosmjerke</va-tab
-            >
-            <va-tab name="initial"
-              ><va-icon name="text_rotation_none"></va-icon>Inicijalne
-              osmosmjerke</va-tab
-            >
-            <va-tab name="integram"
-              ><va-icon name="rule_folder"></va-icon>Integrami</va-tab
-            >
-            <va-tab name="nonogram"
-              ><va-icon name="draw"></va-icon>Nonogrami</va-tab
-            >
-            <va-tab name="numberCrossword"
-              ><va-icon name="format_list_numbered"></va-icon>Brojevne
-              križaljke</va-tab
-            >
-            <va-tab name="numberLetter"
-              ><va-icon name="sync_alt"></va-icon>Isti broj - isto slovo</va-tab
-            >
-          </template>
-        </va-tabs>
-        <ProfilePuzzle
-          component_name="IntegramTable"
-          :friend="friend"
-          text_to_get="favoriteIntegrams"
-          text="integram"
-          v-if="value == 'integram'"
-          :dbRatingsRef="integramsRatingsRef"
-          :dbRecordsRef="integramsRecordsRef"
-          :dbRef="integramsRef"
-        ></ProfilePuzzle>
-        <ProfilePuzzle
-          component_name="NonogramTable"
-          :friend="friend"
-          text_to_get="favoriteNonograms"
-          text="nonogram"
-          v-if="value == 'nonogram'"
-          :dbRatingsRef="nonogramsRatingsRef"
-          :dbRecordsRef="nonogramsRecordsRef"
-          :dbRef="nonogramsRef"
-        ></ProfilePuzzle>
-        <ProfilePuzzle
-          component_name="NumberCrosswordTable"
-          :friend="friend"
-          text_to_get="favoriteNumberCrosswords"
-          text="brojevna križaljka"
-          v-if="value == 'numberCrossword'"
-          :dbRatingsRef="numberCrosswordsRatingsRef"
-          :dbRecordsRef="numberCrosswordsRecordsRef"
-          :dbRef="numberCrosswordsRef"
-        ></ProfilePuzzle>
-        <ProfilePuzzle
-          component_name="CryptogramTable"
-          :friend="friend"
-          text_to_get="favoriteCryptograms"
-          text="kriptogram"
-          v-if="value == 'cryptogram'"
-          :dbRatingsRef="cryptogramsRatingsRef"
-          :dbRecordsRef="cryptogramsRecordsRef"
-          :dbRef="cryptogramsRef"
-        ></ProfilePuzzle>
-        <ProfilePuzzle
-          component_name="NumberLetterTable"
-          :friend="friend"
-          text_to_get="favoriteNumberLetters"
-          text="isto broj - isto slovo"
-          v-if="value == 'numberLetter'"
-          :dbRatingsRef="numberLettersRatingsRef"
-          :dbRecordsRef="numberLettersRecordsRef"
-          :dbRef="numberLettersRef"
-        ></ProfilePuzzle>
-        <ProfilePuzzle
-          component_name="InitialTable"
-          :friend="friend"
-          text_to_get="favoriteInitials"
-          text="inicijalna osmosjerka"
-          v-if="value == 'initial'"
-          :dbRatingsRef="initialsRef"
-          :dbRecordsRef="initialsRecordsRef"
-          :dbRef="initialsRef"
-        ></ProfilePuzzle>
-        <ProfilePuzzle
-          component_name="EightTable"
-          :friend="friend"
-          text_to_get="favoriteEights"
-          text="osmosmjerka"
-          v-if="value == 'eight'"
-          :dbRatingsRef="eightsRatingsRef"
-          :dbRecordsRef="eightsRecordsRef"
-          :dbRef="eightsRef"
-        ></ProfilePuzzle>
-        <va-tabs v-model="friendOption" style="width: 100%">
-          <template #tabs>
-            <va-tab name="friend"
-              ><va-icon name="person_add"></va-icon>&nbsp;  Prijatelji</va-tab
-            >
-            <va-tab name="received"
-              ><va-icon name="inbox"></va-icon>&nbsp;  Primljeni zahtjevi za
-              prijateljstvo</va-tab
-            >
-            <va-tab name="sent"
-              ><va-icon name="outgoing_mail"></va-icon>&nbsp;  Poslani zahtjevi
-              za prijateljstvo</va-tab
-            >
-          </template>
-        </va-tabs>
-        <FriendsTable :userId="friend.uid" v-if="friendOption == 'friend'">
-        </FriendsTable>
-        <FriendRequestsReceivedTable
-          :userId="friend.uid"
-          v-if="friendOption == 'received' && user.email == friend.email"
-        >
-        </FriendRequestsReceivedTable>
-        <FriendRequestsSentTable
-          :userId="friend.uid"
-          v-if="friendOption == 'sent'"
-        >
-        </FriendRequestsSentTable>
+        <br />
+        <va-card color="background" style="padding: 10px">
+          <h6
+            @click="puzzle_toggle = !puzzle_toggle"
+            class="display-6"
+            style="text-align: start"
+          >
+            Zagonetke &nbsp;
+            <va-icon v-if="!puzzle_toggle" name="expand_more"></va-icon>
+            <va-icon v-if="puzzle_toggle" name="expand_less"></va-icon>
+          </h6>
+        </va-card>
+        <div class="my_row" v-if="puzzle_toggle">
+          <h6 
+            class="display-6"
+            style="text-align: start"
+          >
+            Vrsta zagonetke
+          </h6>
+          <br/>
+          <va-tabs v-model="value" style="width: 100%">
+            <template #tabs>
+              <va-tab name="cryptogram"
+                ><va-icon name="multiple_stop"></va-icon>Kriptogrami</va-tab
+              >
+              <va-tab name="eight"
+                ><va-icon name="pattern"></va-icon>Osmosmjerke</va-tab
+              >
+              <va-tab name="initial"
+                ><va-icon name="text_rotation_none"></va-icon>Inicijalne
+                osmosmjerke</va-tab
+              >
+              <va-tab name="integram"
+                ><va-icon name="rule_folder"></va-icon>Integrami</va-tab
+              >
+              <va-tab name="nonogram"
+                ><va-icon name="draw"></va-icon>Nonogrami</va-tab
+              >
+              <va-tab name="numberCrossword"
+                ><va-icon name="format_list_numbered"></va-icon>Brojevne
+                križaljke</va-tab
+              >
+              <va-tab name="numberLetter"
+                ><va-icon name="sync_alt"></va-icon>Isti broj - isto
+                slovo</va-tab
+              >
+            </template>
+          </va-tabs>
+          <br />
+          <h6 
+            class="display-6"
+            style="text-align: start"
+          >
+            Vrsta interakcije
+          </h6>
+          <br/>
+          <ProfilePuzzle
+            component_name="IntegramTable"
+            :friend="friend"
+            text_to_get="favoriteIntegrams"
+            text="integram"
+            v-if="value == 'integram'"
+            :dbRatingsRef="integramsRatingsRef"
+            :dbRecordsRef="integramsRecordsRef"
+            :dbRef="integramsRef"
+          >
+          </ProfilePuzzle>
+          <ProfilePuzzle
+            component_name="NonogramTable"
+            :friend="friend"
+            text_to_get="favoriteNonograms"
+            text="nonogram"
+            v-if="value == 'nonogram'"
+            :dbRatingsRef="nonogramsRatingsRef"
+            :dbRecordsRef="nonogramsRecordsRef"
+            :dbRef="nonogramsRef"
+          >
+          </ProfilePuzzle>
+          <ProfilePuzzle
+            component_name="NumberCrosswordTable"
+            :friend="friend"
+            text_to_get="favoriteNumberCrosswords"
+            text="brojevna križaljka"
+            v-if="value == 'numberCrossword'"
+            :dbRatingsRef="numberCrosswordsRatingsRef"
+            :dbRecordsRef="numberCrosswordsRecordsRef"
+            :dbRef="numberCrosswordsRef"
+          >
+          </ProfilePuzzle>
+          <ProfilePuzzle
+            component_name="CryptogramTable"
+            :friend="friend"
+            text_to_get="favoriteCryptograms"
+            text="kriptogram"
+            v-if="value == 'cryptogram'"
+            :dbRatingsRef="cryptogramsRatingsRef"
+            :dbRecordsRef="cryptogramsRecordsRef"
+            :dbRef="cryptogramsRef"
+          >
+          </ProfilePuzzle>
+          <ProfilePuzzle
+            component_name="NumberLetterTable"
+            :friend="friend"
+            text_to_get="favoriteNumberLetters"
+            text="isto broj - isto slovo"
+            v-if="value == 'numberLetter'"
+            :dbRatingsRef="numberLettersRatingsRef"
+            :dbRecordsRef="numberLettersRecordsRef"
+            :dbRef="numberLettersRef"
+          >
+          </ProfilePuzzle>
+          <ProfilePuzzle
+            component_name="InitialTable"
+            :friend="friend"
+            text_to_get="favoriteInitials"
+            text="inicijalna osmosjerka"
+            v-if="value == 'initial'"
+            :dbRatingsRef="initialsRef"
+            :dbRecordsRef="initialsRecordsRef"
+            :dbRef="initialsRef"
+          >
+          </ProfilePuzzle>
+          <ProfilePuzzle
+            component_name="EightTable"
+            :friend="friend"
+            text_to_get="favoriteEights"
+            text="osmosmjerka"
+            v-if="value == 'eight'"
+            :dbRatingsRef="eightsRatingsRef"
+            :dbRecordsRef="eightsRecordsRef"
+            :dbRef="eightsRef"
+          >
+          </ProfilePuzzle>
+        </div>
+        <br v-else />
+        <va-card color="background" style="padding: 10px">
+          <h6
+            @click="friends_toggle = !friends_toggle"
+            class="display-6"
+            style="text-align: start"
+          >
+            Prijateljstva &nbsp;
+            <va-icon v-if="!friends_toggle" name="expand_more"></va-icon>
+            <va-icon v-if="friends_toggle" name="expand_less"></va-icon>
+          </h6>
+        </va-card>
+        <div class="my_row" v-if="friends_toggle">
+          <h6 
+            class="display-6"
+            style="text-align: start"
+          >
+            Kategorije prijateljstva
+          </h6>
+          <br/>
+          <va-tabs v-model="friendOption" style="width: 100%">
+            <template #tabs>
+              <va-tab name="friend"
+                ><va-icon name="person_add"></va-icon>&nbsp; Prijatelji</va-tab
+              >
+              <va-tab name="received"
+                ><va-icon name="inbox"></va-icon>&nbsp; Primljeni zahtjevi za
+                prijateljstvo</va-tab
+              >
+              <va-tab name="sent"
+                ><va-icon name="outgoing_mail"></va-icon>&nbsp; Poslani zahtjevi
+                za prijateljstvo</va-tab
+              >
+            </template>
+          </va-tabs>
+          <br />
+          <FriendsTable :userId="friend.uid" v-if="friendOption == 'friend'">
+          </FriendsTable>
+          <FriendRequestsReceivedTable
+            :userId="friend.uid"
+            v-if="friendOption == 'received' && user.email == friend.email"
+          >
+          </FriendRequestsReceivedTable>
+          <FriendRequestsSentTable
+            :userId="friend.uid"
+            v-if="friendOption == 'sent'"
+          >
+          </FriendRequestsSentTable>
+        </div>
       </span>
       <span v-else>
         <NoDataToDisplay

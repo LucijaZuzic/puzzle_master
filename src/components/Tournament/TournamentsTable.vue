@@ -46,6 +46,7 @@ export default {
   },
   data() {
     return {
+      values_toggle: false,
       fully_loaded: false,
       value: "integram",
       user: null,
@@ -242,42 +243,61 @@ export default {
   </body>
   <span v-else>
     <body class="my_body">
-      <div class="my_row">
-        <h4 class="display-4">
-          <va-icon size="large" name="workspace_premium"> </va-icon>
-          &nbsp;  Turniri
-        </h4>
-      </div>
-      <div class="my_row">
-        <va-button>
+      <h4 class="display-4">
+        <va-icon size="large" name="workspace_premium"> </va-icon>
+        &nbsp; Turniri
+      </h4>
+      <br />
+      <va-divider></va-divider>
+      <div>
+        <va-button outline :rounded="false" style="border: none">
           <router-link to="/create-tournament">
             <va-icon class="mr-4" name="add_circle" /> Novi turnir
           </router-link>
         </va-button>
       </div>
+      <va-divider></va-divider>
+      <br />
       <span v-if="tournaments.length > 0">
-        <div class="my_row">
+        <div>
           <va-input
             style="display: inline-block"
             placeholder="Unesite pojam za pretragu"
             v-model="filter"
           />
-          &nbsp; 
+          &nbsp;
           <va-checkbox
             style="display: inline-block"
             label="Traži cijelu riječ"
             v-model="useCustomFilteringFn"
           />
         </div>
-        <div class="my_row">
-          <MyCounter
-            :min_value="1"
-            :max_value="Math.ceil(this.filtered.length)"
-            v-bind:value="perPage"
-            @input="(n) => (perPage = n)"
-            :some_text="'Broj rezultata na stranici'"
-          ></MyCounter>
+        <br />
+        <div>
+          <div style="display: inline-block">
+            <MyCounter
+              :min_value="1"
+              :max_value="Math.ceil(this.filtered.length)"
+              v-bind:value="perPage"
+              @input="(n) => (perPage = n)"
+              :is_page_size="true"
+              :some_text="'Po stranici'"
+            >
+            </MyCounter>
+          </div>
+          <div style="display: inline-block; margin-left: 10px">
+            <MyCounter
+              :min_value="1"
+              :max_value="Math.floor(this.filtered.length / perPage)"
+              v-bind:value="currentPage"
+              @input="(n) => (currentPage = n)"
+              :is_page_number="true"
+              :some_text="'Stranica'"
+            >
+            </MyCounter>
+          </div>
         </div>
+        <br />
         <va-data-table
           :items="tournaments"
           :filter="filter"
@@ -310,7 +330,7 @@ export default {
           >
           <template #header(selectedCryptograms)>Broj kriptograma</template>
           <template #header(selectedNumberLetters)
-            >Broj zagonetki tpa "Isti broj - isto slovo"</template
+            >Broj zagonetki tipa Isti broj - isto slovo</template
           >
           <template #header(selectedInitials)
             >Broj inicijalnih osmosmjerki</template
@@ -362,7 +382,25 @@ export default {
             </tr>
           </template>
         </va-data-table>
-        <div class="my_row">
+        <br />
+        <va-card
+          color="background"
+          style="padding: 10px"
+          v-if="selectedItemsEmitted.length > 0"
+        >
+          <h6
+            @click="values_toggle = !values_toggle"
+            class="display-6"
+            style="text-align: start"
+          >
+            Podaci o turniru &nbsp;
+            <va-icon v-if="!values_toggle" name="expand_more"></va-icon>
+            <va-icon v-if="values_toggle" name="expand_less"></va-icon>
+          </h6>
+        </va-card>
+        <div class="my_row" v-if="values_toggle">
+          <h6 class="display-6" style="text-align: start">Vrsta zagonetke</h6>
+          <br />
           <va-tabs
             v-if="selectedItemsEmitted.length > 0"
             v-model="value"
@@ -395,131 +433,149 @@ export default {
               >
             </template>
           </va-tabs>
-        </div>
-        <div class="my_row" v-for="item in selectedItemsEmitted" :key="item.id">
-          <span v-if="value == 'integram' && item.selectedIntegrams.length > 0">
-            <IntegramTable
-              selectMode="single"
-              :puzzleList="item.selectedIntegrams"
-              :start_time="item.start_time"
-              :end_time="item.end_time"
+          <div v-for="item in selectedItemsEmitted" :key="item.id">
+            <span
+              v-if="value == 'integram' && item.selectedIntegrams.length > 0"
             >
-            </IntegramTable>
-          </span>
-          <span
-            v-if="value == 'integram' && item.selectedIntegrams.length <= 0"
-          >
-            <NoDataToDisplay customMessage="Na turniru nema integrama">
-            </NoDataToDisplay>
-          </span>
-          <span v-if="value == 'nonogram' && item.selectedNonograms.length > 0">
-            <NonogramTable
-              selectMode="single"
-              :puzzleList="item.selectedNonograms"
-              :start_time="item.start_time"
-              :end_time="item.end_time"
+              <IntegramTable
+                selectMode="single"
+                :puzzleList="item.selectedIntegrams"
+                :start_time="item.start_time"
+                :end_time="item.end_time"
+                :friend="user"
+              >
+              </IntegramTable>
+            </span>
+            <span
+              v-if="value == 'integram' && item.selectedIntegrams.length <= 0"
             >
-            </NonogramTable>
-          </span>
-          <span
-            v-if="value == 'nonogram' && item.selectedNonograms.length <= 0"
-          >
-            <NoDataToDisplay customMessage="Na turniru nema nonograma">
-            </NoDataToDisplay>
-          </span>
-          <span
-            v-if="
-              value == 'numberCrossword' &&
-              item.selectedNumberCrosswords.length > 0
-            "
-          >
-            <NumberCrosswordTable
-              selectMode="single"
-              :puzzleList="item.selectedNumberCrosswords"
-              :start_time="item.start_time"
-              :end_time="item.end_time"
+              <NoDataToDisplay customMessage="Na turniru nema integrama">
+              </NoDataToDisplay>
+            </span>
+            <span
+              v-if="value == 'nonogram' && item.selectedNonograms.length > 0"
             >
-            </NumberCrosswordTable>
-          </span>
-          <span
-            v-if="
-              value == 'numberCrossword' &&
-              item.selectedNumberCrosswords.length <= 0
-            "
-          >
-            <NoDataToDisplay
-              customMessage="Na turniru nema brojevnih križaljki"
+              <NonogramTable
+                selectMode="single"
+                :puzzleList="item.selectedNonograms"
+                :start_time="item.start_time"
+                :end_time="item.end_time"
+                :friend="user"
+              >
+              </NonogramTable>
+            </span>
+            <span
+              v-if="value == 'nonogram' && item.selectedNonograms.length <= 0"
             >
-            </NoDataToDisplay>
-          </span>
-          <span
-            v-if="value == 'cryptogram' && item.selectedCryptograms.length > 0"
-          >
-            <CryptogramTable
-              selectMode="single"
-              :puzzleList="item.selectedCryptograms"
-              :start_time="item.start_time"
-              :end_time="item.end_time"
+              <NoDataToDisplay customMessage="Na turniru nema nonograma">
+              </NoDataToDisplay>
+            </span>
+            <span
+              v-if="
+                value == 'numberCrossword' &&
+                item.selectedNumberCrosswords.length > 0
+              "
             >
-            </CryptogramTable>
-          </span>
-          <span
-            v-if="value == 'cryptogram' && item.selectedCryptograms.length <= 0"
-          >
-            <NoDataToDisplay customMessage="Na turniru nema kriptograma">
-            </NoDataToDisplay>
-          </span>
-          <span
-            v-if="
-              value == 'numberLetter' && item.selectedNumberLetters.length > 0
-            "
-          >
-            <NumberLetterTable
-              selectMode="single"
-              :puzzleList="item.selectedNumberLetters"
-              :start_time="item.start_time"
-              :end_time="item.end_time"
+              <NumberCrosswordTable
+                selectMode="single"
+                :puzzleList="item.selectedNumberCrosswords"
+                :start_time="item.start_time"
+                :end_time="item.end_time"
+                :friend="user"
+              >
+              </NumberCrosswordTable>
+            </span>
+            <span
+              v-if="
+                value == 'numberCrossword' &&
+                item.selectedNumberCrosswords.length <= 0
+              "
             >
-            </NumberLetterTable>
-          </span>
-          <span
-            v-if="
-              value == 'numberLetter' && item.selectedNumberLetters.length <= 0
-            "
-          >
-            <NoDataToDisplay
-              customMessage='Na turniru nema zagonetki tipa "Isti broj - isto slovo'
+              <NoDataToDisplay
+                customMessage="Na turniru nema brojevnih križaljki"
+              >
+              </NoDataToDisplay>
+            </span>
+            <span
+              v-if="
+                value == 'cryptogram' && item.selectedCryptograms.length > 0
+              "
             >
-            </NoDataToDisplay>
-          </span>
-          <span v-if="value == 'initial' && item.selectedInitials.length > 0">
-            <InitialTable
-              selectMode="single"
-              :puzzleList="item.selectedInitials"
-              :start_time="item.start_time"
-              :end_time="item.end_time"
+              <CryptogramTable
+                selectMode="single"
+                :puzzleList="item.selectedCryptograms"
+                :start_time="item.start_time"
+                :end_time="item.end_time"
+                :friend="user"
+              >
+              </CryptogramTable>
+            </span>
+            <span
+              v-if="
+                value == 'cryptogram' && item.selectedCryptograms.length <= 0
+              "
             >
-            </InitialTable>
-          </span>
-          <span v-if="value == 'initial' && item.selectedInitials.length <= 0">
-            <NoDataToDisplay
-              customMessage="Na turniru nema inicijalnih osmosmjerki"
+              <NoDataToDisplay customMessage="Na turniru nema kriptograma">
+              </NoDataToDisplay>
+            </span>
+            <span
+              v-if="
+                value == 'numberLetter' && item.selectedNumberLetters.length > 0
+              "
             >
-            </NoDataToDisplay>
-          </span>
-          <span v-if="value == 'eight' && item.selectedEights.length > 0">
-            <EightTable
-              selectMode="single"
-              :puzzleList="item.selectedEights"
-              :start_time="item.start_time"
-              :end_time="item.end_time"
+              <NumberLetterTable
+                selectMode="single"
+                :puzzleList="item.selectedNumberLetters"
+                :start_time="item.start_time"
+                :end_time="item.end_time"
+                :friend="user"
+              >
+              </NumberLetterTable>
+            </span>
+            <span
+              v-if="
+                value == 'numberLetter' &&
+                item.selectedNumberLetters.length <= 0
+              "
             >
-            </EightTable>
-          </span>
-          <span v-if="value == 'eight' && item.selectedEights.length <= 0">
-            <NoDataToDisplay customMessage="Na turniru nema osmosmjerki">
-            </NoDataToDisplay>
-          </span>
+              <NoDataToDisplay
+                customMessage="Na turniru nema zagonetki tipa Isti broj - isto slovo"
+              >
+              </NoDataToDisplay>
+            </span>
+            <span v-if="value == 'initial' && item.selectedInitials.length > 0">
+              <InitialTable
+                selectMode="single"
+                :puzzleList="item.selectedInitials"
+                :start_time="item.start_time"
+                :end_time="item.end_time"
+                :friend="user"
+              >
+              </InitialTable>
+            </span>
+            <span
+              v-if="value == 'initial' && item.selectedInitials.length <= 0"
+            >
+              <NoDataToDisplay
+                customMessage="Na turniru nema inicijalnih osmosmjerki"
+              >
+              </NoDataToDisplay>
+            </span>
+            <span v-if="value == 'eight' && item.selectedEights.length > 0">
+              <EightTable
+                selectMode="single"
+                :puzzleList="item.selectedEights"
+                :start_time="item.start_time"
+                :end_time="item.end_time"
+                :friend="user"
+              >
+              </EightTable>
+            </span>
+            <span v-if="value == 'eight' && item.selectedEights.length <= 0">
+              <NoDataToDisplay customMessage="Na turniru nema osmosmjerki">
+              </NoDataToDisplay>
+            </span>
+          </div>
         </div>
       </span>
       <NoDataToDisplay v-else customMessage="Nema turnira"></NoDataToDisplay>

@@ -10,11 +10,13 @@ export default {
 </script>
 
 <template>
-  <div class="my_row">
+  <br />
+  <div>
     <span style="font-weight: bold">
-      <va-icon name="folder_off"></va-icon>&nbsp;  {{ customMessage }}
+      <va-icon name="folder_off"></va-icon>&nbsp; {{ customMessage }}
     </span>
   </div>
+  <br />
 </template>
 
 <style scoped></style>
