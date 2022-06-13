@@ -93,7 +93,7 @@ export default {
           snapshot.forEach(function (childSnapshot) {
             let idPuzzle = childSnapshot.get("puzzleID");
             let idUser = childSnapshot.get("user");
-            let record = new Date(childSnapshot.get("time").seconds * 1000);
+            let record = childSnapshot.get("time").seconds * 1000;
             let match = true;
             if (me.$props.puzzleId && idPuzzle != me.$props.puzzleId) {
               match = false;
@@ -245,7 +245,7 @@ export default {
         <template #header(score)>Rezultat</template>
         <template #header(time)>Datum i vrijeme</template>
         <template #cell(time)="{ source: time }">
-          {{ time.toLocaleString() }}
+          {{ new Date(time).toLocaleString() }}
         </template>
         <template #cell(user_email)="{ source: user_email }">
           <router-link

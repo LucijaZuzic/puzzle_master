@@ -133,9 +133,9 @@ export default {
                     me.friends.push({
                       user_display_name: user_display_name,
                       user_email: user_email,
-                      time: new Date(
+                      time: 
                         childSnapshotFriend.get("time").seconds * 1000
-                      ),
+                      ,
                       user_id: sender,
                     });
                   }
@@ -231,7 +231,7 @@ export default {
         <template #header(time)>Datum i vrijeme</template>
         <template #header(user_id)>Akcije</template>
         <template #cell(time)="{ source: time }">
-          {{ time.toLocaleString() }}
+          {{ new Date(time).toLocaleString() }}
         </template>
         <template #cell(user_email)="{ source: user_email }">
           <router-link

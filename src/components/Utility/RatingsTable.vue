@@ -109,7 +109,7 @@ export default {
               me.already_rated = true;
               me.documentRated = idRating;
             }
-            let record = new Date(childSnapshot.get("time").seconds * 1000);
+            let record = childSnapshot.get("time").seconds * 1000;
             let match = true;
             if (me.$props.puzzleId && idPuzzle != me.$props.puzzleId) {
               match = false;
@@ -342,7 +342,7 @@ export default {
         <template #header(comment)>Komentar</template>
         <template #header(time)>Datum i vrijeme</template>
         <template #cell(time)="{ source: time }">
-          {{ time.toLocaleString() }}
+          {{ new Date(time).toLocaleString() }}
         </template>
         <template #cell(user_email)="{ source: user_email }">
           <router-link

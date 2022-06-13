@@ -175,12 +175,8 @@ export default {
                       organizer_display_name:
                         childSnapshotOrganizer.get("displayName"),
                       organizer_email: childSnapshotOrganizer.get("email"),
-                      start_time: new Date(
-                        childSnapshot.get("start").seconds * 1000
-                      ).toLocaleString(),
-                      end_time: new Date(
-                        childSnapshot.get("end").seconds * 1000
-                      ).toLocaleString(),
+                      start_time: childSnapshot.get("start").seconds * 1000,
+                      end_time: childSnapshot.get("end").seconds * 1000,
                       selectedIntegrams: childSnapshot.get("selectedIntegrams"),
                       selectedNonograms: childSnapshot.get("selectedNonograms"),
                       selectedNumberCrosswords: childSnapshot.get(
@@ -336,6 +332,12 @@ export default {
             >Broj inicijalnih osmosmjerki</template
           >
           <template #header(selectedEights)>Broj osmosmjerki</template>
+          <template #cell(start_time)="{ source: start_time }">
+            {{ new Date(start_time).toLocaleString() }}
+          </template>
+          <template #cell(end_time)="{ source: end_time }">
+            {{ new Date(end_time).toLocaleString() }}
+          </template>
           <template #cell(id)="{ source: id }">
             <va-icon
               v-if="id.granted == true"

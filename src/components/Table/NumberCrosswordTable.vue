@@ -381,20 +381,18 @@ export default {
                                                           author_display_name,
                                                         author_email:
                                                           author_email,
-                                                        time_created: new Date(
+                                                        time_created: 
                                                           childSnapshot.get(
                                                             "time_created"
-                                                          ).seconds * 1000
-                                                        ),
+                                                          ).seconds * 1000,
                                                         updater_display_name:
                                                           updater_display_name,
                                                         updater_email:
                                                           updater_email,
-                                                        last_updated: new Date(
+                                                        last_updated: 
                                                           childSnapshot.get(
                                                             "last_updated"
-                                                          ).seconds * 1000
-                                                        ),
+                                                          ).seconds * 1000,
                                                         id: childSnapshot.id,
                                                         deletePermission:
                                                           newDeletePermission,
@@ -704,10 +702,10 @@ export default {
         <template #header(editPermission)>Uredi</template>
         <template #header(favorite)>Spremi</template>
         <template #cell(time_created)="{ source: time_created }">
-          {{ time_created.toLocaleString() }}
+          {{ new Date(time_created).toLocaleString() }}
         </template>
         <template #cell(last_updated)="{ source: last_updated }">
-          {{ last_updated.toLocaleString() }}
+          {{ new Date(last_updated).toLocaleString() }}
         </template>
         <template #cell(author_email)="{ source: author_email }">
           <router-link
