@@ -381,7 +381,7 @@ export default {
                                                           author_display_name,
                                                         author_email:
                                                           author_email,
-                                                        time_created: 
+                                                        time_created:
                                                           childSnapshot.get(
                                                             "time_created"
                                                           ).seconds * 1000,
@@ -389,7 +389,7 @@ export default {
                                                           updater_display_name,
                                                         updater_email:
                                                           updater_email,
-                                                        last_updated: 
+                                                        last_updated:
                                                           childSnapshot.get(
                                                             "last_updated"
                                                           ).seconds * 1000,

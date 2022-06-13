@@ -1017,14 +1017,22 @@ export default {
       if (i >= this.rows || i <= -1 || j >= this.columns || j <= -1) {
         return false;
       }
-      let seq = this.solution[i][j] + '';
+      let seq = this.solution[i][j] + "";
       let index = j + 1;
-      while (index < this.columns && this.solution[i][index] != -1 && this.solution[i][index] != 10) {
+      while (
+        index < this.columns &&
+        this.solution[i][index] != -1 &&
+        this.solution[i][index] != 10
+      ) {
         seq = seq + "" + this.solution[i][index];
         index += 1;
       }
       index = j - 1;
-      while (index > -1 && this.solution[i][index] != -1 && this.solution[i][index] != 10) {
+      while (
+        index > -1 &&
+        this.solution[i][index] != -1 &&
+        this.solution[i][index] != 10
+      ) {
         seq = this.solution[i][index] + "" + seq;
         index -= 1;
       }
@@ -1037,14 +1045,22 @@ export default {
       if (i >= this.rows || i <= -1 || j >= this.columns || j <= -1) {
         return false;
       }
-      let seq = this.solution[i][j] + '';
+      let seq = this.solution[i][j] + "";
       let index = i + 1;
-      while (index < this.rows && this.solution[index][j] != -1 && this.solution[index][j] != 10) {
+      while (
+        index < this.rows &&
+        this.solution[index][j] != -1 &&
+        this.solution[index][j] != 10
+      ) {
         seq = seq + "" + this.solution[index][j];
         index += 1;
       }
       index = i - 1;
-      while (index > -1 && this.solution[index][j] != -1 && this.solution[index][j] != 10) {
+      while (
+        index > -1 &&
+        this.solution[index][j] != -1 &&
+        this.solution[index][j] != 10
+      ) {
         seq = this.solution[index][j] + "" + seq;
         index -= 1;
       }
@@ -1591,8 +1607,8 @@ export default {
         v-if="image"
         id="img"
         :src="imageURL"
-        alt="Nema slike"
-        style="width: 100%"
+        alt=""
+        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
       />
       <br v-if="image" />
       <va-alert
@@ -1780,7 +1796,7 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: white; 
+  color: white;
 }
 
 .help {

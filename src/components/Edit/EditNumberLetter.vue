@@ -58,7 +58,7 @@ export default {
       num_letters: 1,
       rows: 1,
       columns: 1,
-      mode: -2, 
+      mode: -2,
       value_to_randomize: "letters",
       randomize_all: false,
       keep_black: true,
@@ -1177,7 +1177,7 @@ export default {
             });
           }
         });
-    }, 
+    },
     check_duplicated(x) {
       for (let i = 0; i < this.letters.length; i++) {
         if (x == i) {
@@ -1235,7 +1235,7 @@ export default {
   beforeDestroy() {
     //window.removeEventListener('keyup', this.modeChange);
   },
-  beforeMount() { 
+  beforeMount() {
     if (this.$props.edit) {
       this.fetch_puzzle();
     } else {
@@ -1252,7 +1252,7 @@ export default {
     }
   },
   beforeUpdate() {
-    this.initialize(); 
+    this.initialize();
     this.remove_max_letter();
     if (this.$refs.lettersform) {
       for (let i = 0; i < this.$refs.lettersform.length; i++) {
@@ -1355,7 +1355,7 @@ export default {
             !(
               edit &&
               check_letter() == '' &&
-              !hasEmpty() &&  
+              !hasEmpty() &&
               title.length > 0 &&
               description.length > 0 &&
               source.length > 0
@@ -1369,7 +1369,7 @@ export default {
           :disabled="
             !(
               check_letter() == '' &&
-              !hasEmpty() && 
+              !hasEmpty() &&
               title.length > 0 &&
               description.length > 0 &&
               source.length > 0
@@ -1551,8 +1551,8 @@ export default {
             <td v-for="i in num_letters" v-bind:key="i">
               <va-form ref="lettersform">
                 <va-input
-                  maxlength="2" 
-                  @click="mode = i - 1" 
+                  maxlength="2"
+                  @click="mode = i - 1"
                   v-model="letters[i - 1]"
                   style="
                     width: 80px;
@@ -1586,7 +1586,7 @@ export default {
             </td>
           </tr>
         </table>
-      </div> 
+      </div>
     </div>
     <br v-else />
     <va-card color="background" style="padding: 10px">
@@ -1660,7 +1660,9 @@ export default {
         </table>
       </div>
       <br v-if="hasEmpty()" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="hasEmpty()"
         style="white-space: pre-wrap; border: none"
         color="danger"
@@ -1705,11 +1707,13 @@ export default {
         v-if="image"
         id="img"
         :src="imageURL"
-        alt="Nema slike"
-        style="width: 100%"
+        alt=""
+        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
       />
       <br v-if="image" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="!image"
         style="white-space: pre-wrap; border: none"
         color="warning"
@@ -1787,8 +1791,8 @@ export default {
       <h6
         @click="value[6] = !value[6]"
         class="display-6"
-    
-        v-if="permission_to_edit_visibility || !edit" style="text-align: start" 
+        v-if="permission_to_edit_visibility || !edit"
+        style="text-align: start"
       >
         Dozvola uređivanja &nbsp;
         <va-icon v-if="!value[6]" name="expand_more"></va-icon>
@@ -1802,8 +1806,6 @@ export default {
           :rounded="false"
           style="border: none"
           @click="is_public = !is_public"
-          
-    
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
@@ -1894,7 +1896,7 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: white; 
+  color: white;
 }
 .bordertop {
   border-top: dashed !important;

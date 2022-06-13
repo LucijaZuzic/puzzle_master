@@ -49,10 +49,10 @@ export default {
   <br />
   <h6 class="display-6">Riječi po smjerovima</h6>
   <br />
-  <span class="tab"></span> 
-  Rješavač odabranu riječ postavlja u zagonetku u
-  jednom od osam smjerova koji je unaprijed zadan  ukoliko ima dovoljno slobodnih mjesta i ako se slova
-  u poljima poklapaju. Korisnik može poništiti postavljanje svih riječi, svih
+  <span class="tab"></span>
+  Rješavač odabranu riječ postavlja u zagonetku u jednom od osam smjerova koji
+  je unaprijed zadan ukoliko ima dovoljno slobodnih mjesta i ako se slova u
+  poljima poklapaju. Korisnik može poništiti postavljanje svih riječi, svih
   riječi u jednom smjeru ili samo jedne riječi.
 
   <br />

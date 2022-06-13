@@ -1,19 +1,25 @@
 <script>
-import Info from './Info.vue' 
+import Info from "./Info.vue";
 export default {
   data() {
     return {};
   },
   components: {
-    Info, 
+    Info,
   },
   methods: {},
 };
 </script>
 
 <template>
-   <Info title="Brojevne križaljke" icon="format_list_numbered" general="NumberCrosswordGeneralInfo" edit="NumberCrosswordEditInfo" solve="NumberCrosswordSolveInfo"></Info>
+  <Info
+    title="Brojevne križaljke"
+    icon="format_list_numbered"
+    general="NumberCrosswordGeneralInfo"
+    edit="NumberCrosswordEditInfo"
+    solve="NumberCrosswordSolveInfo"
+  ></Info>
 </template>
 
-<style scoped> 
+<style scoped>
 </style>

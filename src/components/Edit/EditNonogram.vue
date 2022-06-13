@@ -1354,7 +1354,7 @@ export default {
           <span v-if="gridlines_on"> &nbsp; Podebljaj mrežu</span>
           <span v-if="!gridlines_on"> &nbsp; Nemoj podebljati mrežu</span>
         </va-button>
-      </div> 
+      </div>
       <div>
         <MyCounter
           :min_value="1"

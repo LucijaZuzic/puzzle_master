@@ -1,19 +1,25 @@
 <script>
-import Info from './Info.vue' 
+import Info from "./Info.vue";
 export default {
   data() {
     return {};
   },
   components: {
-    Info, 
+    Info,
   },
   methods: {},
 };
 </script>
 
 <template>
-   <Info title="Isti broj - isto slovo" icon="sync_alt" general="NumberLetterGeneralInfo" edit="NumberLetterEditInfo" solve="NumberLetterSolveInfo"></Info>
+  <Info
+    title="Isti broj - isto slovo"
+    icon="sync_alt"
+    general="NumberLetterGeneralInfo"
+    edit="NumberLetterEditInfo"
+    solve="NumberLetterSolveInfo"
+  ></Info>
 </template>
 
-<style scoped> 
+<style scoped>
 </style>

@@ -89,9 +89,7 @@ export default {
                     me.friends.push({
                       user_display_name: user_display_name,
                       user_email: user_email,
-                      time: 
-                        childSnapshotFriend.get("time").seconds * 1000
-                      ,
+                      time: childSnapshotFriend.get("time").seconds * 1000,
                     });
                   }
                 });
@@ -126,8 +124,8 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
-    <span v-if="friends.length > 0">  
-    <br/>
+    <span v-if="friends.length > 0">
+      <br />
       <div>
         <va-input
           style="display: inline-block"

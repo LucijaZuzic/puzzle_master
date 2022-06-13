@@ -26,8 +26,8 @@ export default {
 
   <span class="tab"></span>
   Ukoliko odaberemo da se rješenje prikaže, neće se spremiti rekord pri
-  rješavanju. Rekord je vrijeme provedeno u rješavanju, a neće se spremiti ako se
-  nismo prijavili u sustav.
+  rješavanju. Rekord je vrijeme provedeno u rješavanju, a neće se spremiti ako
+  se nismo prijavili u sustav.
 
   <br />
   <br />
@@ -46,8 +46,8 @@ export default {
   <span class="tab"></span>
   Slova moraju biti jedinstvena i pripadati zadanoj abecedi. Neka slova su
   otkrivena rješavaču na početku rješavanja zagonetke kao dodatna pomoć i nisu
-  promjenjiva. Slova koja su predstavljena određenim brojem pojavljuju se 
-  u mreži kada se upišu.
+  promjenjiva. Slova koja su predstavljena određenim brojem pojavljuju se u
+  mreži kada se upišu.
 
   <br />
   <br />
@@ -69,16 +69,15 @@ export default {
   Zagonetka ima naslov zbog identifikacije, opis koji pomaže prilikom rješavanja
   te izvor koji omogućava da se priznaju zasluge originalnom autoru ukoliko se
   prepisuje tuđu zagonetku u sustav. Izborno je uz zagonetku dodati i sliku koja
-  uz opis pruža dodatnu pomoć prilikom rješavanja. 
+  uz opis pruža dodatnu pomoć prilikom rješavanja.
   <br />
   <br />
   <h6 class="display-6">Autor i posljednja izmjena</h6>
-  <br /> 
+  <br />
   <span class="tab"></span>
-  Vidljivo je kada je zagonetka prvi put stvorena i kada je posljednji put uređivana.
-  Vidljivo je tko je autor zagonetke i tko ju je posljednji uređivao 
+  Vidljivo je kada je zagonetka prvi put stvorena i kada je posljednji put
+  uređivana. Vidljivo je tko je autor zagonetke i tko ju je posljednji uređivao
   ukoliko je profil tog korisnika javan ili ako ste prijatelji.
- 
 </template>
 
 <style scoped>

@@ -1142,7 +1142,9 @@ export default {
         </div>
       </div>
       <br v-if="warning" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="warning"
         color="danger"
         :title="'Postoje boje koje se ponavljaju'"
@@ -1176,7 +1178,7 @@ export default {
           <span v-if="gridlines_on"> &nbsp; Podebljaj mrežu</span>
           <span v-if="!gridlines_on"> &nbsp; Nemoj podebljati mrežu</span>
         </va-button>
-      </div> 
+      </div>
       <div>
         <MyCounter
           :min_value="1"
@@ -1381,8 +1383,11 @@ export default {
               @click="increment(row_index - 1, column_index - 1, false)"
               :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
               :class="{
-                upthick: row_index == 1 || ((row_index - 1) % 5 == 0 && gridlines_on),
-                leftthick: column_index == 1 || ((column_index - 1) % 5 == 0 && gridlines_on), 
+                upthick:
+                  row_index == 1 || ((row_index - 1) % 5 == 0 && gridlines_on),
+                leftthick:
+                  column_index == 1 ||
+                  ((column_index - 1) % 5 == 0 && gridlines_on),
               }"
             >
               <span

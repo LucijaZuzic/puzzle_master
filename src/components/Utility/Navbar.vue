@@ -46,15 +46,15 @@ export default {
 };
 </script>
 <template>
-  <va-affix :offset-top="0" style="background-color: #2C82E0;width: 100%">
-    <div style="background-color: #2C82E0;width: 100%">
+  <va-affix :offset-top="0" style="background-color: #2c82e0; width: 100%">
+    <div style="background-color: #2c82e0; width: 100%">
       <va-icon
-        style="background-color: #2C82E0"
+        style="background-color: #2c82e0"
         name="menu"
         color="#ffffff"
         @click="visible_menu = !visible_menu"
       />
-      &nbsp; 
+      &nbsp;
       <router-link v-if="user != null" :to="'/profile/' + user.email">
         <span style="color: #ffffff">
           <va-icon name="person" />
@@ -62,7 +62,7 @@ export default {
             {{ user.displayName }}
           </span>
         </span>
-        &nbsp; 
+        &nbsp;
       </router-link>
       <span v-if="user != null" @click="signOut()" style="color: #ffffff">
         <va-icon name="logout" />
@@ -158,7 +158,7 @@ export default {
         </template>
       </va-tabs>
     </span>
-  </va-affix> 
+  </va-affix>
 </template>
 
 <style scoped></style>

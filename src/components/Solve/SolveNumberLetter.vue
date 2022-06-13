@@ -949,7 +949,13 @@ export default {
       </va-chip>
       <br v-if="this.imageURL == ''" />
       <br v-if="this.imageURL == ''" />
-      <img v-if="image" id="img" :src="imageURL" alt="" style="width: 100%" />
+      <img
+        v-if="image"
+        id="img"
+        :src="imageURL"
+        alt=""
+        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
+      />
       <br v-if="image" />
       <br v-if="image" />
       <h6 class="display-6" style="text-align: start; color: #2c82e0">
@@ -1067,10 +1073,10 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: white; 
+  color: white;
 }
 .wrong {
-  color: #DE1041 !important;
+  color: #de1041 !important;
 }
 .bordertop {
   border-top: dashed !important;

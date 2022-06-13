@@ -4,40 +4,40 @@
       display: inline-block;
       overflow-wrap: anywhere !important;
       margin: 10px;
-    " 
+    "
   >
     <div>
-    <va-button 
-       v-if="is_zoom" 
-       disabled
-      size="small"
-      outline
-      round
-      :rounded="false"
-      style="border: none" 
-    > 
-      <va-icon name="search"></va-icon> 
-    </va-button> 
-    {{ some_text }}
-    <va-button 
-       v-if="is_zoom"
-      :disabled="100 == value"
-      size="small"
-      outline
-      round
-      :rounded="false"
-      style="border: none"
-      @click="
-        value = 100;
-        value = Math.max(min_value, Math.min(value, max_value));
-        $emit('input', value);
-      "
-    > 
-      <va-icon name="restart_alt"></va-icon> 
-    </va-button> 
+      <va-button
+        v-if="is_zoom"
+        disabled
+        size="small"
+        outline
+        round
+        :rounded="false"
+        style="border: none"
+      >
+        <va-icon name="search"></va-icon>
+      </va-button>
+      {{ some_text }}
+      <va-button
+        v-if="is_zoom"
+        :disabled="100 == value"
+        size="small"
+        outline
+        round
+        :rounded="false"
+        style="border: none"
+        @click="
+          value = 100;
+          value = Math.max(min_value, Math.min(value, max_value));
+          $emit('input', value);
+        "
+      >
+        <va-icon name="restart_alt"></va-icon>
+      </va-button>
     </div>
     <br />
-    <va-button 
+    <va-button
       :disabled="min_value >= value"
       size="small"
       outline
@@ -49,8 +49,8 @@
         value = Math.max(min_value, Math.min(value, max_value));
         $emit('input', value);
       "
-    > 
-      <va-icon name="first_page"></va-icon> 
+    >
+      <va-icon name="first_page"></va-icon>
     </va-button>
     <va-button
       :disabled="min_value >= value"
@@ -64,8 +64,8 @@
         value = Math.max(min_value, Math.min(value, max_value));
         $emit('input', value);
       "
-    > 
-      <va-icon name="chevron_left" /> 
+    >
+      <va-icon name="chevron_left" />
     </va-button>
     <input
       @input="
@@ -89,10 +89,10 @@
         value = Math.max(min_value, Math.min(value, max_value));
         $emit('input', value);
       "
-    > 
-      <va-icon name="chevron_right" /> 
+    >
+      <va-icon name="chevron_right" />
     </va-button>
-    <va-button 
+    <va-button
       :disabled="max_value <= value"
       size="small"
       outline
@@ -104,8 +104,8 @@
         value = Math.max(min_value, Math.min(value, max_value));
         $emit('input', value);
       "
-    > 
-      <va-icon name="last_page"></va-icon> 
+    >
+      <va-icon name="last_page"></va-icon>
     </va-button>
   </span>
 </template>
@@ -146,7 +146,7 @@ input[type="number"] {
   vertical-align: middle;
   text-align: center;
   font-weight: bold;
-  color: #767C88;
+  color: #767c88;
   display: inline-block;
   margin: none;
   padding: none;

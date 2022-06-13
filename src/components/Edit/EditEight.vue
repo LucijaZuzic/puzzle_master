@@ -1864,8 +1864,8 @@ export default {
         v-if="image"
         id="img"
         :src="imageURL"
-        alt="Nema slike"
-        style="width: 100%"
+        alt=""
+        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
       />
       <br v-if="image" />
       <va-alert
@@ -1949,8 +1949,8 @@ export default {
       <h6
         @click="value[6] = !value[6]"
         class="display-6"
-    
-        v-if="permission_to_edit_visibility || !edit" style="text-align: start" 
+        v-if="permission_to_edit_visibility || !edit"
+        style="text-align: start"
       >
         Dozvola uređivanja &nbsp;
         <va-icon v-if="!value[6]" name="expand_more"></va-icon>
@@ -1964,8 +1964,6 @@ export default {
           :rounded="false"
           style="border: none"
           @click="is_public = !is_public"
-          
-    
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
@@ -2055,7 +2053,7 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: white; 
+  color: white;
 }
 
 .help {

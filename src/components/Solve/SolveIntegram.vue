@@ -1291,10 +1291,10 @@ export default {
   <body class="my_body" v-if="!fully_loaded">
     <LoadingBar></LoadingBar>
   </body>
-  <body class="my_body" v-else> 
-      <h4 class="display-4">
-        <va-icon size="large" name="rule_folder"></va-icon>
-        &nbsp; Igraj integram
+  <body class="my_body" v-else>
+    <h4 class="display-4">
+      <va-icon size="large" name="rule_folder"></va-icon>
+      &nbsp; Igraj integram
     </h4>
     <br />
     <va-divider></va-divider>
@@ -1886,7 +1886,7 @@ export default {
           :id="'img' + (value_to_display - 1) + ':' + (category_for_image - 1)"
           :src="urls[value_to_display - 1][category_for_image - 1]"
           alt=""
-          style="width: 100%"
+          style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
         />
       </div>
       <div
@@ -2163,13 +2163,6 @@ th {
   min-width: 240px !important;
   max-width: 240px !important;
   width: 240px !important;
-}
-.image_container {
-  display: inline-block;
-  position: relative;
-width: 100%;
-  margin-right: 1%;
-  text-align: center;
 }
 /* Top left text */
 .topleft {

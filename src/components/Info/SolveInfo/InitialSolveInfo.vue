@@ -33,7 +33,7 @@ export default {
   <br />
   <span class="tab"></span>
   Inicijalna osmosmjerka je predstavljena mrežom unutar koje je samo polje koje
-  je početno slovo neke riječi unaprijed ispunjeno slovima zadane abecede.  Mora
+  je početno slovo neke riječi unaprijed ispunjeno slovima zadane abecede. Mora
   se ispuniti ostala polja smještanjem riječi s popisa pojmova u mrežu. Zadnja
   aktivna pozicija u mreži naznačena je iznad mreže radi lakšeg snalaženja.
   Veličina mreže može se prilagoditi radi bolje vidljivosti.

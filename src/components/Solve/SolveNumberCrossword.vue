@@ -981,9 +981,7 @@ export default {
         </va-chip>
       </div>
       <br v-if="current_x != null && current_y != null" />
-      <div 
-        style="max-height: 400px; overflow-y: scroll; overflow-x: scroll"
-      >
+      <div style="max-height: 400px; overflow-y: scroll; overflow-x: scroll">
         <table class="numbers_table" id="table_zoom">
           <tr v-for="i in rows" v-bind:key="i">
             <td
@@ -1195,7 +1193,13 @@ export default {
       </va-chip>
       <br v-if="this.imageURL == ''" />
       <br v-if="this.imageURL == ''" />
-      <img v-if="image" id="img" :src="imageURL" alt="" style="width: 100%" />
+      <img
+        v-if="image"
+        id="img"
+        :src="imageURL"
+        alt=""
+        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
+      />
       <br v-if="image" />
       <br v-if="image" />
       <h6 class="display-6" style="text-align: start; color: #2c82e0">
@@ -1313,7 +1317,7 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: white; 
+  color: white;
 }
 
 .help {

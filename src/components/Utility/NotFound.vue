@@ -10,7 +10,7 @@ export default {
 <template>
   <body class="my_body">
     <h4 class="display-4">404</h4>
-    <br/>
+    <br />
     <h4 class="display-4">Datoteka nije pronađena</h4>
   </body>
 </template>

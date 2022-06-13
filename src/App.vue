@@ -11,7 +11,7 @@ export default {
     <Navbar></Navbar>
     <va-card
       style="
-      background-color: white;
+        background-color: white;
         margin: 20px;
         padding: 20px;
         display: inline-block;
@@ -43,7 +43,7 @@ export default {
   text-align: center;
   vertical-align: middle;
   padding: 20px;
-} 
+}
 a,
 a:hover,
 a:focus,

@@ -8,27 +8,30 @@ export default {
 };
 </script>
 
-<template> 
+<template>
   <h6 class="display-6">Dimenzije</h6>
   <br />
   <span class="tab"></span>
-  Integramu zadajemo broj kategorija, vrijednosti i uputa.
-  Kategorija i vrijednosti ima između 3 i 5, a uputa između 5 i 10.  
+  Integramu zadajemo broj kategorija, vrijednosti i uputa. Kategorija i
+  vrijednosti ima između 3 i 5, a uputa između 5 i 10.
   <br />
-  <br />  
+  <br />
   <h6 class="display-6">Upute</h6>
   <br />
 
-  <span class="tab"></span> 
-  Upute su dane prilikom zadavanja zagonetke i omogućavaju povezivanje vrijednosti kategorije s određenim pojmom. 
+  <span class="tab"></span>
+  Upute su dane prilikom zadavanja zagonetke i omogućavaju povezivanje
+  vrijednosti kategorije s određenim pojmom.
   <br />
-  <br />  
+  <br />
 
   <h6 class="display-6">Kategorije</h6>
   <br />
 
   <span class="tab"></span>
-  U tablici unosimo naslove za svaku kategoriju i u redcima unosimo vrijednosti koje svaki pojam poprima za svaku kategoriju. Umjesto teksta određena kategorija može biti predstavljena slikom.
+  U tablici unosimo naslove za svaku kategoriju i u redcima unosimo vrijednosti
+  koje svaki pojam poprima za svaku kategoriju. Umjesto teksta određena
+  kategorija može biti predstavljena slikom.
 
   <br />
   <br />
@@ -36,17 +39,19 @@ export default {
   <h6 class="display-6">Slike</h6>
   <br />
 
-  <span class="tab"></span> 
-  Slike koje zamjenjuju pojmove u određenim kategorijama biti će zasebno prikazane i označene kraticom  koja se sastoji od broja kategorije i slova A, B, C, D ili E koje označava broj slike unutar kategorije.
+  <span class="tab"></span>
+  Slike koje zamjenjuju pojmove u određenim kategorijama biti će zasebno
+  prikazane i označene kraticom koja se sastoji od broja kategorije i slova A,
+  B, C, D ili E koje označava broj slike unutar kategorije.
   <br />
   <br />
-  
+
   <h6 class="display-6">Podaci o zagonetci</h6>
   <br />
   <span class="tab"></span>
   Obvezno je zagonetci navesti naslov zbog identifikacije, opis koji pomaže
   prilikom rješavanja te izvor koji omogućava da se priznaju zasluge originalnom
-  autoru ukoliko se prepisuje tuđu zagonetku u sustav.  
+  autoru ukoliko se prepisuje tuđu zagonetku u sustav.
 
   <br />
   <br />

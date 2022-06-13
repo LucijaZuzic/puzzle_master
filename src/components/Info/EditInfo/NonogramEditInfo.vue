@@ -21,8 +21,8 @@ export default {
   <br />
 
   <span class="tab"></span> Možemo odabrati popis boja, ali prva na popisu
-  uvijek je bijela koja služi dodavanju praznina između segmenata određene boje. Nasumično se
-  odabiru nove boje kada povećamo broj boja. 
+  uvijek je bijela koja služi dodavanju praznina između segmenata određene boje.
+  Nasumično se odabiru nove boje kada povećamo broj boja.
   <br />
   <br />
 
@@ -30,11 +30,11 @@ export default {
   <br />
 
   <span class="tab"></span>
-  Možemo odabrati hoćemo li vršiti
-  ispunu segmenta ili jedno po jedno polje. Ukoliko koristimo uređaj koji
-  podržava gestu prelaska mišem, možemo bojati na taj način, ali tada ne možemo
-  bojati po segmentu. Možemo i odjednom obrisati sve ćelije koje smo
-  ispunili ili obrisati samo ćelije koje smo ispunili trenutno korištenom bojom.
+  Možemo odabrati hoćemo li vršiti ispunu segmenta ili jedno po jedno polje.
+  Ukoliko koristimo uređaj koji podržava gestu prelaska mišem, možemo bojati na
+  taj način, ali tada ne možemo bojati po segmentu. Možemo i odjednom obrisati
+  sve ćelije koje smo ispunili ili obrisati samo ćelije koje smo ispunili
+  trenutno korištenom bojom.
   <br />
   <br />
   <h6 class="display-6">Zagonetka</h6>
@@ -43,8 +43,9 @@ export default {
   Zagonetka je predstavljena mrežom unutar koje je svako polje ili bijelo ili
   ispunjeno bojom. Automatski se generira popis segmenata određene boje u redku
   ili stupcu. Zadnja aktivna pozicija u mreži naznačena je iznad mreže radi
-  lakšeg snalaženja. Veličina mreže može se prilagoditi radi bolje vidljivosti. 
-  Može se podebljanim bridom označiti svaki peti redak i stupac radi lakšeg snalaženja.
+  lakšeg snalaženja. Veličina mreže može se prilagoditi radi bolje vidljivosti.
+  Može se podebljanim bridom označiti svaki peti redak i stupac radi lakšeg
+  snalaženja.
 
   <br />
   <br />
@@ -53,7 +54,7 @@ export default {
   <span class="tab"></span>
   Obvezno je zagonetci navesti naslov zbog identifikacije, opis koji pomaže
   prilikom rješavanja te izvor koji omogućava da se priznaju zasluge originalnom
-  autoru ukoliko se prepisuje tuđu zagonetku u sustav.  
+  autoru ukoliko se prepisuje tuđu zagonetku u sustav.
 
   <br />
   <br />

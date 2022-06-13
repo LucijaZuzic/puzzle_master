@@ -9,37 +9,37 @@ export default {
 </script>
 
 <template>
-  <h6 class="display-6"> 
-   Uvod
-  </h6>
-  <br /> 
-    <span class="tab"></span> Zagonetka tipa isti broj isto slovo je vrsta križaljke u kojoj je za sva
-  polja, osim onih koja predstavljaju barijeru, zadan broj. Svaki broj zamjenjuje jedan znak
-na poljima u križaljci. Isti broj uvijek označava isti znak.
-    
+  <h6 class="display-6">Uvod</h6>
+  <br />
+  <span class="tab"></span> Zagonetka tipa isti broj isto slovo je vrsta
+  križaljke u kojoj je za sva polja, osim onih koja predstavljaju barijeru,
+  zadan broj. Svaki broj zamjenjuje jedan znak na poljima u križaljci. Isti broj
+  uvijek označava isti znak.
+
   <br />
   <br />
 
   <h6 class="display-6">Slova</h6>
   <br />
-  <span class="tab"></span>   Različiti brojevi nikada neće označavati isti znak. Svi znakovi abecede
-  ne moraju se pojaviti u poljima, odnosno ne moraju nužno imati broj koji ih
-  označava.
+  <span class="tab"></span> Različiti brojevi nikada neće označavati isti znak.
+  Svi znakovi abecede ne moraju se pojaviti u poljima, odnosno ne moraju nužno
+  imati broj koji ih označava.
   <!--Svaki znak
     koji se pojavljuje kao jedna od tri opcije za neki broj biti će iskorišten 
     u poljima barem jednom.-->
   Dostupni su znakovi osnovnog latiničnog pisma i hrvatski dijakritički i
   složeni znakovi.
   <br />
-  <br /> 
+  <br />
   <h6 class="display-6">
-    <va-icon size="medium" color="#FA8072" name="contrast"></va-icon>&nbsp;
-    Dio rješenja
+    <va-icon size="medium" color="#FA8072" name="contrast"></va-icon>&nbsp; Dio
+    rješenja
   </h6>
   <br />
 
   <span class="tab"></span>
-  Može se tamnijom ružičastom bojom osjenčati određeno polje te ga tako označiti kao dio rješenja, odnosno pojma koji je opisan prilikom zadavanja zagonetke.  
+  Može se tamnijom ružičastom bojom osjenčati određeno polje te ga tako označiti
+  kao dio rješenja, odnosno pojma koji je opisan prilikom zadavanja zagonetke.
 
   <br />
   <br />

@@ -349,13 +349,8 @@ export default {
           </h6>
         </va-card>
         <div class="my_row" v-if="puzzle_toggle">
-          <h6 
-            class="display-6"
-            style="text-align: start"
-          >
-            Vrsta zagonetke
-          </h6>
-          <br/>
+          <h6 class="display-6" style="text-align: start">Vrsta zagonetke</h6>
+          <br />
           <va-tabs v-model="value" style="width: 100%">
             <template #tabs>
               <va-tab name="cryptogram"
@@ -385,13 +380,8 @@ export default {
             </template>
           </va-tabs>
           <br />
-          <h6 
-            class="display-6"
-            style="text-align: start"
-          >
-            Vrsta interakcije
-          </h6>
-          <br/>
+          <h6 class="display-6" style="text-align: start">Vrsta interakcije</h6>
+          <br />
           <ProfilePuzzle
             component_name="IntegramTable"
             :friend="friend"
@@ -483,13 +473,10 @@ export default {
           </h6>
         </va-card>
         <div class="my_row" v-if="friends_toggle">
-          <h6 
-            class="display-6"
-            style="text-align: start"
-          >
+          <h6 class="display-6" style="text-align: start">
             Kategorije prijateljstva
           </h6>
-          <br/>
+          <br />
           <va-tabs v-model="friendOption" style="width: 100%">
             <template #tabs>
               <va-tab name="friend"

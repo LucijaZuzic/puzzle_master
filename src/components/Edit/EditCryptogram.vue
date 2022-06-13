@@ -2054,7 +2054,9 @@ export default {
         </table>
       </div>
       <br v-if="hasEmpty()" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="hasEmpty()"
         style="white-space: pre-wrap; border: none"
         color="danger"
@@ -2064,7 +2066,9 @@ export default {
         Neke ćelije nemaju dodijeljen broj slova.
       </va-alert>
       <br v-if="hasEmptyOption()" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="hasEmptyOption()"
         style="white-space: pre-wrap; border: none"
         color="danger"
@@ -2109,11 +2113,13 @@ export default {
         v-if="image"
         id="img"
         :src="imageURL"
-        alt="Nema slike"
-        style="width: 100%"
+        alt=""
+        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
       />
       <br v-if="image" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="!image"
         style="white-space: pre-wrap; border: none"
         color="warning"
@@ -2191,8 +2197,8 @@ export default {
       <h6
         @click="value[6] = !value[6]"
         class="display-6"
-    
-        v-if="permission_to_edit_visibility || !edit" style="text-align: start" 
+        v-if="permission_to_edit_visibility || !edit"
+        style="text-align: start"
       >
         Dozvola uređivanja &nbsp;
         <va-icon v-if="!value[6]" name="expand_more"></va-icon>
@@ -2206,8 +2212,6 @@ export default {
           :rounded="false"
           style="border: none"
           @click="is_public = !is_public"
-          
-    
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
@@ -2298,7 +2302,7 @@ export default {
 .special {
   background-color: salmon !important;
   font-weight: bold !important;
-  color: white !important; 
+  color: white !important;
 }
 .unnumbered {
   background-color: #fdefef !important;

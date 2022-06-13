@@ -9,56 +9,58 @@ export default {
 </script>
 
 <template>
- <h6 class="display-6">Dimenzije</h6>
+  <h6 class="display-6">Dimenzije</h6>
   <br />
   <span class="tab"></span>
-  Incijalnoj osmosmjerci zadajemo broj redaka i stupaca.
-  Maksimalni broj redaka je 50, a isto vrijedi i za stupce.  
+  Incijalnoj osmosmjerci zadajemo broj redaka i stupaca. Maksimalni broj redaka
+  je 50, a isto vrijedi i za stupce.
   <br />
-  <br /> 
+  <br />
   <h6 class="display-6">Ispuna mreže</h6>
   <br />
   <span class="tab"></span>
-  Mreža se može ispuniti riječima u osam smjerova. Dvoslovi se mogu posebno dodavati u riječ jer većina tipkovica ne podržava njihov 
- direktan unos, a ponekada je potrebno prikazati ih u jednom, a ne dva polja mreže. 
- Može se odjednom izbrisati sve riječi. 
+  Mreža se može ispuniti riječima u osam smjerova. Dvoslovi se mogu posebno
+  dodavati u riječ jer većina tipkovica ne podržava njihov direktan unos, a
+  ponekada je potrebno prikazati ih u jednom, a ne dva polja mreže. Može se
+  odjednom izbrisati sve riječi.
 
   <br />
-  <br /> 
-      <h6 class="display-6">  Početno slovo  </h6>
+  <br />
+  <h6 class="display-6">Početno slovo</h6>
   <br />
   <span class="tab"></span>
-   Početna slova riječi su označena plavom bojom pozadine i podebljana. 
-   Slovo se može označiti kao dio rješenja tamnijom ružičastom bojom pozadine, ukoliko nije početno slovo riječi. 
-  
+  Početna slova riječi su označena plavom bojom pozadine i podebljana. Slovo se
+  može označiti kao dio rješenja tamnijom ružičastom bojom pozadine, ukoliko
+  nije početno slovo riječi.
+
   <br />
   <br />
   <h6 class="display-6">Zagonetka</h6>
   <br />
   <span class="tab"></span>
-  Inicijalna osmosmjerka je predstavljena mrežom unutar koje svako polje moramo ispuniti 
-  slovima zadane abecede. 
-  Dostupni su znakovi osnovnog latiničnog pisma i hrvatski dijakritički i
-  složeni znakovi. Zadnja aktivna pozicija u
-  mreži naznačena je iznad mreže radi lakšeg snalaženja. Veličina mreže može se
+  Inicijalna osmosmjerka je predstavljena mrežom unutar koje svako polje moramo
+  ispuniti slovima zadane abecede. Dostupni su znakovi osnovnog latiničnog pisma
+  i hrvatski dijakritički i složeni znakovi. Zadnja aktivna pozicija u mreži
+  naznačena je iznad mreže radi lakšeg snalaženja. Veličina mreže može se
   prilagoditi radi bolje vidljivosti.
-<br />
-  <br /> 
+  <br />
+  <br />
   <h6 class="display-6">Rješenje</h6>
   <br />
-  <span class="tab"></span> 
+  <span class="tab"></span>
 
-  Slova koja su označena kao dio rješenja tvore pojam koji je opisan prilikom zadavanja zagonetke i osjenčana su tamnijom ružičastom bojom.
+  Slova koja su označena kao dio rješenja tvore pojam koji je opisan prilikom
+  zadavanja zagonetke i osjenčana su tamnijom ružičastom bojom.
   <br />
-  <br /> 
+  <br />
   <h6 class="display-6">Riječi po smjerovima</h6>
   <br />
-  <span class="tab"></span> 
+  <span class="tab"></span>
 
   Prilikom zadavanja riječ se postavlja u zagonetku u jednom od osam smjerova
-   ukoliko ima dovoljno slobodnih mjesta i ako se slova u
-  poljima poklapaju.
-  Riječi u svakom od osam smjerova koje su dodane kao dio inicijalne osmosmjerke mogu se pregledati i može se ukloniti samo jedna ili sve riječi u smjeru.
+  ukoliko ima dovoljno slobodnih mjesta i ako se slova u poljima poklapaju.
+  Riječi u svakom od osam smjerova koje su dodane kao dio inicijalne osmosmjerke
+  mogu se pregledati i može se ukloniti samo jedna ili sve riječi u smjeru.
   <br />
   <br />
   <h6 class="display-6">Podaci o zagonetci</h6>

@@ -1,19 +1,25 @@
 <script>
-import Info from './Info.vue' 
+import Info from "./Info.vue";
 export default {
   data() {
     return {};
   },
   components: {
-    Info, 
+    Info,
   },
   methods: {},
 };
 </script>
 
 <template>
-   <Info title="Nonogrami" icon="draw" general="NonogramGeneralInfo" edit="NonogramEditInfo" solve="NonogramSolveInfo"></Info>
+  <Info
+    title="Nonogrami"
+    icon="draw"
+    general="NonogramGeneralInfo"
+    edit="NonogramEditInfo"
+    solve="NonogramSolveInfo"
+  ></Info>
 </template>
 
-<style scoped> 
+<style scoped>
 </style>

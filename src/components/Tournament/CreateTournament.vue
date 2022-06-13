@@ -193,12 +193,12 @@ export default {
       <va-icon size="large" name="edit_calendar"></va-icon>&nbsp; Novi turnir
     </h4>
     <br />
-    <va-divider></va-divider>  
-      <va-button outline :rounded="false" style="border: none">
-        <router-link to="/search-tournament">
-          <va-icon class="mr-4" name="search" /> Popis turnira
-        </router-link>
-      </va-button> 
+    <va-divider></va-divider>
+    <va-button outline :rounded="false" style="border: none">
+      <router-link to="/search-tournament">
+        <va-icon class="mr-4" name="search" /> Popis turnira
+      </router-link>
+    </va-button>
     <br />
     <va-divider></va-divider>
     <br />

@@ -20,10 +20,10 @@ export default {
   <h6 class="display-6">Nasumično generiranje</h6>
   <br />
   <span class="tab"></span>
-  Vrijednosti koje se mogu nasumično generirati su slova uključena u zagonetku te brojevi 
-  koji predstavljaju slova u mreži. Može se
-  odabrati da se naznačene vrijednost, umjesto generiranja, izbrišu.
-   
+  Vrijednosti koje se mogu nasumično generirati su slova uključena u zagonetku
+  te brojevi koji predstavljaju slova u mreži. Može se odabrati da se naznačene
+  vrijednost, umjesto generiranja, izbrišu.
+
   <br />
   <br />
   <h6 class="display-6">Opcije generiranja</h6>
@@ -40,18 +40,17 @@ export default {
   <br />
   <span class="tab"></span>
   Mreža se može ispuniti brojevima od 0 (uključivo) do broja uključenih slova
-  (isključivo) ili barijerama između pojmova. Može se i obrisati broj
-   ili označiti da se u polju
-  nalazi barijera. Može se tamnijom ružičastom bojom osjenčati
-  određeno polje zagonetke i označiti ga kao dio rješenja ili
-  polju dodati iscrtkani brid.
+  (isključivo) ili barijerama između pojmova. Može se i obrisati broj ili
+  označiti da se u polju nalazi barijera. Može se tamnijom ružičastom bojom
+  osjenčati određeno polje zagonetke i označiti ga kao dio rješenja ili polju
+  dodati iscrtkani brid.
 
   <br />
   <br />
   <h6 class="display-6">Slova</h6>
   <br />
   <span class="tab"></span>
-  Slova moraju biti jedinstvena i pripadati zadanoj abecedi. 
+  Slova moraju biti jedinstvena i pripadati zadanoj abecedi.
 
   <br />
   <br />
@@ -59,8 +58,8 @@ export default {
   <br />
   <span class="tab"></span>
   Zagonetka je predstavljena mrežom unutar koje je svako polje ili barijera
-  između pojmova ili mora imati zadan broj. Zadnja aktivna pozicija u
-  mreži naznačena je iznad mreže radi lakšeg snalaženja. Veličina mreže može se
+  između pojmova ili mora imati zadan broj. Zadnja aktivna pozicija u mreži
+  naznačena je iznad mreže radi lakšeg snalaženja. Veličina mreže može se
   prilagoditi radi bolje vidljivosti.
 
   <br />

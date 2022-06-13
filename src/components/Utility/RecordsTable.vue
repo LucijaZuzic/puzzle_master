@@ -186,7 +186,7 @@ export default {
 <template>
   <LoadingBar v-if="!fully_loaded"></LoadingBar>
   <span v-else>
-    <span v-if="user_records.length > 0"> 
+    <span v-if="user_records.length > 0">
       <div>
         <va-input
           style="display: inline-block"

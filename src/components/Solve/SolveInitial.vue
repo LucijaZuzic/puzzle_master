@@ -1030,7 +1030,8 @@ export default {
       <span v-for="i in rows" v-bind:key="i">
         <span v-for="j in columns" v-bind:key="j">
           <va-chip
-            v-if="is_special[i - 1][j - 1] &&
+            v-if="
+              is_special[i - 1][j - 1] &&
               values[i - 1][j - 1] != solution[i - 1][j - 1] &&
               show_error
             "
@@ -1045,7 +1046,8 @@ export default {
             <span v-else>?</span>
           </va-chip>
           <va-chip
-            v-if="is_special[i - 1][j - 1] &&
+            v-if="
+              is_special[i - 1][j - 1] &&
               !(values[i - 1][j - 1] != solution[i - 1][j - 1] && show_error)
             "
             color="#FA8072"
@@ -1198,7 +1200,13 @@ export default {
       </va-chip>
       <br v-if="this.imageURL == ''" />
       <br v-if="this.imageURL == ''" />
-      <img v-if="image" id="img" :src="imageURL" alt="" style="width: 100%" />
+      <img
+        v-if="image"
+        id="img"
+        :src="imageURL"
+        alt=""
+        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
+      />
       <br v-if="image" />
       <br v-if="image" />
       <h6 class="display-6" style="text-align: start; color: #2c82e0">
@@ -1312,7 +1320,7 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: white; 
+  color: white;
 }
 
 .help {
@@ -1320,7 +1328,7 @@ export default {
   background-color: #90beee;
 }
 .wrong {
-  color: #DE1041;
+  color: #de1041;
 }
 .placed {
   text-decoration: line-through;

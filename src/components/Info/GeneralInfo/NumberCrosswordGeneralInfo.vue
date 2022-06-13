@@ -9,24 +9,22 @@ export default {
 </script>
 
 <template>
-  <h6 class="display-6"> 
-   Uvod
-  </h6>
-  <br /> 
-    <span class="tab"></span> Brojevna križaljka je vrsta zagonetke u kojoj su sva polja
-    pravokutne mreže ispunjena znamenkama ili barijerama. U toj mreži moguće je pronaći sve brojeve
-    s popisa brojeva.
-<br />
-  <br /> 
+  <h6 class="display-6">Uvod</h6>
+  <br />
+  <span class="tab"></span> Brojevna križaljka je vrsta zagonetke u kojoj su sva
+  polja pravokutne mreže ispunjena znamenkama ili barijerama. U toj mreži moguće
+  je pronaći sve brojeve s popisa brojeva.
+  <br />
+  <br />
   <h6 class="display-6">
-    <va-icon size="medium" color="#FA8072" name="contrast"></va-icon>&nbsp;
-    Dio rješenja
+    <va-icon size="medium" color="#FA8072" name="contrast"></va-icon>&nbsp; Dio
+    rješenja
   </h6>
   <br />
 
   <span class="tab"></span>
-  Može se tamnijom ružičastom bojom osjenčati određeno polje te ga tako označiti kao dio rješenja, 
-  odnosno pojma koji je opisan prilikom zadavanja zagonetke.  
+  Može se tamnijom ružičastom bojom osjenčati određeno polje te ga tako označiti
+  kao dio rješenja, odnosno pojma koji je opisan prilikom zadavanja zagonetke.
 
   <br />
   <br />

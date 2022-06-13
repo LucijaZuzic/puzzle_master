@@ -25,7 +25,7 @@ export default {
   brojevi u kriptogramu koji predstavljaju jedan od tri moguća znaka te opcije
   koje određuju koji se od tri znaka prikazuje u određenom polju. Može se
   odabrati da se naznačene vrijednost, umjesto generiranja, izbrišu.
-   
+
   <br />
   <br />
   <h6 class="display-6">Opcije generiranja</h6>

@@ -9,50 +9,53 @@ export default {
 </script>
 
 <template>
- <h6 class="display-6">Dimenzije</h6>
+  <h6 class="display-6">Dimenzije</h6>
   <br />
   <span class="tab"></span>
-  Osmosmjerci zadajemo broj redaka i stupaca.
-  Maksimalni broj redaka je 50, a isto vrijedi i za stupce.  
+  Osmosmjerci zadajemo broj redaka i stupaca. Maksimalni broj redaka je 50, a
+  isto vrijedi i za stupce.
   <br />
-  <br /> 
+  <br />
   <h6 class="display-6">Ispuna mreže</h6>
   <br />
   <span class="tab"></span>
-  Mreža se može ispuniti riječima u osam smjerova.  Riječi koje su dio osmosmjerke prikazane su rješavaču da ih pronađe, a preostale tvore rješenje.
- Dvoslovi se mogu posebno dodavati u riječ jer većina tipkovica ne podržava njihov 
- direktan unos, a ponekada je potrebno prikazati ih u jednom, a ne dva polja mreže. 
- Može se brisati sve riječi, samo riječi koje su dio rješenja ili samo riječi koje su dio osmosmjerke. 
-  
+  Mreža se može ispuniti riječima u osam smjerova. Riječi koje su dio
+  osmosmjerke prikazane su rješavaču da ih pronađe, a preostale tvore rješenje.
+  Dvoslovi se mogu posebno dodavati u riječ jer većina tipkovica ne podržava
+  njihov direktan unos, a ponekada je potrebno prikazati ih u jednom, a ne dva
+  polja mreže. Može se brisati sve riječi, samo riječi koje su dio rješenja ili
+  samo riječi koje su dio osmosmjerke.
+
   <br />
   <br />
   <h6 class="display-6">Zagonetka</h6>
   <br />
   <span class="tab"></span>
-  Osmosmjerka je predstavljena mrežom unutar koje svako polje moramo ispuniti 
-  slovima zadane abecede. 
-  Dostupni su znakovi osnovnog latiničnog pisma i hrvatski dijakritički i
-  složeni znakovi. Zadnja aktivna pozicija u
-  mreži naznačena je iznad mreže radi lakšeg snalaženja. Veličina mreže može se
+  Osmosmjerka je predstavljena mrežom unutar koje svako polje moramo ispuniti
+  slovima zadane abecede. Dostupni su znakovi osnovnog latiničnog pisma i
+  hrvatski dijakritički i složeni znakovi. Zadnja aktivna pozicija u mreži
+  naznačena je iznad mreže radi lakšeg snalaženja. Veličina mreže može se
   prilagoditi radi bolje vidljivosti.
-<br />
-  <br /> 
+  <br />
+  <br />
   <h6 class="display-6">Rješenje</h6>
   <br />
-  <span class="tab"></span> 
+  <span class="tab"></span>
 
-  Riječi koje su dodane kao dio rješenja tvore pojam koji je opisan prilikom zadavanja zagonetke i osjenčane su tamnijom ružičastom bojom.
+  Riječi koje su dodane kao dio rješenja tvore pojam koji je opisan prilikom
+  zadavanja zagonetke i osjenčane su tamnijom ružičastom bojom.
   <br />
-  <br /> 
+  <br />
   <h6 class="display-6">Riječi po smjerovima</h6>
   <br />
-  <span class="tab"></span> 
+  <span class="tab"></span>
 
-  Prilikom zadavanja riječ se postavlja u zagonetku u jednom od osam smjerova koji
-   ukoliko ima dovoljno slobodnih mjesta i ako se slova u
-  poljima poklapaju. Također se ne smiju preklapati riječi koje su dio osmosmjerke i riječi koje su dio rješenja.
-   Riječi u svakom od osam smjerova  koje su dodane kao dio osmosmjerke mogu 
-  se pregledati i može se ukloniti samo jedna ili sve riječi u smjeru.
+  Prilikom zadavanja riječ se postavlja u zagonetku u jednom od osam smjerova
+  koji ukoliko ima dovoljno slobodnih mjesta i ako se slova u poljima poklapaju.
+  Također se ne smiju preklapati riječi koje su dio osmosmjerke i riječi koje su
+  dio rješenja. Riječi u svakom od osam smjerova koje su dodane kao dio
+  osmosmjerke mogu se pregledati i može se ukloniti samo jedna ili sve riječi u
+  smjeru.
   <br />
   <br />
   <h6 class="display-6">Podaci o zagonetci</h6>

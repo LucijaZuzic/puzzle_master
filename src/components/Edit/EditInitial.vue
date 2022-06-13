@@ -461,15 +461,15 @@ export default {
       }
       this.check_full();
     },
-    reset() { 
+    reset() {
       let new_values = [];
-      for (let i = 0; i < this.rows; i++) { 
+      for (let i = 0; i < this.rows; i++) {
         let solution_row = [];
-        for (let j = 0; j < this.columns; j++) { 
+        for (let j = 0; j < this.columns; j++) {
           solution_row.push("");
-        } 
+        }
         new_values.push(solution_row);
-      } 
+      }
       this.solution = new_values;
       this.words_by_dir = [[], [], [], [], [], [], [], []];
     },
@@ -1520,7 +1520,9 @@ export default {
         </table>
       </div>
       <br v-if="warning" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="warning"
         style="white-space: pre-wrap; border: none"
         color="danger"
@@ -1705,11 +1707,13 @@ export default {
         v-if="image"
         id="img"
         :src="imageURL"
-        alt="Nema slike"
-        style="width: 100%"
+        alt=""
+        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
       />
       <br v-if="image" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         v-if="!image"
         style="white-space: pre-wrap; border: none"
         color="warning"
@@ -1788,8 +1792,8 @@ export default {
       <h6
         @click="value[6] = !value[6]"
         class="display-6"
-    
-        v-if="permission_to_edit_visibility || !edit" style="text-align: start" 
+        v-if="permission_to_edit_visibility || !edit"
+        style="text-align: start"
       >
         Dozvola uređivanja &nbsp;
         <va-icon v-if="!value[6]" name="expand_more"></va-icon>
@@ -1803,8 +1807,6 @@ export default {
           :rounded="false"
           style="border: none"
           @click="is_public = !is_public"
-          
-    
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />
@@ -1894,7 +1896,7 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: white; 
+  color: white;
 }
 
 .help {
