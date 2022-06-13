@@ -53,7 +53,8 @@ export default {
   Zadatak rješavača je ispuniti mrežu tako da odgovara zadanom popisu  segmenata određene boje u redku ili stupcu.
    Zadnja aktivna pozicija u
   mreži naznačena je iznad mreže radi lakšeg snalaženja. Veličina mreže može se
-  prilagoditi radi bolje vidljivosti.
+  prilagoditi radi bolje vidljivosti. 
+  Može se podebljanim bridom označiti svaki peti redak i stupac radi lakšeg snalaženja.
 
   <br />
   <br />

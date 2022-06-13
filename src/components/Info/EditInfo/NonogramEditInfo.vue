@@ -43,7 +43,8 @@ export default {
   Zagonetka je predstavljena mrežom unutar koje je svako polje ili bijelo ili
   ispunjeno bojom. Automatski se generira popis segmenata određene boje u redku
   ili stupcu. Zadnja aktivna pozicija u mreži naznačena je iznad mreže radi
-  lakšeg snalaženja. Veličina mreže može se prilagoditi radi bolje vidljivosti.
+  lakšeg snalaženja. Veličina mreže može se prilagoditi radi bolje vidljivosti. 
+  Može se podebljanim bridom označiti svaki peti redak i stupac radi lakšeg snalaženja.
 
   <br />
   <br />

@@ -1067,10 +1067,10 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: #DE1041; 
+  color: white; 
 }
 .wrong {
-  color: #DE1041;
+  color: #DE1041 !important;
 }
 .bordertop {
   border-top: dashed !important;

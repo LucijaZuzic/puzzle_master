@@ -15,6 +15,7 @@ export default {
   },
   data() {
     return {
+      gridlines_on: true,
       value: [false, false, false],
       zoom: 100,
       max_zoom: 200,
@@ -1164,6 +1165,19 @@ export default {
     </va-card>
     <div class="my_row" v-if="value[1]">
       <div>
+        <va-button
+          @click="gridlines_on = !gridlines_on"
+          outline
+          :rounded="false"
+          style="border: none"
+        >
+          <va-icon v-if="gridlines_on" name="border_all"></va-icon>
+          <va-icon v-if="!gridlines_on" name="border_outer"></va-icon>
+          <span v-if="gridlines_on"> &nbsp; Podebljaj mrežu</span>
+          <span v-if="!gridlines_on"> &nbsp; Nemoj podebljati mrežu</span>
+        </va-button>
+      </div> 
+      <div>
         <MyCounter
           :min_value="1"
           :max_value="max_zoom"
@@ -1367,8 +1381,8 @@ export default {
               @click="increment(row_index - 1, column_index - 1, false)"
               :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
               :class="{
-                upthick: row_index == 1,
-                leftthick: column_index == 1,
+                upthick: row_index == 1 || ((row_index - 1) % 5 == 0 && gridlines_on),
+                leftthick: column_index == 1 || ((column_index - 1) % 5 == 0 && gridlines_on), 
               }"
             >
               <span

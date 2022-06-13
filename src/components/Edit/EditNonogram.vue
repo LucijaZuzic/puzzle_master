@@ -17,6 +17,7 @@ export default {
   },
   data() {
     return {
+      gridlines_on: true,
       reset_all: false,
       value: [false, false, false, false, false],
       zoom: 100,
@@ -368,7 +369,7 @@ export default {
       this.$forceUpdate();
     },
     reset_current_color() {
-      let old_mode = this.mode; 
+      let old_mode = this.mode;
       this.mode = 0;
       for (let i = 0; i < this.solution.length; i++) {
         for (let j = 0; j < this.solution[i].length; j++) {
@@ -497,7 +498,7 @@ export default {
               if (
                 document.getElementById("cell" + i + ":" + j) &&
                 document.getElementById("colorpicker" + this.mode)
-              ) {  
+              ) {
                 document.getElementById(
                   "cell" + i + ":" + j
                 ).style.backgroundColor = document.getElementById(
@@ -1316,7 +1317,9 @@ export default {
         />
       </div>
       <br v-if="warning" />
-      <va-alert dense outline
+      <va-alert
+        dense
+        outline
         style="white-space: pre-wrap; border: none"
         v-if="warning"
         color="danger"
@@ -1339,6 +1342,19 @@ export default {
       </h6>
     </va-card>
     <div class="my_row" v-if="value[2]">
+      <div>
+        <va-button
+          @click="gridlines_on = !gridlines_on"
+          outline
+          :rounded="false"
+          style="border: none"
+        >
+          <va-icon v-if="gridlines_on" name="border_all"></va-icon>
+          <va-icon v-if="!gridlines_on" name="border_outer"></va-icon>
+          <span v-if="gridlines_on"> &nbsp; Podebljaj mrežu</span>
+          <span v-if="!gridlines_on"> &nbsp; Nemoj podebljati mrežu</span>
+        </va-button>
+      </div> 
       <div>
         <MyCounter
           :min_value="1"
@@ -1478,8 +1494,11 @@ export default {
               @click="increment(row_index - 1, column_index - 1, false)"
               :id="'cell' + (row_index - 1) + ':' + (column_index - 1)"
               :class="{
-                upthick: row_index == 1,
-                leftthick: column_index == 1,
+                upthick:
+                  row_index == 1 || ((row_index - 1) % 5 == 0 && gridlines_on),
+                leftthick:
+                  column_index == 1 ||
+                  ((column_index - 1) % 5 == 0 && gridlines_on),
               }"
             >
               <span
@@ -1585,8 +1604,8 @@ export default {
       <h6
         @click="value[4] = !value[4]"
         class="display-6"
-    
-        v-if="permission_to_edit_visibility || !edit" style="text-align: start" 
+        v-if="permission_to_edit_visibility || !edit"
+        style="text-align: start"
       >
         Dozvola uređivanja &nbsp;
         <va-icon v-if="!value[4]" name="expand_more"></va-icon>
@@ -1600,8 +1619,6 @@ export default {
           :rounded="false"
           style="border: none"
           @click="is_public = !is_public"
-          
-    
         >
           <span v-if="is_public == false">
             <va-icon name="public_off" />

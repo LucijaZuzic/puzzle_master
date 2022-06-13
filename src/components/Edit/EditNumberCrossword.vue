@@ -1780,7 +1780,7 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: #DE1041; 
+  color: white; 
 }
 
 .help {

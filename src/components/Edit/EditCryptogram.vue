@@ -2298,7 +2298,7 @@ export default {
 .special {
   background-color: salmon !important;
   font-weight: bold !important;
-  color: #DE1041 !important; 
+  color: white !important; 
 }
 .unnumbered {
   background-color: #fdefef !important;

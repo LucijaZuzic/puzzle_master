@@ -1398,7 +1398,7 @@ export default {
 .special {
   background-color: salmon;
   font-weight: bold;
-  color: #DE1041; 
+  color: white; 
 }
 .unnumbered_cell {
   background-color: #fdefef !important;
@@ -1412,7 +1412,7 @@ export default {
   border: none;
 }
 .wrong {
-  color: #DE1041;
+  color: #DE1041 !important;
 }
 .bordertop {
   border-top: dashed !important;
