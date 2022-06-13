@@ -461,20 +461,15 @@ export default {
       }
       this.check_full();
     },
-    reset() {
-      let new_special = [];
+    reset() { 
       let new_values = [];
-      for (let i = 0; i < this.rows; i++) {
-        let special_row = [];
+      for (let i = 0; i < this.rows; i++) { 
         let solution_row = [];
-        for (let j = 0; j < this.columns; j++) {
-          special_row.push(0);
+        for (let j = 0; j < this.columns; j++) { 
           solution_row.push("");
-        }
-        new_special.push(special_row);
+        } 
         new_values.push(solution_row);
-      }
-      this.is_special = new_special;
+      } 
       this.solution = new_values;
       this.words_by_dir = [[], [], [], [], [], [], [], []];
     },
@@ -1451,7 +1446,7 @@ export default {
           <va-tab @click="word += 'Ǌ'"> Ǌ </va-tab>
           <va-tab @click="reset()">
             <va-icon name="delete" />
-            &nbsp; Izbriši
+            &nbsp; Izbriši sve
           </va-tab>
           <va-tab :name="10000" disabled></va-tab>
         </template>
