@@ -132,8 +132,8 @@ export default {
     <div style="background-color: #2c82e0; text-align: start">
       <va-tabs :color="bgcolor" v-model="selected_destination">
         <template #tabs>
-          <va-tab name="my_profile" v-if="user != null">
-            <router-link :to="'/profile/' + user.email">
+          <va-tab name="my_profile" :disabled="user == null">
+            <router-link :to="'/profile/' + user.email" v-if="user != null">
               <span style="color: #ffffff">
                 <va-icon name="person" />
                 <span>

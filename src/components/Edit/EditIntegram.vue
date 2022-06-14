@@ -41,7 +41,7 @@ export default {
       title: "",
       numcategories: 5,
       numvalues: 5,
-      numinstructions: 6,
+      numinstructions: 9,
       author: "",
       authorUserRecord: { displayName: "", email: "" },
       time_created: "",

@@ -26,9 +26,9 @@ export default {
       value: [false, false, false, false, false, false, false],
       zoom: 100,
       max_zoom: 200,
-      row_counter_min: 1,
+      row_counter_min: 2,
       row_counter_max: 50,
-      column_counter_min: 1,
+      column_counter_min: 2,
       column_counter_max: 50,
       fully_loaded: false,
       border_top: [[]],
@@ -56,9 +56,9 @@ export default {
       option: [[]],
       is_special: [[]],
       unnumbered: [[]],
-      num_letters: 1,
-      rows: 1,
-      columns: 1,
+      num_letters: 11,
+      rows: 22,
+      columns: 23,
       use_option: false,
       use_mode: true,
       mode: -2,
@@ -1655,7 +1655,7 @@ export default {
         :some_text="'Broj stupaca'"
       ></MyCounter>
       <MyCounter
-        :min_value="1"
+        :min_value="2"
         :max_value="Math.floor(alphabet.length / 3)"
         v-bind:value="num_letters"
         @input="(n) => ((num_letters = n), $forceUpdate())"
