@@ -348,11 +348,10 @@ export default {
           <router-link
             v-bind:to="{ name: 'profile', params: { email: user_email } }"
           >
-            <va-button
-              outline
-              :rounded="false"
-              style="border: none"
-            ><va-icon name="email"></va-icon> &nbsp; {{ user_email }}</va-button>
+            <va-button outline :rounded="false" style="border: none"
+              ><va-icon name="email"></va-icon> &nbsp;
+              {{ user_email }}</va-button
+            >
           </router-link>
         </template>
         <template #bodyAppend>

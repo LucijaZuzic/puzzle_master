@@ -1315,15 +1315,13 @@ export default {
       </div>
       <br />
       <div style="text-align: start">
-          <va-button outline
-              :rounded="false"
-              style="border: none"
-            ><router-link :to="'/profile/' + authorUserRecord.email">
-          <va-icon name="person"/> &nbsp; Autor zagonetke:
-          {{ authorUserRecord.displayName }}
-          ({{ authorUserRecord.email }})
-        </router-link></va-button>
-        
+        <va-button outline :rounded="false" style="border: none"
+          ><router-link :to="'/profile/' + authorUserRecord.email">
+            <va-icon name="person" /> &nbsp; Autor zagonetke:
+            {{ authorUserRecord.displayName }}
+            ({{ authorUserRecord.email }})
+          </router-link></va-button
+        >
       </div>
       <br />
       <div style="text-align: start">
@@ -1332,15 +1330,13 @@ export default {
       </div>
       <br />
       <div style="text-align: start">
-          <va-button outline
-              :rounded="false"
-              style="border: none"
-            ><router-link :to="'/profile/' + updaterUserRecord.email">
-          <va-icon name="person"/> &nbsp; Zadnji ažurirao:
-          {{ updaterUserRecord.displayName }}
-          ({{ updaterUserRecord.email }})
-        </router-link></va-button>
-        
+        <va-button outline :rounded="false" style="border: none"
+          ><router-link :to="'/profile/' + updaterUserRecord.email">
+            <va-icon name="person" /> &nbsp; Zadnji ažurirao:
+            {{ updaterUserRecord.displayName }}
+            ({{ updaterUserRecord.email }})
+          </router-link></va-button
+        >
       </div>
       <br />
       <div style="text-align: start">

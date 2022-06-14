@@ -707,46 +707,38 @@ export default {
           <router-link
             v-bind:to="{ name: 'profile', params: { email: author_email } }"
           >
-            <va-button
-              outline
-              :rounded="false"
-              style="border: none"
-            ><va-icon name="email"></va-icon> &nbsp; {{ author_email }}</va-button>
+            <va-button outline :rounded="false" style="border: none"
+              ><va-icon name="email"></va-icon> &nbsp;
+              {{ author_email }}</va-button
+            >
           </router-link>
         </template>
         <template #cell(updater_email)="{ source: updater_email }">
           <router-link
             v-bind:to="{ name: 'profile', params: { email: updater_email } }"
           >
-            <va-button
-              outline
-              :rounded="false"
-              style="border: none"
-            ><va-icon name="email"></va-icon> &nbsp; {{ updater_email }}</va-button>
+            <va-button outline :rounded="false" style="border: none"
+              ><va-icon name="email"></va-icon> &nbsp;
+              {{ updater_email }}</va-button
+            >
           </router-link>
         </template>
         <template #cell(id)="{ source: id }">
           <router-link v-bind:to="{ name: 'solve_eight', params: { id: id } }">
-              <va-button outline
-              :rounded="false"
-              style="border: none"
-            ><va-icon
-            name="play_arrow"
-          /></va-button>
-        
+            <va-button outline :rounded="false" style="border: none"
+              ><va-icon name="play_arrow"
+            /></va-button>
           </router-link>
         </template>
         <template #cell(deletePermission)="{ source: deletePermission }">
-            <va-button
+          <va-button
             v-if="deletePermission.granted == true"
             @click="deletePuzzle(deletePermission.id)"
-              outline
-              :rounded="false"
-              style="border: none"
-            ><va-icon
-            name="delete"
+            outline
+            :rounded="false"
+            style="border: none"
+            ><va-icon name="delete"
           /></va-button>
-        
         </template>
         <template #cell(editPermission)="{ source: editPermission }">
           <router-link
@@ -756,28 +748,22 @@ export default {
               params: { id: editPermission.id },
             }"
           >
-            <va-button
-              outline
-              :rounded="false"
-              style="border: none"
-            ><va-icon name="mode_edit" /></va-button>
+            <va-button outline :rounded="false" style="border: none"
+              ><va-icon name="mode_edit"
+            /></va-button>
           </router-link>
         </template>
         <template #cell(favorite)="{ source: favorite }">
-            <va-button outline
-              :rounded="false"
-              style="border: none"
+          <va-button outline :rounded="false" style="border: none"
             ><va-icon
-            v-if="favorite.favorite != true && user"
-            name="favorite"
-            @click="add_favorite(favorite.id)"
-          />
-          <va-icon
-            v-if="favorite.favorite == true && user"
-            name="heart_broken"
-            @click="remove_favorite(favorite.id)"
+              v-if="favorite.favorite != true && user"
+              name="favorite"
+              @click="add_favorite(favorite.id)" />
+            <va-icon
+              v-if="favorite.favorite == true && user"
+              name="heart_broken"
+              @click="remove_favorite(favorite.id)"
           /></va-button>
-        
         </template>
         <template #cell(is_public)="{ source: is_public }">
           <span v-if="is_public">Svi</span>

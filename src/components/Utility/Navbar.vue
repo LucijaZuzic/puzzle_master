@@ -97,7 +97,7 @@ export default {
         const link = document.querySelector("[rel='icon']");
         link.setAttribute("href", this.name_to_icon[this.selected_destination]);
         if (this.name_to_icon[this.selected_destination] == undefined) {
-          link.setAttribute("href", this.name_to_icon["other"])
+          link.setAttribute("href", this.name_to_icon["other"]);
         }
       }
     );

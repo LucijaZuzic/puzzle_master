@@ -134,7 +134,7 @@ export default {
               let user_display_name = childSnapshotUser.get("displayName");
               let user_email = childSnapshotUser.get("email");
               let user_id = childSnapshotUser.id;
-              let visibility = childSnapshotUser.get("visible"); 
+              let visibility = childSnapshotUser.get("visible");
               if (!me.user) {
                 if (visibility) {
                   me.friends.push({
@@ -147,7 +147,7 @@ export default {
                     status: "not_logged_in",
                   });
                 }
-              } else { 
+              } else {
                 if (
                   my_friends.includes(user_id) &&
                   !(me.user && me.user.uid == user_id)
@@ -157,13 +157,13 @@ export default {
                     user_email: user_email,
                     user_id: user_id,
                   });
-                  me.status.push({ user_id: user_id, status: "friends" }); 
+                  me.status.push({ user_id: user_id, status: "friends" });
                 }
                 if (
                   !my_friends.includes(user_id) &&
                   visibility &&
                   !(me.user && me.user.uid == user_id)
-                ) { 
+                ) {
                   let found_request = "not_sent";
                   friendRequestsRef
                     .get()
@@ -179,14 +179,14 @@ export default {
                           receiver == me.user.uid &&
                           sender == user_id
                         ) {
-                          found_request = "sent"; 
+                          found_request = "sent";
                         }
                         if (
                           me.user &&
                           sender == me.user.uid &&
                           receiver == user_id
                         ) {
-                          found_request = "sent"; 
+                          found_request = "sent";
                         }
                       });
                     })
@@ -312,16 +312,18 @@ export default {
             <router-link
               v-bind:to="{ name: 'profile', params: { email: user_email } }"
             >
-              <va-button
-              outline
-              :rounded="false"
-              style="border: none"
-            ><va-icon name="email"></va-icon> &nbsp; {{ user_email }}</va-button>
+              <va-button outline :rounded="false" style="border: none"
+                ><va-icon name="email"></va-icon> &nbsp;
+                {{ user_email }}</va-button
+              >
             </router-link>
           </template>
           <template #cell(user_id)="{ source: user_id }">
             <va-button
-              :disabled="getStatus(user_id) == 'not_logged_in' || getStatus(user_id) == 'sent'"
+              :disabled="
+                getStatus(user_id) == 'not_logged_in' ||
+                getStatus(user_id) == 'sent'
+              "
               outline
               :rounded="false"
               style="border: none"
