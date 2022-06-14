@@ -33,6 +33,7 @@ import EditNumberLetter from "./components/Edit/EditNumberLetter.vue";
 import SolveNumberLetter from "./components/Solve/SolveNumberLetter.vue";
 
 import FriendProfile from "./components/Profile/FriendProfile.vue";
+import UserSearch from "./components/Utility/UserSearch.vue";
 
 /*import BootstrapVue3 from "bootstrap-vue-3";
 
@@ -85,6 +86,11 @@ const routes = [
     path: "/profile/:email",
     component: FriendProfile,
     name: "profile",
+  },
+  {
+    path: "/user-search",
+    component: UserSearch,
+    name: "user_search",
   },
   {
     path: "/create-cryptogram",

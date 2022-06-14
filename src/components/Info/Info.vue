@@ -62,6 +62,7 @@ export default {
 </script>
 
 <template>
+  <div style="overflow-y: scroll; max-height: 80vh">
   <h4 class="display-4" style="text-align: center; vertical-align: middle">
     <va-icon size="large" :name="icon"></va-icon>&nbsp; {{ title }}
   </h4>
@@ -77,6 +78,7 @@ export default {
   <component v-if="choice == 'general'" :is="general" />
   <component v-if="choice == 'edit'" :is="edit" />
   <component v-if="choice == 'solve'" :is="solve" />
+  </div>
 </template>
 
 <style scoped>

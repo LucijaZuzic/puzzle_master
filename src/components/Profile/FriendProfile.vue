@@ -269,20 +269,15 @@ export default {
             :rounded="false"
             style="border: none"
           >
-            <span v-if="areFriends">
-              <va-icon
-                @click="removeFriend(user.uid, friend.uid)"
-                name="person_remove"
-              >
-              </va-icon>
+            <span v-if="areFriends" @click="removeFriend(user.uid, friend.uid)">
+              <va-icon name="person_remove"> </va-icon>
               &nbsp; Prekini prijateljstvo
             </span>
-            <span v-if="!areFriends && !requestSent">
-              <va-icon
-                @click="sendFriendRequest(user.uid, friend.uid)"
-                name="person_add"
-              >
-              </va-icon>
+            <span
+              v-if="!areFriends && !requestSent"
+              @click="sendFriendRequest(user.uid, friend.uid)"
+            >
+              <va-icon name="person_add"> </va-icon>
               &nbsp; Pošalji zahtjev za prijateljstvo
             </span>
             <span v-if="!areFriends && requestSent">
@@ -377,6 +372,7 @@ export default {
                 ><va-icon name="sync_alt"></va-icon>Isti broj - isto
                 slovo</va-tab
               >
+              <va-tab :name="10000" disabled></va-tab>
             </template>
           </va-tabs>
           <br />
@@ -482,14 +478,15 @@ export default {
               <va-tab name="friend"
                 ><va-icon name="person_add"></va-icon>&nbsp; Prijatelji</va-tab
               >
-              <va-tab name="received"
+              <va-tab name="received" v-if="user.email == friend.email"
                 ><va-icon name="inbox"></va-icon>&nbsp; Primljeni zahtjevi za
                 prijateljstvo</va-tab
               >
-              <va-tab name="sent"
+              <va-tab name="sent" v-if="user.email == friend.email"
                 ><va-icon name="outgoing_mail"></va-icon>&nbsp; Poslani zahtjevi
                 za prijateljstvo</va-tab
               >
+              <va-tab :name="10000" disabled></va-tab>
             </template>
           </va-tabs>
           <br />
@@ -502,7 +499,7 @@ export default {
           </FriendRequestsReceivedTable>
           <FriendRequestsSentTable
             :userId="friend.uid"
-            v-if="friendOption == 'sent'"
+            v-if="friendOption == 'sent' && user.email == friend.email"
           >
           </FriendRequestsSentTable>
         </div>

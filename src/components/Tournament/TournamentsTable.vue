@@ -433,6 +433,7 @@ export default {
               <va-tab name="eight"
                 ><va-icon name="pattern"></va-icon>Osmosmjerke</va-tab
               >
+        <va-tab :name="10000" disabled></va-tab>
             </template>
           </va-tabs>
           <div v-for="item in selectedItemsEmitted" :key="item.id">

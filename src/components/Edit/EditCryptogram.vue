@@ -2167,11 +2167,15 @@ export default {
       />
       <br v-if="edit" />
       <div v-if="edit" style="text-align: start">
-        <router-link :to="'/profile/' + authorUserRecord.email">
-          <span style="font-weight: bold"> Autor zagonetke: </span>
+          <va-button outline
+              :rounded="false"
+              style="border: none"
+            ><router-link :to="'/profile/' + authorUserRecord.email">
+          <va-icon name="person"/> &nbsp; Autor zagonetke:
           {{ authorUserRecord.displayName }}
           ({{ authorUserRecord.email }})
-        </router-link>
+        </router-link></va-button>
+        
       </div>
       <br v-if="edit" />
       <div v-if="edit" style="text-align: start">
@@ -2180,11 +2184,15 @@ export default {
       </div>
       <br v-if="edit" />
       <div v-if="edit" style="text-align: start">
-        <router-link :to="'/profile/' + updaterUserRecord.email">
-          <span style="font-weight: bold"> Zadnji ažurirao: </span>
+          <va-button outline
+              :rounded="false"
+              style="border: none"
+            ><router-link :to="'/profile/' + updaterUserRecord.email">
+          <va-icon name="person"/> &nbsp; Zadnji ažurirao:
           {{ updaterUserRecord.displayName }}
           ({{ updaterUserRecord.email }})
-        </router-link>
+        </router-link></va-button>
+        
       </div>
       <br v-if="edit" />
       <div v-if="edit" style="text-align: start">

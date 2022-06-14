@@ -66,6 +66,22 @@ export default {
       perPage: 1,
       currentPage: 1,
       columns: [
+        { key: "id", sortable: false, classes: "data_table_overflow" },
+        {
+          key: "deletePermission",
+          sortable: false,
+          classes: "data_table_overflow",
+        },
+        {
+          key: "editPermission",
+          sortable: false,
+          classes: "data_table_overflow",
+        },
+        {
+          key: "favorite",
+          sortable: false,
+          classes: "data_table_overflow",
+        },
         { key: "categories", sortable: true, classes: "data_table_overflow" },
         { key: "values", sortable: true, classes: "data_table_overflow" },
         {
@@ -96,22 +112,6 @@ export default {
           classes: "data_table_overflow",
         },
         { key: "last_updated", sortable: true, classes: "data_table_overflow" },
-        { key: "id", sortable: false, classes: "data_table_overflow" },
-        {
-          key: "deletePermission",
-          sortable: false,
-          classes: "data_table_overflow",
-        },
-        {
-          key: "editPermission",
-          sortable: false,
-          classes: "data_table_overflow",
-        },
-        {
-          key: "favorite",
-          sortable: false,
-          classes: "data_table_overflow",
-        },
       ],
       sortingOrderOptions: [
         { text: "Uzlazno", value: "asc" },
@@ -719,29 +719,48 @@ export default {
           <router-link
             v-bind:to="{ name: 'profile', params: { email: author_email } }"
           >
-            {{ author_email }}
+            <va-button
+              outline
+              :rounded="false"
+              style="border: none"
+            ><va-icon name="email"></va-icon> &nbsp; {{ author_email }}</va-button>
           </router-link>
         </template>
         <template #cell(updater_email)="{ source: updater_email }">
           <router-link
             v-bind:to="{ name: 'profile', params: { email: updater_email } }"
           >
-            {{ updater_email }}
+            <va-button
+              outline
+              :rounded="false"
+              style="border: none"
+            ><va-icon name="email"></va-icon> &nbsp; {{ updater_email }}</va-button>
           </router-link>
         </template>
         <template #cell(id)="{ source: id }">
           <router-link
             v-bind:to="{ name: 'solve_integram', params: { id: id } }"
           >
-            <va-icon name="play_arrow" />
+              <va-button outline
+              :rounded="false"
+              style="border: none"
+            ><va-icon
+            name="play_arrow"
+          /></va-button>
+        
           </router-link>
         </template>
         <template #cell(deletePermission)="{ source: deletePermission }">
-          <va-icon
+            <va-button
             v-if="deletePermission.granted == true"
             @click="deletePuzzle(deletePermission.id)"
+              outline
+              :rounded="false"
+              style="border: none"
+            ><va-icon
             name="delete"
-          />
+          /></va-button>
+        
         </template>
         <template #cell(editPermission)="{ source: editPermission }">
           <router-link
@@ -751,11 +770,18 @@ export default {
               params: { id: editPermission.id },
             }"
           >
-            <va-icon name="mode_edit" />
+            <va-button
+              outline
+              :rounded="false"
+              style="border: none"
+            ><va-icon name="mode_edit" /></va-button>
           </router-link>
         </template>
         <template #cell(favorite)="{ source: favorite }">
-          <va-icon
+            <va-button outline
+              :rounded="false"
+              style="border: none"
+            ><va-icon
             v-if="favorite.favorite != true && user"
             name="favorite"
             @click="add_favorite(favorite.id)"
@@ -764,7 +790,8 @@ export default {
             v-if="favorite.favorite == true && user"
             name="heart_broken"
             @click="remove_favorite(favorite.id)"
-          />
+          /></va-button>
+        
         </template>
         <template #cell(is_public)="{ source: is_public }">
           <span v-if="is_public">Svi</span>

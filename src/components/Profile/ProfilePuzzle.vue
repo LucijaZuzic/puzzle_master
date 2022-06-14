@@ -138,6 +138,7 @@ export default {
       <va-tab name="favorite"
         ><va-icon name="favorite"></va-icon>&nbsp; Spremljeno</va-tab
       >
+        <va-tab :name="10000" disabled></va-tab>
     </template>
   </va-tabs>
   <component
