@@ -207,7 +207,7 @@ export default {
           });
         })
         .then(() => {
-          this.filtered = this.friends;
+          this.filtered = this.friends; this.perPage = 1;
           this.fully_loaded = true;
         });
     },

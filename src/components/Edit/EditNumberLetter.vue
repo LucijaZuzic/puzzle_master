@@ -1,6 +1,7 @@
 <script>
 import {
   ref,
+  getBytes,
   uploadBytes,
   getDownloadURL,
   getMetadata,
@@ -9,7 +10,11 @@ import {
 import { projectStorage, friendsRef } from "../../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usersRef } from "../../firebase_main.js";
-import { numberLettersRef } from "../../firebase_main.js";
+import {
+  numberLettersRef,
+  numberLettersRatingsRef,
+  numberLettersRecordsRef,
+} from "../../firebase_main.js";
 
 import MyCounter from "../Utility/MyCounter.vue";
 import NumberLetterInfo from "../Info/NumberLetterInfo.vue";
@@ -104,6 +109,93 @@ export default {
     };
   },
   methods: {
+    deletePuzzle() {
+      let id = this.$route.params.id;
+      numberLettersRef
+        .doc(id)
+        .delete()
+        .then(() => {
+          this.$vaToast.init("Zagonetka je uspješno izbrisana.");
+          this.$router.push("/search-number-letter");
+        })
+        .then(() => {
+          numberLettersRatingsRef
+            .get()
+            .then(function (snapshotRating) {
+              snapshotRating.forEach(function (childSnapshotRating) {
+                let idPuzzle = childSnapshotRating.get("puzzleID");
+                let idRating = childSnapshotRating.id;
+                if (idPuzzle == id) {
+                  numberLettersRatingsRef
+                    .doc(idRating)
+                    .delete()
+                    .then(() => {
+                      //console.log("Document successfully deleted!");
+                    })
+                    .catch((error) => {
+                      //console.error("Error removing document: ", error);
+                    });
+                }
+              });
+            })
+            .then(() => {
+              numberLettersRecordsRef.get().then(function (snapshotRecord) {
+                snapshotRecord.forEach(function (childSnapshotRecord) {
+                  let idPuzzle = childSnapshotRecord.get("puzzleID");
+                  let idRecord = childSnapshotRecord.id;
+                  if (idPuzzle == id) {
+                    numberLettersRecordsRef
+                      .doc(idRecord)
+                      .delete()
+                      .then(() => {
+                        //console.log("Document successfully deleted!");
+                      })
+                      .catch((error) => {
+                        //console.error("Error removing document: ", error);
+                      });
+                  }
+                });
+              });
+            });
+        })
+        .then(() => {
+          // Create a reference under which you want to list
+          const listRef = ref(projectStorage, "numberLetter/");
+          // Find all the prefixes and items.
+          listAll(listRef)
+            .then((res) => {
+              res.prefixes.forEach((folderRef) => {
+                // All the prefixes under listRef.
+                // You may call listAll() recursively on them.
+              });
+              res.items.forEach((itemRef) => {
+                // All the items under listRef.
+                // Get metadata properties
+                getMetadata(itemRef)
+                  .then((metadata) => {
+                    if (metadata.name.toString().includes(id)) {
+                      deleteObject(itemRef)
+                        .then(() => {
+                          // File deleted successfully
+                        })
+                        .catch((error) => {
+                          // Uh-oh, an error occurred!
+                        });
+                    }
+                  })
+                  .catch((error) => {
+                    // Uh-oh, an error occurred!
+                  });
+              });
+            })
+            .catch((error) => {
+              // Uh-oh, an error occurred!
+            });
+        })
+        .catch((error) => {
+          // Uh-oh, an error occurred!
+        });
+    },
     zoom_number() {
       if (this.zoom > this.max_zoom) {
         this.zoom = this.max_zoom;
@@ -1068,57 +1160,56 @@ export default {
               var old_reference = ref(projectStorage, this.image);
               let exstension = "";
               // Get metadata properties
-              getMetadata(old_reference)
-                .then((metadata) => {
-                  // Metadata now contains the metadata for 'images/forest.jpg'
-                  exstension = metadata.contentType.split("/")[1];
-                })
-                .catch((error) => {
-                  // Uh-oh, an error occurred!
-                });
-              const reference = "numberLetter/" + some_id + "." + exstension;
-              const storageRef = ref(projectStorage, reference);
-              const metadata = {
-                contentType: "image/" + exstension,
-              };
-              // 'file' comes from the Blob or File API
-              uploadBytes(storageRef, this.image, metadata)
-                .then((snapshot) => {})
-                .catch((error) => {})
-                .then(() => {
-                  let imageLocation = reference;
-                  numberLettersRef
-                    .doc(some_id)
-                    .update({
-                      solution: funct_ref(newsolution),
-                      is_special: funct_ref(newspecial),
-                      border_top: funct_ref(newtop),
-                      border_bottom: funct_ref(newbottom),
-                      border_left: funct_ref(newleft),
-                      border_right: funct_ref(newright),
-                      title: this.title,
-                      letters: newletters,
-                      description: this.description,
-                      author: this.user.uid,
-                      image: this.image,
-                      updater: this.user.uid,
-                      is_public: this.is_public,
-                      permissions: newPermissions,
-                      source: this.source,
-                      time_created: datetime,
-                      last_updated: datetime,
-                    })
+              getMetadata(old_reference).then((metadata) => {
+                exstension = metadata.contentType.split("/")[1];
+                console.log(exstension);
+                const reference = "numberLetter/" + some_id + "." + exstension;
+                console.log(this.image, reference);
+                const storageRef = ref(projectStorage, reference);
+                const new_metadata = {
+                  contentType: "image/" + exstension,
+                };
+                // 'file' comes from the Blob or File API
+                getBytes(old_reference).then((bytes) => {
+                  uploadBytes(storageRef, bytes, new_metadata)
+                    .then((snapshot) => {})
+                    .catch((error) => {})
                     .then(() => {
-                      this.new_async(
-                        this.$vaToast.init(
-                          "Nova zagonetka je uspješno spremljena."
-                        ),
-                        1000
-                      ).then(() => {
-                        this.$router.push("/search-number-letter");
-                      });
+                      let imageLocation = reference;
+                      numberLettersRef
+                        .doc(some_id)
+                        .update({
+                          solution: funct_ref(newsolution),
+                          is_special: funct_ref(newspecial),
+                          border_top: funct_ref(newtop),
+                          border_bottom: funct_ref(newbottom),
+                          border_left: funct_ref(newleft),
+                          border_right: funct_ref(newright),
+                          title: this.title,
+                          letters: newletters,
+                          description: this.description,
+                          author: this.user.uid,
+                          image: imageLocation,
+                          updater: this.user.uid,
+                          is_public: this.is_public,
+                          permissions: newPermissions,
+                          source: this.source,
+                          time_created: datetime,
+                          last_updated: datetime,
+                        })
+                        .then(() => {
+                          this.new_async(
+                            this.$vaToast.init(
+                              "Nova zagonetka je uspješno spremljena."
+                            ),
+                            1000
+                          ).then(() => {
+                            this.$router.push("/search-number-letter");
+                          });
+                        });
                     });
                 });
+              });
             } else {
               let exstension =
                 this.image.name.split(".")[
@@ -1348,6 +1439,9 @@ export default {
             <va-icon name="search"></va-icon>
             &nbsp; Popis zagonetki
           </router-link>
+        </va-tab>
+        <va-tab v-if="edit" @click="$refs.delete_modal.show()">
+          <va-icon name="delete" /> &nbsp; Izbriši zagonetku
         </va-tab>
         <va-tab
           v-if="edit"
@@ -1708,7 +1802,7 @@ export default {
         id="img"
         :src="imageURL"
         alt=""
-        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
+        style="max-width: 500px; width: 100%"
       />
       <br v-if="image" />
       <va-alert
@@ -1871,6 +1965,15 @@ export default {
   >
     <NumberLetterInfo></NumberLetterInfo>
   </va-modal>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="delete_modal"
+    message="Želite li da se zagonetka izbriše?"
+    @ok="deletePuzzle()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
 </template>
 
 

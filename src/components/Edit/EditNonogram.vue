@@ -1,6 +1,11 @@
 <script>
 import tinycolor from "tinycolor2/tinycolor";
-import { nonogramsRef, friendsRef } from "../../firebase_main.js";
+import {
+  nonogramsRef,
+  nonogramsRecordsRef,
+  nonogramsRatingsRef,
+  friendsRef,
+} from "../../firebase_main.js";
 import { usersRef } from "../../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
@@ -65,6 +70,94 @@ export default {
     };
   },
   methods: {
+    deletePuzzle() {
+      let id = this.$route.params.id;
+      nonogramsRef
+        .doc(id)
+        .delete()
+        .then(() => {
+          this.$vaToast.init("Zagonetka je uspješno izbrisana.");
+          this.$router.push("/search-nonogram");
+        })
+        .then(() => {
+          nonogramsRatingsRef
+            .get()
+            .then(function (snapshotRating) {
+              snapshotRating.forEach(function (childSnapshotRating) {
+                let idPuzzle = childSnapshotRating.get("puzzleID");
+                let idRating = childSnapshotRating.id;
+                if (idPuzzle == id) {
+                  nonogramsRatingsRef
+                    .doc(idRating)
+                    .delete()
+                    .then(() => {
+                      //console.log("Document successfully deleted!");
+                    })
+                    .catch((error) => {
+                      //console.error("Error removing document: ", error);
+                    });
+                }
+              });
+            })
+            .then(() => {
+              nonogramsRecordsRef.get().then(function (snapshotRecord) {
+                snapshotRecord.forEach(function (childSnapshotRecord) {
+                  let idPuzzle = childSnapshotRecord.get("puzzleID");
+                  let idRecord = childSnapshotRecord.id;
+                  if (idPuzzle == id) {
+                    nonogramsRecordsRef
+                      .doc(idRecord)
+                      .delete()
+                      .then(() => {
+                        //console.log("Document successfully deleted!");
+                      })
+                      .catch((error) => {
+                        //console.error("Error removing document: ", error);
+                      });
+                  }
+                });
+              });
+            });
+        })
+        .then(() => {
+          // Create a reference under which you want to list
+          const listRef = ref(projectStorage, "nonogram/");
+          // Find all the prefixes and items.
+          listAll(listRef)
+            .then((res) => {
+              res.prefixes.forEach((folderRef) => {
+                // All the prefixes under listRef.
+                // You may call listAll() recursively on them.
+              });
+              res.items.forEach((itemRef) => {
+                // All the items under listRef.
+                // Get metadata properties
+                getMetadata(itemRef)
+                  .then((metadata) => {
+                    
+                    if (metadata.name.toString().includes(id)) {
+                      deleteObject(itemRef)
+                        .then(() => {
+                          // File deleted successfully
+                        })
+                        .catch((error) => {
+                          // Uh-oh, an error occurred!
+                        });
+                    }
+                  })
+                  .catch((error) => {
+                    // Uh-oh, an error occurred!
+                  });
+              });
+            })
+            .catch((error) => {
+              // Uh-oh, an error occurred!
+            });
+        })
+        .catch((error) => {
+          // Uh-oh, an error occurred!
+        });
+    },
     zoom_number() {
       if (this.zoom > this.max_zoom) {
         this.zoom = this.max_zoom;
@@ -1082,6 +1175,9 @@ export default {
             &nbsp; Popis zagonetki
           </router-link>
         </va-tab>
+        <va-tab v-if="edit" @click="$refs.delete_modal.show()">
+          <va-icon name="delete" /> &nbsp; Izbriši zagonetku
+        </va-tab>
         <va-tab
           v-if="edit"
           :disabled="
@@ -1684,6 +1780,15 @@ export default {
   >
     <NonogramInfo></NonogramInfo>
   </va-modal>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="delete_modal"
+    message="Želite li da se zagonetka izbriše?"
+    @ok="deletePuzzle()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
 </template>
 
 

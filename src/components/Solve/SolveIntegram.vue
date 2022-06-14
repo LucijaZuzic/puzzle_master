@@ -1886,7 +1886,7 @@ export default {
           :id="'img' + (value_to_display - 1) + ':' + (category_for_image - 1)"
           :src="urls[value_to_display - 1][category_for_image - 1]"
           alt=""
-          style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
+          style="max-width: 500px; width: 100%"
         />
       </div>
       <div

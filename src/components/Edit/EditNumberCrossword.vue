@@ -1,9 +1,14 @@
 <script>
 import { usersRef, friendsRef } from "../../firebase_main.js";
-import { numberCrosswordsRef } from "../../firebase_main.js";
+import {
+  numberCrosswordsRef,
+  numberCrosswordsRecordsRef,
+  numberCrosswordsRatingsRef,
+} from "../../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   ref,
+  getBytes,
   uploadBytes,
   getDownloadURL,
   getMetadata,
@@ -63,6 +68,93 @@ export default {
     };
   },
   methods: {
+    deletePuzzle() {
+      let id = this.$route.params.id;
+      numberCrosswordsRef
+        .doc(id)
+        .delete()
+        .then(() => {
+          this.$vaToast.init("Zagonetka je uspješno izbrisana.");
+          this.$router.push("/search-number-crossword");
+        })
+        .then(() => {
+          numberCrosswordsRatingsRef
+            .get()
+            .then(function (snapshotRating) {
+              snapshotRating.forEach(function (childSnapshotRating) {
+                let idPuzzle = childSnapshotRating.get("puzzleID");
+                let idRating = childSnapshotRating.id;
+                if (idPuzzle == id) {
+                  numberCrosswordsRatingsRef
+                    .doc(idRating)
+                    .delete()
+                    .then(() => {
+                      //console.log("Document successfully deleted!");
+                    })
+                    .catch((error) => {
+                      //console.error("Error removing document: ", error);
+                    });
+                }
+              });
+            })
+            .then(() => {
+              numberCrosswordsRecordsRef.get().then(function (snapshotRecord) {
+                snapshotRecord.forEach(function (childSnapshotRecord) {
+                  let idPuzzle = childSnapshotRecord.get("puzzleID");
+                  let idRecord = childSnapshotRecord.id;
+                  if (idPuzzle == id) {
+                    numberCrosswordsRecordsRef
+                      .doc(idRecord)
+                      .delete()
+                      .then(() => {
+                        //console.log("Document successfully deleted!");
+                      })
+                      .catch((error) => {
+                        //console.error("Error removing document: ", error);
+                      });
+                  }
+                });
+              });
+            });
+        })
+        .then(() => {
+          // Create a reference under which you want to list
+          const listRef = ref(projectStorage, "numberCrossword/");
+          // Find all the prefixes and items.
+          listAll(listRef)
+            .then((res) => {
+              res.prefixes.forEach((folderRef) => {
+                // All the prefixes under listRef.
+                // You may call listAll() recursively on them.
+              });
+              res.items.forEach((itemRef) => {
+                // All the items under listRef.
+                // Get metadata properties
+                getMetadata(itemRef)
+                  .then((metadata) => {
+                    if (metadata.name.toString().includes(id)) {
+                      deleteObject(itemRef)
+                        .then(() => {
+                          // File deleted successfully
+                        })
+                        .catch((error) => {
+                          // Uh-oh, an error occurred!
+                        });
+                    }
+                  })
+                  .catch((error) => {
+                    // Uh-oh, an error occurred!
+                  });
+              });
+            })
+            .catch((error) => {
+              // Uh-oh, an error occurred!
+            });
+        })
+        .catch((error) => {
+          // Uh-oh, an error occurred!
+        });
+    },
     zoom_number() {
       if (this.zoom > this.max_zoom) {
         this.zoom = this.max_zoom;
@@ -911,53 +1003,53 @@ export default {
               var old_reference = ref(projectStorage, this.image);
               let exstension = "";
               // Get metadata properties
-              getMetadata(old_reference)
-                .then((metadata) => {
-                  // Metadata now contains the metadata for 'images/forest.jpg'
-                  exstension = metadata.contentType.split("/")[1];
-                })
-                .catch((error) => {
-                  // Uh-oh, an error occurred!
-                });
-              const reference = "numberCrossword/" + some_id + "." + exstension;
-              const storageRef = ref(projectStorage, reference);
-              const metadata = {
-                contentType: "image/" + exstension,
-              };
-              // 'file' comes from the Blob or File API
-              uploadBytes(storageRef, this.image, metadata)
-                .then((snapshot) => {})
-                .catch((error) => {})
-                .then(() => {
-                  let imageLocation = reference;
-                  numberCrosswordsRef
-                    .doc(some_id)
-                    .update({
-                      solution: funct_ref(newsolution),
-                      is_special: funct_ref(newspecial),
-                      is_revealed: funct_ref(newrevealed),
-                      title: this.title,
-                      description: this.description,
-                      image: imageLocation,
-                      author: this.user.uid,
-                      updater: this.user.uid,
-                      is_public: this.is_public,
-                      permissions: newPermissions,
-                      source: this.source,
-                      time_created: datetime,
-                      last_updated: datetime,
-                    })
+              getMetadata(old_reference).then((metadata) => {
+                exstension = metadata.contentType.split("/")[1];
+                console.log(exstension);
+                const reference =
+                  "numberCrossword/" + some_id + "." + exstension;
+                console.log(this.image, reference);
+                const storageRef = ref(projectStorage, reference);
+                const new_metadata = {
+                  contentType: "image/" + exstension,
+                };
+                // 'file' comes from the Blob or File API
+                getBytes(old_reference).then((bytes) => {
+                  uploadBytes(storageRef, bytes, new_metadata)
+                    .then((snapshot) => {})
+                    .catch((error) => {})
                     .then(() => {
-                      this.new_async(
-                        this.$vaToast.init(
-                          "Nova zagonetka je uspješno spremljena."
-                        ),
-                        1000
-                      ).then(() => {
-                        this.$router.push("/search-number-crossword");
-                      });
+                      let imageLocation = reference;
+                      numberCrosswordsRef
+                        .doc(some_id)
+                        .update({
+                          solution: funct_ref(newsolution),
+                          is_special: funct_ref(newspecial),
+                          is_revealed: funct_ref(newrevealed),
+                          title: this.title,
+                          description: this.description,
+                          image: imageLocation,
+                          author: this.user.uid,
+                          updater: this.user.uid,
+                          is_public: this.is_public,
+                          permissions: newPermissions,
+                          source: this.source,
+                          time_created: datetime,
+                          last_updated: datetime,
+                        })
+                        .then(() => {
+                          this.new_async(
+                            this.$vaToast.init(
+                              "Nova zagonetka je uspješno spremljena."
+                            ),
+                            1000
+                          ).then(() => {
+                            this.$router.push("/search-number-crossword");
+                          });
+                        });
                     });
                 });
+              });
             } else {
               let exstension =
                 this.image.name.split(".")[
@@ -1266,6 +1358,9 @@ export default {
             <va-icon name="search"></va-icon>
             &nbsp; Popis zagonetki
           </router-link>
+        </va-tab>
+        <va-tab v-if="edit" @click="$refs.delete_modal.show()">
+          <va-icon name="delete" /> &nbsp; Izbriši zagonetku
         </va-tab>
         <va-tab
           v-if="edit"
@@ -1608,7 +1703,7 @@ export default {
         id="img"
         :src="imageURL"
         alt=""
-        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
+        style="max-width: 500px; width: 100%"
       />
       <br v-if="image" />
       <va-alert
@@ -1772,6 +1867,15 @@ export default {
   >
     <NumberCrosswordInfo></NumberCrosswordInfo>
   </va-modal>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="delete_modal"
+    message="Želite li da se zagonetka izbriše?"
+    @ok="deletePuzzle()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
 </template>
 
 <style scoped>

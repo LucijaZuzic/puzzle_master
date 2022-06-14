@@ -172,6 +172,7 @@ export default {
           });
         })
         .then(() => {
+          this.filtered = this.user_ratings; this.perPage = 1;
           this.fully_loaded = true;
         });
     },

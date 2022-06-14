@@ -201,6 +201,7 @@ export default {
           });
         })
         .then(() => {
+          this.filtered = this.tournaments; this.perPage = 1;
           this.fully_loaded = true;
         });
     },

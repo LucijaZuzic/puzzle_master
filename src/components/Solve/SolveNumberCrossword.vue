@@ -1198,7 +1198,7 @@ export default {
         id="img"
         :src="imageURL"
         alt=""
-        style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
+        style="max-width: 500px; width: 100%"
       />
       <br v-if="image" />
       <br v-if="image" />

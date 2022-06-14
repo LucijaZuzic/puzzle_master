@@ -464,6 +464,7 @@ export default {
           });
         })
         .then(() => {
+          this.filtered = this.puzzles; this.perPage = 1;
           this.fully_loaded = true;
         });
     },
@@ -471,6 +472,7 @@ export default {
       return this.columns.map(({ key }) => key);
     },
     add_favorite(id) {
+      this.$vaToast.init("Zagonetka je dodana u spremljene zagonetke.");
       this.favoriteNumberLetters.push(id);
       usersRef
         .doc(this.user.uid)
@@ -486,6 +488,7 @@ export default {
         });
     },
     remove_favorite(id) {
+      this.$vaToast.init("Zagonetka je uklonjena iz spremljenih zagonetki.");
       let index = this.favoriteNumberLetters.indexOf(id);
       if (index > -1) {
         this.favoriteNumberLetters.splice(index, 1);
@@ -504,10 +507,16 @@ export default {
         });
     },
     deletePuzzle(id) {
+      this.id_to_delete = id;
+      this.$refs.delete_modal.show();
+    },
+    deletePuzzleConfirmed() {
+      let id = this.id_to_delete;
       numberLettersRef
         .doc(id)
         .delete()
         .then(() => {
+          this.$vaToast.init("Zagonetka je uspješno izbrisana.");
           this.fetch_puzzles();
           this.$forceUpdate();
         })
@@ -566,7 +575,7 @@ export default {
                 // Get metadata properties
                 getMetadata(itemRef)
                   .then((metadata) => {
-                    // Metadata now contains the metadata for 'images/forest.jpg'
+                    
                     if (metadata.name.toString().includes(id)) {
                       deleteObject(itemRef)
                         .then(() => {
@@ -936,6 +945,15 @@ export default {
   >
     <NumberLetterInfo></NumberLetterInfo>
   </va-modal>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="delete_modal"
+    message="Želite li da se zagonetka izbriše?"
+    @ok="deletePuzzleConfirmed()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
 </template>
 
 

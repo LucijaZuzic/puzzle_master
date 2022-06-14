@@ -160,6 +160,7 @@ export default {
           });
         })
         .then(() => {
+          this.filtered = this.user_records; this.perPage = 1;
           this.fully_loaded = true;
         });
     },

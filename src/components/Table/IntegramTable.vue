@@ -475,6 +475,7 @@ export default {
           });
         })
         .then(() => {
+          this.filtered = this.puzzles; this.perPage = 1;
           this.fully_loaded = true;
         });
     },
@@ -482,6 +483,7 @@ export default {
       return this.columns.map(({ key }) => key);
     },
     add_favorite(id) {
+      this.$vaToast.init("Zagonetka je dodana u spremljene zagonetke.");
       this.favoriteIntegrams.push(id);
       usersRef
         .doc(this.user.uid)
@@ -497,6 +499,7 @@ export default {
         });
     },
     remove_favorite(id) {
+      this.$vaToast.init("Zagonetka je uklonjena iz spremljenih zagonetki.");
       let index = this.favoriteIntegrams.indexOf(id);
       if (index > -1) {
         this.favoriteIntegrams.splice(index, 1);
@@ -515,10 +518,16 @@ export default {
         });
     },
     deletePuzzle(id) {
+      this.id_to_delete = id;
+      this.$refs.delete_modal.show();
+    },
+    deletePuzzleConfirmed() {
+      let id = this.id_to_delete;
       integramsRef
         .doc(id)
         .delete()
         .then(() => {
+          this.$vaToast.init("Zagonetka je uspješno izbrisana.");
           this.fetch_puzzles();
           this.$forceUpdate();
         })
@@ -939,6 +948,15 @@ export default {
   >
     <IntegramInfo></IntegramInfo>
   </va-modal>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="delete_modal"
+    message="Želite li da se zagonetka izbriše?"
+    @ok="deletePuzzleConfirmed()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
 </template>
 
 <style scoped></style>

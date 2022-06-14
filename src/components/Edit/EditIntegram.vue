@@ -1,6 +1,7 @@
 <script>
 import {
   ref,
+  getBytes,
   uploadBytes,
   getDownloadURL,
   getMetadata,
@@ -10,7 +11,11 @@ import tinycolor from "tinycolor2/tinycolor";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { projectStorage, friendsRef } from "../../firebase_main.js";
 import { usersRef } from "../../firebase_main.js";
-import { integramsRef } from "../../firebase_main.js";
+import {
+  integramsRef,
+  integramsRatingsRef,
+  integramsRecordsRef,
+} from "../../firebase_main.js";
 
 import MyCounter from "../Utility/MyCounter.vue";
 import LoadingBar from "../Utility/LoadingBar.vue";
@@ -66,6 +71,83 @@ export default {
     };
   },
   methods: {
+    deletePuzzle() {
+      let id = this.$route.params.id;
+      integramsRef
+        .doc(id)
+        .delete()
+        .then(() => {
+          this.$vaToast.init("Zagonetka je uspješno izbrisana.");
+          this.$router.push("/search-integram");
+        })
+        .then(() => {
+          integramsRatingsRef
+            .get()
+            .then(function (snapshotRating) {
+              snapshotRating.forEach(function (childSnapshotRating) {
+                let idPuzzle = childSnapshotRating.get("puzzleID");
+                let idRating = childSnapshotRating.id;
+                if (idPuzzle == id) {
+                  integramsRatingsRef
+                    .doc(idRating)
+                    .delete()
+                    .then(() => {
+                      //console.log("Document successfully deleted!");
+                    })
+                    .catch((error) => {
+                      //console.error("Error removing document: ", error);
+                    });
+                }
+              });
+            })
+            .then(() => {
+              integramsRecordsRef.get().then(function (snapshotRecord) {
+                snapshotRecord.forEach(function (childSnapshotRecord) {
+                  let idPuzzle = childSnapshotRecord.get("puzzleID");
+                  let idRecord = childSnapshotRecord.id;
+                  if (idPuzzle == id) {
+                    integramsRecordsRef
+                      .doc(idRecord)
+                      .delete()
+                      .then(() => {
+                        //console.log("Document successfully deleted!");
+                      })
+                      .catch((error) => {
+                        //console.error("Error removing document: ", error);
+                      });
+                  }
+                });
+              });
+            });
+        })
+        .then(() => {
+          // Create a reference under which you want to list
+          const listRef = ref(projectStorage, "integram/" + id + "/");
+          // Find all the prefixes and items.
+          listAll(listRef)
+            .then((res) => {
+              res.prefixes.forEach((folderRef) => {
+                // All the prefixes under listRef.
+                // You may call listAll() recursively on them.
+              });
+              res.items.forEach((itemRef) => {
+                deleteObject(itemRef)
+                  .then(() => {
+                    // File deleted successfully
+                  })
+                  .catch((error) => {
+                    // Uh-oh, an error occurred!
+                  });
+              });
+            })
+            .catch((error) => {
+              // Uh-oh, an error occurred!
+            });
+        })
+        .catch((error) => {
+          // Uh-oh, an error occurred!
+        });
+    },
     getAuthorUserRecord() {
       let some_id = this.author;
       let other = this.author;
@@ -861,31 +943,28 @@ export default {
                   );
                   let exstension = "";
                   // Get metadata properties
-                  getMetadata(old_reference)
-                    .then((metadata) => {
-                      // Metadata now contains the metadata for 'images/forest.jpg'
-                      exstension = metadata.contentType.split("/")[1];
-                    })
-                    .catch((error) => {
-                      // Uh-oh, an error occurred!
+                  getMetadata(old_reference).then((metadata) => {
+                    exstension = metadata.contentType.split("/")[1];
+                    const reference =
+                      "integram/" +
+                      some_id +
+                      "/" +
+                      (i + 1) +
+                      this.alphabet[j] +
+                      "." +
+                      exstension;
+                    category_values2[j][i] = reference;
+                    const storageRef = ref(projectStorage, reference);
+                    const new_metadata = {
+                      contentType: "image/" + exstension,
+                    };
+                    // 'file' comes from the Blob or File API
+                    getBytes(old_reference).then((bytes) => {
+                      uploadBytes(storageRef, bytes, new_metadata)
+                        .then((snapshot) => {})
+                        .catch((error) => {});
                     });
-                  const reference =
-                    "integram/" +
-                    some_id +
-                    "/" +
-                    (i + 1) +
-                    this.alphabet[j] +
-                    "." +
-                    exstension;
-                  const storageRef = ref(projectStorage, reference);
-                  const metadata = {
-                    contentType: "image/" + exstension,
-                  };
-                  // 'file' comes from the Blob or File API
-                  uploadBytes(storageRef, this.category_values[j][i], metadata)
-                    .then((snapshot) => {})
-                    .catch((error) => {});
-                  category_values2[j][i] = reference;
+                  });
                 }
               }
             }
@@ -1239,6 +1318,9 @@ export default {
             <va-icon name="search"></va-icon>
             &nbsp; Popis integrama
           </router-link>
+        </va-tab>
+        <va-tab v-if="edit" @click="$refs.delete_modal.show()">
+          <va-icon name="delete" /> &nbsp; Izbriši zagonetku
         </va-tab>
         <va-tab
           v-if="edit"
@@ -1691,7 +1773,7 @@ export default {
           :id="'img' + (value_to_display - 1) + ':' + (category_for_image - 1)"
           :src="urls[value_to_display - 1][category_for_image - 1]"
           alt=""
-          style="max-width: 500px; max-height: 500px; width: 100%; height: 100%"
+          style="max-width: 500px; width: 100%"
         />
       </div>
       <div
@@ -1877,6 +1959,15 @@ export default {
   >
     <IntegramInfo></IntegramInfo>
   </va-modal>
+  <va-modal
+    :mobile-fullscreen="false"
+    ref="delete_modal"
+    message="Želite li da se zagonetka izbriše?"
+    @ok="deletePuzzle()"
+    stateful
+    ok-text="Da"
+    cancel-text="Ne"
+  />
 </template>
 
 
