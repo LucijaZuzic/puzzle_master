@@ -18,6 +18,7 @@ export default {
   },
   mounted() {
     const auth = getAuth();
+    auth.signOut();
     onAuthStateChanged(auth, (user) => {
       if (user) {
         // User is signed in, see docs for a list of available properties

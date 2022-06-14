@@ -99,6 +99,14 @@ export default {
         if (this.name_to_icon[this.selected_destination] == undefined) {
           link.setAttribute("href", this.name_to_icon["other"]);
         }
+        if (
+          this.$route.name == "profile" &&
+          this.user &&
+          this.$route.params.email == this.user.email
+        ) {
+          document.title = "Moj profil";
+          this.selected_destination = "my_profile";
+        }
       }
     );
   },
@@ -121,49 +129,32 @@ export default {
 </script>
 <template>
   <va-affix :offset-top="0" style="background-color: #2c82e0; width: 100%">
-    <div
-      style="
-        background-color: #2c82e0;
-        width: 100%;
-        text-align: start;
-        height: 24px;
-      "
-    >
-      <va-icon
-        style="background-color: #2c82e0"
-        name="menu"
-        color="#ffffff"
-        @click="visible_menu = !visible_menu"
-      />
-      &nbsp;
-      <router-link v-if="user != null" :to="'/profile/' + user.email">
-        <span style="color: #ffffff">
-          <va-icon name="person" />
-          <span>
-            {{ user.displayName }}
-          </span>
-        </span>
-        &nbsp;
-      </router-link>
-      <span v-if="user != null" @click="signOut()" style="color: #ffffff">
-        <va-icon name="logout" />
-        <span> Odjava </span>
-      </span>
-      <router-link :to="'/login'" v-else>
-        <span style="color: #ffffff">
-          <va-icon name="login" />
-          <span> Prijava </span>
-        </span>
-      </router-link>
-    </div>
-    <span v-if="visible_menu" class="navbar-container"
-      ><va-tabs
-        vertical
-        :color="bgcolor"
-        v-model="selected_destination"
-        style="background-color: #1e70c8"
-      >
+    <div style="background-color: #2c82e0; text-align: start">
+      <va-tabs :color="bgcolor" v-model="selected_destination">
         <template #tabs>
+          <va-tab name="my_profile" v-if="user != null">
+            <router-link :to="'/profile/' + user.email">
+              <span style="color: #ffffff">
+                <va-icon name="person" />
+                <span>
+                  {{ user.displayName }}
+                </span>
+              </span>
+              &nbsp;
+            </router-link>
+          </va-tab>
+          <va-tab name="login">
+            <span v-if="user != null" @click="signOut()" style="color: #ffffff">
+              <va-icon name="logout" />
+              <span> Odjava </span>
+            </span>
+            <router-link :to="'/login'" v-else>
+              <span style="color: #ffffff">
+                <va-icon name="login" />
+                <span> Prijava </span>
+              </span>
+            </router-link>
+          </va-tab>
           <va-tab name="cryptogram">
             <router-link to="/search-cryptogram">
               <span style="color: #ffffff">
@@ -236,14 +227,18 @@ export default {
               </span>
             </router-link>
           </va-tab>
+          <va-tab :name="10000" disabled></va-tab>
         </template>
       </va-tabs>
-    </span>
+    </div>
   </va-affix>
 </template>
 
 <style scoped>
 .navbar-container {
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
   min-height: 100%;
   max-height: 80vh;
   display: inline-block;
@@ -251,5 +246,6 @@ export default {
   left: 0;
   background-color: #1e70c8;
   overflow-y: scroll;
+  overflow-x: scroll;
 }
 </style>
