@@ -444,7 +444,7 @@ export default {
     count_special() {
       for (let i = 0; i < this.values.length; i++) {
         for (let j = 0; j < this.values[i].length; j++) {
-          if (this.values[i][j]) {
+          if (this.is_special[i][j] && this.solution != "1") {
             return true;
           }
         }
@@ -1014,10 +1014,9 @@ export default {
                 wrong:
                   values[i - 1][j - 1] != is_special[i - 1][j - 1] &&
                   show_error,
-                special: values[i - 1][j - 1],
-              }"
+                special: values[i - 1][j - 1], black:  solution[i - 1][j - 1] == '1'}"
             >
-              {{ solution[i - 1][j - 1] }}
+              <span v-if="solution[i - 1][j - 1] != '1'">{{ solution[i - 1][j - 1] }}</span>
             </td>
           </tr>
         </table>
@@ -1376,6 +1375,9 @@ export default {
   background-color: salmon;
   font-weight: bold;
   color: white;
+}
+.black {
+  background-color: black !important;
 }
 
 .help {

@@ -586,6 +586,7 @@ export default {
       this.is_special = new_special;
       this.solution = new_values;
       this.words_by_dir = [[], [], [], [], [], [], [], []];
+      this.$forceUpdate();
     },
     reset_keep_non_special() {
       let new_values = [];
@@ -601,6 +602,7 @@ export default {
         new_values.push(solution_row);
       }
       this.solution = new_values;
+      this.$forceUpdate();
     },
     reset_keep_special() {
       let new_special = [];
@@ -622,11 +624,12 @@ export default {
       this.is_special = new_special;
       this.solution = new_values;
       this.words_by_dir = [[], [], [], [], [], [], [], []];
+      this.$forceUpdate();
     },
     count_special() {
       for (let i = 0; i < this.is_special.length; i++) {
         for (let j = 0; j < this.is_special[i].length; j++) {
-          if (this.is_special[i][j]) {
+          if (this.is_special[i][j] && this.solution != "1") {
             return true;
           }
         }
@@ -992,6 +995,19 @@ export default {
       }
     },
     place_word(x, y, new_word, dirx, diry, special_place, show_warning) {
+      if (special_place == 2) {
+        if (this.is_special[y][x] == 1) {
+          if (this.solution[y][x] == "1") {
+            this.solution[y][x] = "";
+          } else {
+            this.solution[y][x] = "1";
+          }
+          this.check_full();
+        } else {
+          this.$vaToast.init("Ne možete dodati barijeru na dio osmosmjerke.");
+        }
+        return;
+      }
       if (!new_word) {
         if (special_place == 1 && this.is_special[y][x] == 1) {
           this.solution[y][x] = "";
@@ -1383,7 +1399,7 @@ export default {
             });
           }
         });
-    }, 
+    },
     delay(operation, delay) {
       return new Promise((resolve) => {
         setTimeout(() => {
@@ -1663,13 +1679,13 @@ export default {
       <br />
       <va-tabs v-model="place_special">
         <template #tabs>
-          <va-tab name="0"
-            ><va-icon color="#000000" name="contrast"></va-icon>&nbsp; Dio
-            osmosmjerke
-          </va-tab>
+          <va-tab name="0"> Dio osmosmjerke </va-tab>
           <va-tab name="1"
             ><va-icon color="#FA8072" name="contrast"></va-icon>&nbsp; Dio
             rješenja
+          </va-tab>
+          <va-tab name="2"
+            ><va-icon color="#000000" name="contrast"></va-icon>&nbsp; Barijera
           </va-tab>
           <va-tab :name="10000" disabled></va-tab>
         </template>
@@ -1704,7 +1720,7 @@ export default {
               delete_action();
             "
           >
-            Izbriši rješenje
+            Izbriši rješenje i barijere
           </va-tab>
           <va-tab
             @click="
@@ -1786,9 +1802,14 @@ export default {
                 current_x = i;
                 current_y = j;
               "
-              :class="{ special: is_special[i - 1][j - 1] }"
+              :class="{
+                special: is_special[i - 1][j - 1],
+                black: solution[i - 1][j - 1] == '1',
+              }"
             >
-              {{ solution[i - 1][j - 1] }}
+              <span v-if="solution[i - 1][j - 1] != '1'">{{
+                solution[i - 1][j - 1]
+              }}</span>
             </td>
           </tr>
         </table>
@@ -1827,7 +1848,7 @@ export default {
             outline
             square
             style="margin-left: 5px; margin-top: 5px"
-            v-if="is_special[i - 1][j - 1]"
+            v-if="is_special[i - 1][j - 1] && solution[i - 1][j - 1] != '1'"
           >
             <span v-if="solution[i - 1][j - 1] != ''">
               {{ solution[i - 1][j - 1] }}
@@ -1890,7 +1911,7 @@ export default {
             </div>
           </div>
         </span>
-      </va-chip> 
+      </va-chip>
     </div>
     <br
       v-if="
@@ -2137,7 +2158,7 @@ export default {
   border-collapse: collapse;
 }
 .black {
-  background-color: black;
+  background-color: black !important;
 }
 .special {
   background-color: salmon;

@@ -23,9 +23,10 @@ export default {
   osmosmjerke prikazane su rješavaču da ih pronađe, a preostale tvore rješenje.
   Dvoslovi se mogu posebno dodavati u riječ jer većina tipkovica ne podržava
   njihov direktan unos, a ponekada je potrebno prikazati ih u jednom, a ne dva
-  polja mreže. Može se brisati sve riječi, samo riječi koje su dio rješenja ili
-  samo riječi koje su dio osmosmjerke.
-
+  polja mreže. Može se dodati barijeru crne boje koja 
+  predstavlja prazninu koja nije ispunjena. 
+  Može se brisati sve riječi, samo riječi koje su dio rješenja zajedno s barijerama
+  ili samo riječi koje su dio osmosmjerke. 
   <br />
   <br />
   <h6 class="display-6">Zagonetka</h6>
