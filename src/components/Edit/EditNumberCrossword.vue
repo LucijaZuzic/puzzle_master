@@ -1005,10 +1005,10 @@ export default {
               // Get metadata properties
               getMetadata(old_reference).then((metadata) => {
                 exstension = metadata.contentType.split("/")[1];
-                console.log(exstension);
+                
                 const reference =
                   "numberCrossword/" + some_id + "." + exstension;
-                console.log(this.image, reference);
+                
                 const storageRef = ref(projectStorage, reference);
                 const new_metadata = {
                   contentType: "image/" + exstension,

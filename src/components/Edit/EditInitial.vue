@@ -819,7 +819,34 @@ export default {
         this.solution[y_new][x_new] = new_word[letter_number];
       }
       this.words_by_dir[this.get_dir(dirx, diry)].push([x, y, new_word]);
-      this.words_by_dir[this.get_dir(dirx, diry)].sort(this.sortFunction);
+      this.words_by_dir[this.get_dir(dirx, diry)] = this.words_by_dir[
+        this.get_dir(dirx, diry)
+      ].sort(this.sortFunction);
+    },
+    findInAlphabet(character) {
+      let newCharacter = character.toUpperCase();
+      for (let i = 0; i < this.alphabet.length; i++) {
+        if (this.alphabet[i] == newCharacter) {
+          return i;
+        }
+      }
+      return -1;
+    },
+    wordSort(a, b) {
+      let newA = a.toUpperCase();
+      let newB = b.toUpperCase();
+      let len = newA.length;
+      if (newB.length < len) {
+        len = newB.length;
+      }
+      for (let i = 0; i < len; i++) {
+        if (newA[i] != newB[i]) {
+          return this.findInAlphabet(newA[i]) < this.findInAlphabet(newB[i])
+            ? -1
+            : 1;
+        }
+      }
+      return newA.length < newB.length ? -1 : 1;
     },
     sortFunction(a, b) {
       if (a[2] === b[2]) {
@@ -833,7 +860,7 @@ export default {
           return a[1] < b[1] ? -1 : 1;
         }
       } else {
-        return a[2] < b[2] ? -1 : 1;
+        return this.wordSort(a[2], b[2]);
       }
     },
     place_word(x, y, new_word, dirx, diry, show_warning) {
@@ -858,16 +885,7 @@ export default {
       if (this.word_warning == "" || !show_warning) {
         //if (this.check_start(x, y, show_warning) == false) {
         if (this.check_dir(x, y, new_word, dirx, diry, show_warning) == true) {
-          this.add_word(x, y, new_word, dirx, diry);
-          let number_of_words = 0;
-          let number_of_dirs = 0;
-          for (let i = 0; i < this.words_by_dir.length; i++) {
-            if (this.words_by_dir[i].length != 0) {
-              number_of_words += this.words_by_dir[i].length;
-              number_of_dirs++;
-            }
-          }
-          this.page_length = Math.ceil(number_of_words / number_of_dirs);
+          this.add_word(x, y, new_word, dirx, diry); 
           this.check_full();
         }
         //}
@@ -1114,9 +1132,9 @@ export default {
               // Get metadata properties
               getMetadata(old_reference).then((metadata) => {
                 exstension = metadata.contentType.split("/")[1];
-                console.log(exstension);
+
                 const reference = "initial/" + some_id + "." + exstension;
-                console.log(this.image, reference);
+
                 const storageRef = ref(projectStorage, reference);
                 const new_metadata = {
                   contentType: "image/" + exstension,

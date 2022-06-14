@@ -17,6 +17,7 @@ export default {
   },
   data() {
     return {
+      all_words: [],
       value: [false, false, false, false],
       zoom: 100,
       max_zoom: 200,
@@ -25,6 +26,7 @@ export default {
       victory: false,
       cheat: false,
       show_error: true,
+      dir_index: -1,
       word_index: -1,
       image: null,
       imageURL: "",
@@ -332,22 +334,69 @@ export default {
         }
         new_values.push(solution_row);
       }
-      this.values = new_values;
-      let number_of_words = 0;
-      let number_of_dirs = 0;
+      this.values = new_values; 
       this.placed_words = [];
       for (let i = 0; i < this.words_by_dir.length; i++) {
         if (this.words_by_dir[i][0] == "") {
           this.words_by_dir[i] = [];
-        }
-        if (this.words_by_dir[i].length != 0) {
-          number_of_words += this.words_by_dir[i].length;
-          number_of_dirs++;
-        }
+        } 
         this.placed_words.push([]);
         for (let j = 0; j < this.words_by_dir[i].length; j++) {
           this.placed_words[i].push(0);
         }
+      }
+      this.all_words = [];
+      for (let i = 0; i < this.words_by_dir.length; i++) {
+        for (let j = 0; j < this.words_by_dir[i].length; j++) {
+          this.all_words.push([
+            this.words_by_dir[i][j][0],
+            this.words_by_dir[i][j][1],
+            this.words_by_dir[i][j][2],
+            i,
+            j,
+          ]);
+        }
+      }
+      this.all_words = this.all_words.sort(this.sortFunction);
+    },
+    findInAlphabet(character) {
+      let newCharacter = character.toUpperCase();
+      for (let i = 0; i < this.alphabet.length; i++) {
+        if (this.alphabet[i] == newCharacter) {
+          return i;
+        }
+      }
+      return -1;
+    },
+    wordSort(a, b) {
+      let newA = a.toUpperCase();
+      let newB = b.toUpperCase();
+      let len = newA.length;
+      if (newB.length < len) {
+        len = newB.length;
+      }
+      for (let i = 0; i < len; i++) {
+        if (newA[i] != newB[i]) {
+          return this.findInAlphabet(newA[i]) < this.findInAlphabet(newB[i])
+            ? -1
+            : 1;
+        }
+      }
+      return newA.length < newB.length ? -1 : 1;
+    },
+    sortFunction(a, b) {
+      if (a[2] === b[2]) {
+        if (a[1] === b[1]) {
+          if (a[0] === b[0]) {
+            return 0;
+          } else {
+            return a[0] < b[0] ? -1 : 1;
+          }
+        } else {
+          return a[1] < b[1] ? -1 : 1;
+        }
+      } else {
+        return this.wordSort(a[2], b[2]);
       }
     },
     reset() {
@@ -385,6 +434,7 @@ export default {
           this.placed_words.push([
             this.words_by_dir[i][j][0],
             this.words_by_dir[i][j][1],
+            i
           ]);
         }
       }
@@ -528,9 +578,8 @@ export default {
       }
       return false;
     },
-    check_dir(x, y, word_index, dirx, diry, show_warning) {
-      let dir = this.get_dir(dirx, diry);
-      let new_word = this.words_by_dir[dir][word_index][2];
+    check_dir(x, y, dir_index, word_index, dirx, diry, show_warning) { 
+      let new_word = this.words_by_dir[dir_index][word_index][2];
       for (
         let letter_number = 0;
         letter_number < new_word.length;
@@ -605,10 +654,9 @@ export default {
         return diry + 6;
       }
     },
-    add_word(x, y, word_index, dirx, diry) {
-      let dir = this.get_dir(dirx, diry);
-      let new_word = this.words_by_dir[dir][word_index][2];
-      if (this.placed_words[dir][word_index] != 0) {
+    add_word(x, y, dir_index, word_index, dirx, diry) { 
+      let new_word = this.words_by_dir[dir_index][word_index][2];
+      if (this.placed_words[dir_index][word_index] != 0) {
         return;
       }
       if (this.victory) {
@@ -623,9 +671,9 @@ export default {
         let y_new = y + letter_number * diry;
         this.values[y_new][x_new] = 0;
       }
-      this.placed_words[dir][word_index] = [x, y];
+      this.placed_words[dir_index][word_index] = [x, y, this.get_dir(dirx, diry)];
     },
-    place_word(x, y, word_index, dirx, diry, show_warning) {
+    place_word(x, y, dir_index, word_index, dirx, diry, show_warning) {
       if (word_index == -1) {
         return false;
       }
@@ -633,6 +681,10 @@ export default {
       if (this.placed_words[dir][word_index] != 0) {
         let old_place_x = this.placed_words[dir][word_index][0];
         let old_place_y = this.placed_words[dir][word_index][1];
+        let old_place_dir = this.placed_words[dir][word_index][2]; 
+        let old_place_dirxy = this.get_dirxy(old_place_dir); 
+        let old_place_dirx = old_place_dirxy[0];
+        let old_place_diry = old_place_dirxy[1];
         this.remove_word(dir, word_index);
         if (
           this.place_word(x, y, word_index, dirx, diry, show_warning) == false
@@ -640,9 +692,10 @@ export default {
           this.place_word(
             old_place_x,
             old_place_y,
+            dir_index,
             word_index,
-            dirx,
-            diry,
+            old_place_dirx,
+            old_place_diry,
             show_warning
           );
         }
@@ -656,8 +709,8 @@ export default {
               return;
           } */
       //if (this.check_start(x, y, show_warning) == false) {
-      if (this.check_dir(x, y, word_index, dirx, diry, show_warning) == true) {
-        this.add_word(x, y, word_index, dirx, diry);
+      if (this.check_dir(x, y, dir_index, word_index, dirx, diry, show_warning) == true) {
+        this.add_word(x, y, dir_index, word_index, dirx, diry);
         this.check_victory();
       } else {
         return false;
@@ -682,39 +735,10 @@ export default {
       if (this.placed_words[i][j] != 0) {
         return;
       }
+      this.dir_index = i;
       this.word_index = j;
-      let dirs = this.get_dirxy(i);
-      this.mode_x = dirs[0];
-      this.mode_y = dirs[1];
       this.$forceUpdate();
-    },
-    remove_dir(dir) {
-      if (this.victory) {
-        return;
-      }
-      for (let j = 0; j < this.placed_words[dir].length; j++) {
-        this.placed_words[dir][j] = 0;
-      }
-      let old_words = this.placed_words;
-      this.reset();
-      for (let i = 0; i < old_words.length; i++) {
-        for (let j = 0; j < old_words[i].length; j++) {
-          if (old_words[i][j] == 0) {
-            continue;
-          }
-          let dirs = this.get_dirxy(i);
-          this.add_word(
-            old_words[i][j][0],
-            old_words[i][j][1],
-            j,
-            dirs[0],
-            dirs[1]
-          );
-        }
-      }
-      this.check_victory();
-      this.$forceUpdate();
-    },
+    }, 
     remove_word(dir, index) {
       if (this.placed_words[dir][index] == 0) {
         return;
@@ -730,10 +754,11 @@ export default {
           if (old_words[i][j] == 0) {
             continue;
           }
-          let dirs = this.get_dirxy(i);
-          this.add_word(
+          let dirs = this.get_dirxy(old_words[i][j][2]);
+          this.add_word( 
             old_words[i][j][0],
             old_words[i][j][1],
+            i,
             j,
             dirs[0],
             dirs[1]
@@ -979,7 +1004,7 @@ export default {
               v-for="j in columns"
               v-bind:key="j"
               @click="
-                place_word(j - 1, i - 1, word_index, mode_x, mode_y, true)
+                place_word(j - 1, i - 1, dir_index, word_index, mode_x, mode_y, true)
               "
               @mouseover="
                 current_x = i;
@@ -1062,7 +1087,7 @@ export default {
         class="display-6"
         style="text-align: start"
       >
-        Riječi po smjerovima &nbsp;
+        Riječi u abecednom redoslijedu &nbsp;
         <va-icon v-if="!value[2]" name="expand_more"></va-icon>
         <va-icon v-if="value[2]" name="expand_less"></va-icon>
       </h6>
@@ -1081,78 +1106,113 @@ export default {
           words_by_dir[7].length >
           0
       "
-    >
+    >  
       <va-button outline :rounded="false" style="border: none" @click="reset()">
         <va-icon name="delete" />
         &nbsp; Izbriši sve
       </va-button>
       <br />
       <br />
-      <va-tabs v-model="dir_to_display">
+      <h6 class="display-6" style="text-align: start">Smjer</h6>
+      <br />
+      <va-tabs v-model="current_dir">
         <template #tabs>
-          <va-tab v-if="words_by_dir[0].length > 0" name="0">
-            <span>&#8598;</span>
+          <va-tab
+            name="0"
+            @click="
+              mode_x = -1;
+              mode_y = -1;
+            "
+          >
+            &#8598;
           </va-tab>
-          <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
-            <va-tab v-if="words_in_dir.length > 0 && i > 0" :name="i">
-              <span v-if="i == 1">&#8592;</span>
-              <span v-if="i == 2">&#8601;</span>
-              <span v-if="i == 3">&#8593;</span>
-              <span v-if="i == 4">&#8595;</span>
-              <span v-if="i == 5">&#8599;</span>
-              <span v-if="i == 6">&#8594;</span>
-              <span v-if="i == 7">&#8600;</span>
-            </va-tab>
-          </span>
+          <va-tab
+            name="1"
+            @click="
+              mode_x = -1;
+              mode_y = 0;
+            "
+          >
+            &#8592;
+          </va-tab>
+          <va-tab
+            name="2"
+            @click="
+              mode_x = -1;
+              mode_y = 1;
+            "
+          >
+            &#8601;
+          </va-tab>
+          <va-tab
+            name="3"
+            @click="
+              mode_x = 0;
+              mode_y = -1;
+            "
+          >
+            &#8593;
+          </va-tab>
+          <va-tab
+            name="4"
+            @click="
+              mode_x = 0;
+              mode_y = 1;
+            "
+          >
+            &#8595;
+          </va-tab>
+          <va-tab
+            name="5"
+            @click="
+              mode_x = 1;
+              mode_y = -1;
+            "
+          >
+            &#8599;
+          </va-tab>
+          <va-tab
+            name="6"
+            @click="
+              mode_x = 1;
+              mode_y = 0;
+            "
+          >
+            &#8594;
+          </va-tab>
+          <va-tab
+            name="7"
+            @click="
+              mode_x = 1;
+              mode_y = 1;
+            "
+          >
+            &#8600;
+          </va-tab>
           <va-tab :name="10000" disabled></va-tab>
         </template>
       </va-tabs>
-      <div
-        v-if="dir_to_display != null && words_by_dir[dir_to_display].length > 0"
+      <br /> 
+      <va-chip
+        outline
+        style="padding: 20px; margin-left: 20px; margin-top: 20px"
       >
-        <va-chip
-          outline
-          style="padding: 20px; margin-left: 20px; margin-top: 20px"
-        >
-          <span>
-            <span v-if="dir_to_display == 0">&#8598;</span>
-            <span v-if="dir_to_display == 1">&#8592;</span>
-            <span v-if="dir_to_display == 2">&#8601;</span>
-            <span v-if="dir_to_display == 3">&#8593;</span>
-            <span v-if="dir_to_display == 4">&#8595;</span>
-            <span v-if="dir_to_display == 5">&#8599;</span>
-            <span v-if="dir_to_display == 6">&#8594;</span>
-            <span v-if="dir_to_display == 7">&#8600;</span>
-            &nbsp;
-            <va-icon @click="remove_dir(dir_to_display)" name="delete" />
-            <br />
-            <br />
-            <div style="max-height: 200px; overflow-y: scroll">
-              <div
-                v-for="(word, j) in words_by_dir[dir_to_display]"
-                v-bind:key="j"
-              >
-                <span
-                  @click="select_word(dir_to_display, j)"
+        <span>
+          <div style="max-height: 200px; overflow-y: scroll">
+            <div v-for="(word, j) in all_words" v-bind:key="j" 
+            @click="select_word(word[3], word[4])"
                   :class="{
                     selected:
-                      word_index == j &&
-                      get_dir(mode_x, mode_y) == dir_to_display,
-                    placed: placed_words[dir_to_display][j] != 0,
-                  }"
-                >
-                  {{ word[2] }}
-                </span>
-                &nbsp;
-                <va-icon
-                  @click="remove_word(dir_to_display, j)"
-                  name="delete"
-                />
-              </div>
+                    dir_index == word[3] &&
+                      word_index == word[4],
+                    placed: placed_words[word[3]][word[4]] != 0,
+                  }">
+              {{ word[2] }} 
+              <va-icon @click="remove_word(word[3], word[4])" name="delete" />
             </div>
-          </span>
-        </va-chip>
-      </div>
+          </div>
+        </span>
+      </va-chip> 
     </div>
     <br
       v-if="

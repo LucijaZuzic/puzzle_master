@@ -38,8 +38,8 @@ export default {
   <br />
   <span class="tab"></span> Riječi su zapisane u jednom od osam mogućih smjerova
   od početnog prema zadnjem slovu. Smjerovi su gore, dolje, lijevo, desno, gore
-  lijevo, gore desno, dolje lijevo i dolje desno. Riječi su razvrstne prema
-  smjeru u kojem su zapisane, a onda abecedno sortirane.
+  lijevo, gore desno, dolje lijevo i dolje desno. Riječi su abecedno sortirane, 
+  a rješavač mora pronaći smjer.
 
   <br />
   <br />

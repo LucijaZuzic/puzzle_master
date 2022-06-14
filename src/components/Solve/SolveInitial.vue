@@ -335,24 +335,17 @@ export default {
         }
         new_values.push(solution_row);
       }
-      this.values = new_values;
-      let number_of_words = 0;
-      let number_of_dirs = 0;
+      this.values = new_values; 
       this.placed_words = [];
       for (let i = 0; i < this.words_by_dir.length; i++) {
         if (this.words_by_dir[i][0] == "") {
           this.words_by_dir[i] = [];
-        }
-        if (this.words_by_dir[i].length != 0) {
-          number_of_words += this.words_by_dir[i].length;
-          number_of_dirs++;
-        }
+        } 
         this.placed_words.push([]);
         for (let j = 0; j < this.words_by_dir[i].length; j++) {
           this.placed_words[i].push(0);
         }
-      }
-      this.page_length = Math.ceil(number_of_words / number_of_dirs);
+      } 
     },
     reset() {
       let new_values = [];

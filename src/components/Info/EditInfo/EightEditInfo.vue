@@ -46,16 +46,16 @@ export default {
   zadavanja zagonetke i osjenčane su tamnijom ružičastom bojom.
   <br />
   <br />
-  <h6 class="display-6">Riječi po smjerovima</h6>
+  <h6 class="display-6">Riječi u abecednom redoslijedu</h6>
   <br />
   <span class="tab"></span>
 
-  Prilikom zadavanja riječ se postavlja u zagonetku u jednom od osam smjerova
-  koji ukoliko ima dovoljno slobodnih mjesta i ako se slova u poljima poklapaju.
-  Također se ne smiju preklapati riječi koje su dio osmosmjerke i riječi koje su
-  dio rješenja. Riječi u svakom od osam smjerova koje su dodane kao dio
-  osmosmjerke mogu se pregledati i može se ukloniti samo jedna ili sve riječi u
-  smjeru.
+  Prilikom zadavanja riječ se postavlja u zagonetku u jednom od osam smjerova 
+  koji je odabran ukoliko ima dovoljno slobodnih mjesta i ako se slova u poljima 
+  poklapaju.Također se ne smiju preklapati riječi koje su dio osmosmjerke i riječi koje su
+  dio rješenja. Riječi u svima smjerovima koje su dodane kao dio
+  osmosmjerke mogu se pregledati u zajedničkom popisu sortirane 
+  u abecednom redoslijedu te se mogu pojedinačno ukloniti.
   <br />
   <br />
   <h6 class="display-6">Podaci o zagonetci</h6>

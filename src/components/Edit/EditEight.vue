@@ -1,5 +1,10 @@
 <script>
-import { eightsRef, eightsRatingsRef, eightsRecordsRef, friendsRef } from "../../firebase_main.js";
+import {
+  eightsRef,
+  eightsRatingsRef,
+  eightsRecordsRef,
+  friendsRef,
+} from "../../firebase_main.js";
 import { usersRef } from "../../firebase_main.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -24,6 +29,7 @@ export default {
   },
   data() {
     return {
+      all_words: [],
       permission_to_edit_visibility: false,
       value: [false, false, false, false, false, false, false],
       delete_type: 0,
@@ -109,10 +115,8 @@ export default {
         .doc(id)
         .delete()
         .then(() => {
-          this.$vaToast.init(
-              "Zagonetka je uspješno izbrisana."
-            );
-            this.$router.push("/search-eight");
+          this.$vaToast.init("Zagonetka je uspješno izbrisana.");
+          this.$router.push("/search-eight");
         })
         .then(() => {
           eightsRatingsRef
@@ -169,7 +173,6 @@ export default {
                 // Get metadata properties
                 getMetadata(itemRef)
                   .then((metadata) => {
-                    
                     if (metadata.name.toString().includes(id)) {
                       deleteObject(itemRef)
                         .then(() => {
@@ -919,7 +922,22 @@ export default {
         this.is_special[y_new][x_new] = 0;
       }
       this.words_by_dir[this.get_dir(dirx, diry)].push([x, y, new_word]);
-      this.words_by_dir[this.get_dir(dirx, diry)].sort(this.sortFunction);
+      this.words_by_dir[this.get_dir(dirx, diry)] = this.words_by_dir[
+        this.get_dir(dirx, diry)
+      ].sort(this.sortFunction);
+      this.all_words = [];
+      for (let i = 0; i < this.words_by_dir.length; i++) {
+        for (let j = 0; j < this.words_by_dir[i].length; j++) {
+          this.all_words.push([
+            this.words_by_dir[i][j][0],
+            this.words_by_dir[i][j][1],
+            this.words_by_dir[i][j][2],
+            i,
+            j,
+          ]);
+        }
+      }
+      this.all_words = this.all_words.sort(this.sortFunction);
     },
     add_word_part_of_solution(x, y, new_word, dirx, diry) {
       for (
@@ -933,6 +951,31 @@ export default {
         this.is_special[y_new][x_new] = 1;
       }
     },
+    findInAlphabet(character) {
+      let newCharacter = character.toUpperCase();
+      for (let i = 0; i < this.alphabet.length; i++) {
+        if (this.alphabet[i] == newCharacter) {
+          return i;
+        }
+      }
+      return -1;
+    },
+    wordSort(a, b) {
+      let newA = a.toUpperCase();
+      let newB = b.toUpperCase();
+      let len = newA.length;
+      if (newB.length < len) {
+        len = newB.length;
+      }
+      for (let i = 0; i < len; i++) {
+        if (newA[i] != newB[i]) {
+          return this.findInAlphabet(newA[i]) < this.findInAlphabet(newB[i])
+            ? -1
+            : 1;
+        }
+      }
+      return newA.length < newB.length ? -1 : 1;
+    },
     sortFunction(a, b) {
       if (a[2] === b[2]) {
         if (a[1] === b[1]) {
@@ -945,7 +988,7 @@ export default {
           return a[1] < b[1] ? -1 : 1;
         }
       } else {
-        return a[2] < b[2] ? -1 : 1;
+        return this.wordSort(a[2], b[2]);
       }
     },
     place_word(x, y, new_word, dirx, diry, special_place, show_warning) {
@@ -1227,11 +1270,10 @@ export default {
               let exstension = "";
               // Get metadata properties
               getMetadata(old_reference).then((metadata) => {
-                
                 exstension = metadata.contentType.split("/")[1];
-                console.log(exstension);
+
                 const reference = "eight/" + some_id + "." + exstension;
-                console.log(this.image, reference);
+
                 const storageRef = ref(projectStorage, reference);
                 const new_metadata = {
                   contentType: "image/" + exstension,
@@ -1341,26 +1383,7 @@ export default {
             });
           }
         });
-    },
-    remove_dir(dir) {
-      this.words_by_dir[dir] = [];
-      let old_words = this.words_by_dir;
-      this.reset_keep_special();
-      for (let i = 0; i < old_words.length; i++) {
-        for (let j = 0; j < old_words[i].length; j++) {
-          let dirs = this.get_dirxy(i);
-          this.add_word(
-            old_words[i][j][0],
-            old_words[i][j][1],
-            old_words[i][j][2],
-            dirs[0],
-            dirs[1]
-          );
-        }
-      }
-      this.check_full();
-      //this.$forceUpdate();
-    },
+    }, 
     delay(operation, delay) {
       return new Promise((resolve) => {
         setTimeout(() => {
@@ -1474,10 +1497,7 @@ export default {
             &nbsp; Popis osmosmjerki
           </router-link>
         </va-tab>
-        <va-tab
-          v-if="edit"
-          @click="$refs.delete_modal.show()"
-        >
+        <va-tab v-if="edit" @click="$refs.delete_modal.show()">
           <va-icon name="delete" /> &nbsp; Izbriši zagonetku
         </va-tab>
         <va-tab
@@ -1838,7 +1858,7 @@ export default {
         class="display-6"
         style="text-align: start"
       >
-        Riječi po smjerovima &nbsp;
+        Riječi u abecednom redoslijedu &nbsp;
         <va-icon v-if="!value[4]" name="expand_more"></va-icon>
         <va-icon v-if="value[4]" name="expand_less"></va-icon>
       </h6>
@@ -1858,60 +1878,19 @@ export default {
           0
       "
     >
-      <va-tabs v-model="dir_to_display">
-        <template #tabs>
-          <va-tab v-if="words_by_dir[0].length > 0" name="0">
-            <span>&#8598;</span>
-          </va-tab>
-          <span v-for="(words_in_dir, i) in words_by_dir" v-bind:key="i">
-            <va-tab v-if="words_in_dir.length > 0 && i > 0" :name="i">
-              <span v-if="i == 1">&#8592;</span>
-              <span v-if="i == 2">&#8601;</span>
-              <span v-if="i == 3">&#8593;</span>
-              <span v-if="i == 4">&#8595;</span>
-              <span v-if="i == 5">&#8599;</span>
-              <span v-if="i == 6">&#8594;</span>
-              <span v-if="i == 7">&#8600;</span>
-            </va-tab>
-          </span>
-          <va-tab :name="10000" disabled></va-tab>
-        </template>
-      </va-tabs>
-      <div
-        v-if="dir_to_display != null && words_by_dir[dir_to_display].length > 0"
+      <va-chip
+        outline
+        style="padding: 20px; margin-left: 20px; margin-top: 20px"
       >
-        <va-chip
-          outline
-          style="padding: 20px; margin-left: 20px; margin-top: 20px"
-        >
-          <span>
-            <span v-if="dir_to_display == 0">&#8598;</span>
-            <span v-if="dir_to_display == 1">&#8592;</span>
-            <span v-if="dir_to_display == 2">&#8601;</span>
-            <span v-if="dir_to_display == 3">&#8593;</span>
-            <span v-if="dir_to_display == 4">&#8595;</span>
-            <span v-if="dir_to_display == 5">&#8599;</span>
-            <span v-if="dir_to_display == 6">&#8594;</span>
-            <span v-if="dir_to_display == 7">&#8600;</span>
-            &nbsp;
-            <va-icon @click="remove_dir(dir_to_display)" name="delete" />
-            <br />
-            <br />
-            <div style="max-height: 200px; overflow-y: scroll">
-              <div
-                v-for="(word, j) in words_by_dir[dir_to_display]"
-                v-bind:key="j"
-              >
-                {{ word[2] }}&nbsp; ({{ word[1] + 1 }},{{ word[0] + 1 }}) &nbsp;
-                <va-icon
-                  @click="remove_word(dir_to_display, j)"
-                  name="delete"
-                />
-              </div>
+        <span>
+          <div style="max-height: 200px; overflow-y: scroll">
+            <div v-for="(word, j) in all_words" v-bind:key="j">
+              {{ word[2] }}&nbsp; ({{ word[1] + 1 }},{{ word[0] + 1 }}) &nbsp;
+              <va-icon @click="remove_word(word[3], word[4])" name="delete" />
             </div>
-          </span>
-        </va-chip>
-      </div>
+          </div>
+        </span>
+      </va-chip> 
     </div>
     <br
       v-if="
