@@ -375,15 +375,7 @@ export default {
           <template #cell(selectedEights)="{ source: selectedEights }">
             {{ selectedEights.length }}
           </template>
-          <template #bodyAppend>
-            <tr>
-              <td colspan="12">
-                <div style="display: inline-block; margin-top: 10px">
-                  <va-pagination v-model="currentPage" input :pages="pages" />
-                </div>
-              </td>
-            </tr>
-          </template>
+           
         </va-data-table>
         <br />
         <va-card

@@ -258,15 +258,7 @@ export default {
             >
           </router-link>
         </template>
-        <template #bodyAppend>
-          <tr>
-            <td colspan="4">
-              <div style="display: inline-block; margin-top: 10px">
-                <va-pagination v-model="currentPage" input :pages="pages" />
-              </div>
-            </td>
-          </tr>
-        </template>
+        
       </va-data-table>
     </span>
     <NoDataToDisplay
