@@ -53,7 +53,7 @@ export default {
 
   Prilikom zadavanja riječ se postavlja u zagonetku u jednom od osam smjerova 
   koji je odabran ukoliko ima dovoljno slobodnih mjesta i ako se slova u poljima 
-  poklapaju.Također se ne smiju preklapati riječi koje su dio osmosmjerke i riječi koje su
+  poklapaju. Također se ne smiju preklapati riječi koje su dio osmosmjerke i riječi koje su
   dio rješenja. Riječi u svima smjerovima koje su dodane kao dio
   osmosmjerke mogu se pregledati u zajedničkom popisu sortirane 
   u abecednom redoslijedu te se mogu pojedinačno ukloniti.

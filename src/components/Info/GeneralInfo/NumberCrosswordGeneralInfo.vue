@@ -36,7 +36,7 @@ export default {
   <br />
 
   <span class="tab"></span>Prazna polja, odnosno barijere koje označavaju
-  granice između uzastopnih pojmova u istom retku ili stupcu, ispunjena su crnom
+  granice između uzastopnih brojeva u istom retku ili stupcu, ispunjena su crnom
   bojom.
 </template>
 

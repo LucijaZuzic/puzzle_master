@@ -31,9 +31,9 @@ export default {
   <span class="tab"></span>
   Može se nasumično generirati znamenke i barijere. Prilikom generiranja
   vrijednosti može se odabrati nadopunu samo praznih vrijednosti ili promjenu
-  upisanih vrijednosti. Dodatno se može kontrolirati barijere između pojmova,
+  upisanih vrijednosti. Dodatno se može kontrolirati barijere između brojeva,
   odnosno polja ispunjena crnom bojom. Može se odabrati da se barijere između
-  pojmova zadrže ili da se generiraju nove.
+  brojeva zadrže ili da se generiraju nove.
 
   <br />
   <br />
